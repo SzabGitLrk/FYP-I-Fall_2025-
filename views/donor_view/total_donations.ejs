@@ -1,0 +1,34 @@
+<% layout("/layouts/boilerplate") %>
+
+<body class="bg-light">
+  <section class="py-5">
+    <div class="container">
+      <h2 class="fw-bold text-success mb-4">Your Donations</h2>
+
+      <div class="mb-4">
+        <h4>Total Donations: <%= totalDonations || 0 %></h4>
+      </div>
+
+      <% if (!donations || donations.length === 0) { %>
+        <div class="alert alert-info">You have not donated anything yet.</div>
+      <% } else { %>
+        <div class="row g-4">
+          <% donations.forEach(donation => { %>
+            <div class="col-md-6">
+              <div class="card shadow-sm p-4">
+                <h5 class="fw-bold mb-2"><%= donation.foodTitle || "No title" %></h5>
+                <p><strong>Quantity:</strong> <%= donation.quantity || "N/A" %></p>
+                <p><strong>Status:</strong> <%= donation.status || "Pending" %></p>
+                <p><strong>Donated At:</strong> <%= donation.createdAt ? donation.createdAt.toLocaleString() : "N/A" %></p>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <div class="mt-5 text-center">
+        <a href="/donor/dashboard" class="btn btn-outline-success fw-bold">← Back to Dashboard</a>
+      </div>
+    </div>
+  </section>
+</body>

@@ -1,0 +1,104 @@
+<% layout("/layouts/boilerplate") %>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NGO Registration | ShareMyFood</title>
+</head>
+
+<body class="bg-light">
+
+  <div class="container mt-5 d-flex justify-content-center">
+
+    <div class="col-md-6" style="max-width: 600px;">
+
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-4">
+
+          <h3 class="text-center mb-4 text-success fw-bold">Register Your NGO</h3>
+
+          <% if (error && error.length > 0) { %>
+            <div class="alert alert-danger"><%= error %></div>
+          <% } %>
+
+          <% if (success && success.length > 0) { %>
+            <div class="alert alert-success"><%= success %></div>
+          <% } %>
+
+          <form action="/ngo_signup" method="POST">
+
+            <!-- NGO NAME -->
+            <div class="mb-3">
+              <label class="form-label">NGO Name</label>
+              <input type="text" class="form-control" name="ngo_name" required>
+            </div>
+
+            <!-- LICENSE -->
+            <div class="mb-3">
+              <label class="form-label">License Number</label>
+              <input type="text" class="form-control" name="licence_number" required>
+            </div>
+
+            <!-- EMAIL -->
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" name="email" required>
+            </div>
+
+            <!-- CONTACT -->
+            <div class="mb-3">
+              <label class="form-label">Contact Number</label>
+              <input type="text" class="form-control" name="contact_number" required>
+            </div>
+
+            <!-- ADDRESS (Used for Geocoding) -->
+            <div class="mb-3">
+              <label class="form-label">Complete Address</label>
+              <input type="text" class="form-control" name="address" placeholder="Enter full NGO address" required>
+              <small class="text-muted">This address will be converted into GPS coordinates.</small>
+            </div>
+
+            <!-- HEAD NAME -->
+            <div class="mb-3">
+              <label class="form-label">Head Person Name</label>
+              <input type="text" class="form-control" name="head_person_name" required>
+            </div>
+
+            <!-- HEAD CONTACT -->
+            <div class="mb-3">
+              <label class="form-label">Head Person Contact</label>
+              <input type="text" class="form-control" name="head_person_contact" required>
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input type="password" class="form-control" name="password" required>
+            </div>
+
+            <!-- SUBMIT -->
+            <div class="d-grid mt-3">
+              <button type="submit" class="btn btn-success btn-lg rounded-3">
+                Register
+              </button>
+            </div>
+
+            <p class="text-center mt-3 text-muted small">
+              After registration, upload verification documents from your dashboard.
+              Your account will be reviewed by the Admin.
+            </p>
+
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

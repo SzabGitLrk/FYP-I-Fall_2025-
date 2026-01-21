@@ -1,0 +1,40 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+  <h3 class="text-success fw-bold mb-4">🏢 All Approved NGOs</h3>
+  <table class="table table-bordered table-hover shadow-sm">
+    <thead class="table-success">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>City</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% ngos.forEach(n => { %>
+
+        <tr>
+          <td><%= n.ngo_name %></td>
+          <td><%= n.email %></td>
+          <td><%= n.address %></td>
+          <td>
+            <!-- Later you can add: suspend, delete, view more -->
+            <a href="/admin/ngo/<%= n._id %>" class="btn btn-sm btn-outline-success">View</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Back button at bottom -->
+  <div class="mt-4">
+    <a href="/admin/dashboard" class="btn btn-outline-success">
+      ⬅ Back to Dashboard
+    </a>
+  </div>
+</div>
+
+
+

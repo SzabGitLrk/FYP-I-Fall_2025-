@@ -1,0 +1,35 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+  <h3 class="text-success fw-bold mb-4">👤 All Donors</h3>
+
+  <table class="table table-bordered table-hover shadow-sm">
+    <thead class="table-success">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>City</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% donor.forEach(d => { %>
+        <tr>
+          <td><%= d.name %></td>
+          <td><%= d.email %></td>
+          <td><%= d.phone %></td>
+          <td><%= d.city %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Back button at bottom -->
+  <div class="mt-4">
+    <a href="/admin/dashboard" class="btn btn-outline-success">
+      ⬅ Back to Dashboard
+    </a>
+  </div>
+</div>
+

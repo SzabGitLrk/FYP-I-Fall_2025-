@@ -1,0 +1,87 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5">
+
+  <!-- Page Title -->
+  <h2 class="text-center mb-4 fw-bold text-success">
+    📜 Task History
+  </h2>
+
+  <% if (tasks.length === 0) { %>
+    <div class="alert alert-info text-center">
+      No completed or failed tasks yet.
+    </div>
+  <% } else { %>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover shadow-sm align-middle">
+        <thead class="table-success text-center">
+          <tr>
+            <th>#</th>
+            <th>Task Title</th>
+            <th>Donation</th>
+            <th>Status</th>
+            <th>Completed On</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% tasks.forEach((task, index) => { %>
+            <tr class="text-center">
+              <td><%= index + 1 %></td>
+
+              <td class="fw-semibold">
+                <%= task.task_title %>
+              </td>
+
+              <td>
+                <%= task.donation_id?.food_title || "Donation" %>
+              </td>
+
+              <td>
+                <% if (task.status === "Completed") { %>
+                  <span class="badge bg-success">Completed</span>
+                <% } else { %>
+                  <span class="badge bg-danger">Failed</span>
+                <% } %>
+              </td>
+
+              <td>
+                <% if (task.completedAt) { %>
+                  <%= new Date(task.completedAt).toLocaleString() %>
+                <% } else { %>
+                  — 
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+  <% } %>
+
+  <!-- Back Button -->
+  <div class="text-center mt-4">
+    <a href="/volunteer_dashboard" class="btn btn-outline-success fw-semibold">
+      ← Back to Dashboard
+    </a>
+  </div>
+
+</div>
+
+<style>
+  body {
+    background: linear-gradient(145deg, #e8f5e9, #ffffff);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  table {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #f1fdf4;
+  }
+</style>

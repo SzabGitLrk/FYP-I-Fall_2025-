@@ -1,0 +1,79 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+
+  <!-- Flash Messages 
+  <% if (typeof success !== 'undefined') { %>
+    <div class="alert alert-success"><%= success %></div>
+  <% } %>
+
+  <% if (typeof error !== 'undefined') { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+-->
+  <h2 class="fw-bold text-success mb-4 text-center">Edit Admin Profile</h2>
+
+  <div class="row justify-content-center">
+    <div class="col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Update Profile Information</h5>
+        </div>
+
+        <div class="card-body">
+          <form action="/edit-admin" method="POST">
+
+            <!-- Name -->
+            <div class="mb-3">
+              <label class="form-label">Full Name</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                name="name" 
+                value="<%= admin.name %>" 
+                required
+              >
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input 
+                type="email" 
+                class="form-control" 
+                name="email" 
+                value="<%= admin.email %>" 
+                required
+              >
+            </div>
+
+            <!-- Contact Number -->
+            <div class="mb-3">
+              <label class="form-label">Contact Number</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                name="contact_number" 
+                value="<%= admin.contact_number %>" 
+                placeholder="Optional"
+              >
+            </div>
+
+            <button class="btn btn-success w-100" type="submit">
+              Save Changes
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="/change-password" class="btn btn-outline-success">
+          Change Password 
+        </a>
+        <a href="/admin/dashboard" class="btn btn-outline-success"> Back to Dashboard</a>
+      </div>
+
+    </div>
+  </div>
+</div>

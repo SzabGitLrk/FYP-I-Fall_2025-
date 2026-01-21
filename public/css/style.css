@@ -1,0 +1,135 @@
+.navbar{
+ height:5rem;
+background-color:white ;
+}
+
+.fa-bowl-rice{
+
+color:green;
+font-size:2rem;
+}
+
+.nav-link{
+  color:#222222 !important;
+}
+
+/* Fixed footer */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;       /* Full width */
+  background-color: #157347;  /* Bootstrap green */
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1200px;        /* fixed width */
+  background-color: #157347;
+  color: white;
+  text-align: center;
+
+  padding: 10px 0;
+  border-radius: 10px 10px 0 0;
+}
+body {
+  padding-bottom: 60px;
+}
+
+.f-info {
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  justify-content: center;
+  align-items: space-evenly;
+  text-align: center;
+  height: 8rem;
+  background-color: #ebebeb;
+  color: #333;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  flex-wrap:wrap;
+}
+
+.f-links, .f-socials, .f-info-brand{
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  width:100%;
+   justify-content: center;
+}
+
+.f-info-socials i{
+ font-size:1.25rem;
+ margin-right:1rem;
+}
+.f-links a {
+  text-decoration: none;
+  color: #222222;
+  margin: 0.25rem 0;
+  margin-left:0.25rem;
+  transition: color 0.3s, text-decoration 0.3s;
+}
+
+.f-links a:hover {
+  text-decoration: underline;
+  color: #007bff;
+}
+
+
+
+
+/* main dashboard styling*/
+/* Body and Fonts */
+.home-body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f9fafb;
+  color: #333;
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+              url('/images/food-sharing-bg.jpg') center/cover no-repeat;
+  height: 90vh;
+  color: white;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+}
+
+.hero-content p {
+  max-width: 600px;
+  margin: 15px auto;
+  font-size: 1.2rem;
+}
+
+/* Features */
+.features-section {
+  background-color: #fff;
+}
+
+.feature-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* CTA Section */
+.cta-section {
+  background: linear-gradient(135deg, #2e8b57, #1b5e20);
+}
+
+.img{
+ width: 30%;
+  height: 60px;           /* fixed height for neat layout */
+  object-fit: cover;       /* crops image nicely */
+  border-radius: 12px;     /* smooth corners */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}

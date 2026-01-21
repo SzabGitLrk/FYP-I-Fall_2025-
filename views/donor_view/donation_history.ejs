@@ -1,0 +1,57 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+
+  <h3 class="text-success fw-bold mb-4">📘 Donation History</h3>
+
+  <% if (donations.length === 0) { %>
+    <div class="alert alert-info text-center">
+      No donations yet. Start donating! 🍲
+    </div>
+  <% } else { %>
+
+    <table class="table table-bordered table-hover shadow-sm">
+      <thead class="table-success">
+        <tr>
+          <th>#</th>
+          <th>Food Title</th>
+          <th>Quantity</th>
+          <th>Pickup City</th>
+          <th>Status</th>
+          <th>Donated On</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% donations.forEach((donation, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td><%= donation.food_title %></td>
+            <td><%= donation.quantity %></td>
+            <td><%= donation.pickup_city %></td>
+
+            <td>
+              <% if (donation.status === "Pending") { %>
+                <span class="badge bg-warning text-dark">Pending</span>
+              <% } else if (donation.status === "Accepted") { %>
+                <span class="badge bg-success">Accepted</span>
+              <% } else if (donation.status === "Rejected") { %>
+                <span class="badge bg-danger">Rejected</span>
+              <% } else { %>
+                <span class="badge bg-secondary"><%= donation.status %></span>
+              <% } %>
+            </td>
+
+            <td><%= donation.createdAt.toDateString() %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+  <% } %>
+
+  <div class="mt-4">
+    <a href="/donor/dashboard" class="btn btn-success">⬅ Back to Dashboard</a>
+  </div>
+
+</div>

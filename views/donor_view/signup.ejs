@@ -1,0 +1,89 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5 d-flex justify-content-center">
+
+  <div class="col-md-6" style="max-width: 600px;">
+
+    <div class="card shadow-lg rounded-4">
+      <div class="card-body p-3">
+
+        <h3 class="text-center mb-4 text-success fw-bold">Donor Registration</h3>
+
+        <!-- Flash Messages 
+         
+        <% if (success) { %>
+          <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
+        <% if (error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
+-->
+        <form action="/donor_signup" method="POST">
+
+          <!-- Full Name -->
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+
+          <!-- Email Address -->
+          <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" name="email" required>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="mb-3">
+            <label class="form-label">Phone Number</label>
+            <input type="text" class="form-control" name="phone" required>
+          </div>
+
+          <!-- Address -->
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            <input type="text" class="form-control" name="address" required>
+          </div>
+
+          <!-- City -->
+          <div class="mb-3">
+            <label class="form-label">City</label>
+            <input type="text" class="form-control" name="city" required>
+          </div>
+
+          <!-- Organization Type -->
+          <div class="mb-3">
+            <label class="form-label">Organization Type</label>
+            <select class="form-select" name="organizationType" required>
+              <option value="">Select Type</option>
+              <option value="Individual">Individual</option>
+              <option value="Restaurant">Restaurant</option>
+              <option value="Hotel">Hotel</option>
+              <option value="Canteen">Canteen</option>
+              <option value="Wedding Hall">Wedding Hall</option>
+            </select>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" name="password" required>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="d-grid">
+            <button type="submit" class="btn btn-success btn-lg">Register</button>
+          </div>
+
+        </form>
+
+        <p class="text-center mt-3 small">
+          Already have an account? <a href="/donor_login">Login here</a>
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

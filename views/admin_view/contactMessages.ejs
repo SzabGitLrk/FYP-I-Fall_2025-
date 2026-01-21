@@ -1,0 +1,30 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5">
+  <h2 class="fw-bold text-success mb-4">Contact Messages</h2>
+  <table class="table table-bordered table-striped shadow-sm">
+    <thead class="table-success">
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Message</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% contacts.forEach((msg, index) => { %>
+      <tr>
+        <td><%= index + 1 %></td>
+        <td><%= msg.name %></td>
+        <td><%= msg.email %></td>
+        <td><%= msg.message %></td>
+        <td><%= msg.createdAt.toLocaleString() %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+      <div class="text-center mt-3">
+        <a href="/admin/dashboard" class="btn btn-outline-success"> Back to Dashboard</a>
+      </div>
+</div>

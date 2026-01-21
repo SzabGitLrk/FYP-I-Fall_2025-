@@ -1,0 +1,55 @@
+
+
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pending Donors | ShareMyFood</title>
+
+
+
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    
+<a href="/ngo/dashboard" class="btn btn-outline-success rounded-pill px-4 py-2 mb-3 shadow-sm">
+  <i class="bi bi-arrow-left-circle"></i> Back to Dashboard
+</a>
+
+    <h2 class="text-center text-success mb-4">Pending Donors</h2>
+
+    <div class="row">
+      <% if (donors.length > 0) { %>
+        <% donors.forEach(donor => { %>
+          <div class="col-md-4 mb-4">
+            <div class="card shadow border-0 rounded-4">
+              <div class="card-body">
+                <h5 class="card-title text-success"><%= donor.name %></h5>
+                <p><strong>Email:</strong> <%= donor.email %></p>
+                <p><strong>Phone:</strong> <%= donor.phone %></p>
+                <p><strong>City:</strong> <%= donor.city %></p>
+                <p><strong>Organization:</strong> <%= donor.organizationType %></p>
+
+                <div class="d-flex gap-2">
+                  <form action="/approveDonor/<%= donor._id %>" method="POST" class="w-50">
+                    <button type="submit" class="btn btn-success w-100">Approve</button>
+                  </form>
+
+                  <form action="/rejectDonor/<%= donor._id %>" method="POST" class="w-50">
+                    <button type="submit" class="btn btn-danger w-100">Reject</button>
+                  </form>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <p class="text-center text-muted">No pending donors right now.</p>
+      <% } %>
+    </div>
+
+  </div>
+</body>
+</html>

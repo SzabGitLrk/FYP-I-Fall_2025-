@@ -1,0 +1,118 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5">
+
+  <!-- Page Title -->
+  <h2 class="text-center mb-4 fw-bold text-success">
+    📋 My Assigned Tasks
+  </h2>
+
+  <% if (tasks.length === 0) { %>
+    <div class="alert alert-info text-center">
+      You have no assigned tasks at the moment.
+    </div>
+  <% } else { %>
+
+    <div class="row">
+      <% tasks.forEach(task => { %>
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm border-0 rounded-4 h-100">
+
+            <div class="card-body p-4">
+
+              <!-- Task Title -->
+              <h5 class="fw-bold text-success mb-2">
+                <%= task.task_title %>
+              </h5>
+
+            
+
+              <!-- Donation Info -->
+              <p class="mb-1">
+                <strong>🍲 Food:</strong>
+                <%= task.donation_id?.food_title || "Donation" %>
+              </p>
+
+              <p class="mb-1">
+                <strong>📍 Pickup:</strong>
+                <%= task.donation_id?.pickup_address %>,
+                <%= task.donation_id?.pickup_city %>
+              </p>
+
+              <p class="mb-1">
+                <strong>🏢 Assigned By:</strong>
+                <%= task.assigned_by?.name || "NGO" %>
+              </p>
+
+              <!-- Status Badge -->
+              <div class="my-3">
+                <% if (task.status === "Assigned") { %>
+                  <span class="badge bg-warning text-dark">Assigned</span>
+                <% } else if (task.status === "In Progress") { %>
+                  <span class="badge bg-primary">In Progress</span>
+                <% } else if (task.status === "Completed") { %>
+                  <span class="badge bg-success">Completed</span>
+                <% } else { %>
+                  <span class="badge bg-danger">Failed</span>
+                <% } %>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="d-flex gap-2 flex-wrap">
+
+                <% if (task.status === "Assigned") { %>
+                  <form method="POST" action="/volunteer/task/<%= task._id %>/start">
+                    <button class="btn btn-outline-primary btn-sm">
+                      ▶ Start Task
+                    </button>
+                  </form>
+                <% } %>
+
+                <% if (task.status === "In Progress") { %>
+                  <form method="POST" action="/volunteer/task/<%= task._id %>/complete">
+                    <button class="btn btn-success btn-sm">
+                      ✔ Complete
+                    </button>
+                  </form>
+
+                  <form method="POST" action="/volunteer/task/<%= task._id %>/fail">
+                    <button class="btn btn-danger btn-sm">
+                      ✖ Mark Failed
+                    </button>
+                  </form>
+                <% } %>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+  <% } %>
+
+  <!-- Back Button -->
+  <div class="text-center mt-4">
+    <a href="/volunteer_dashboard" class="btn btn-outline-success fw-semibold">
+      ← Back to Dashboard
+    </a>
+  </div>
+
+</div>
+
+<style>
+  body {
+    background: linear-gradient(145deg, #e8f5e9, #ffffff);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    transition: 0.3s ease;
+  }
+
+  .btn-sm {
+    font-weight: 600;
+  }
+</style>

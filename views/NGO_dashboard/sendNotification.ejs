@@ -1,0 +1,30 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-4">
+
+  <h4 class="text-success mb-3">
+    🔔 Send Notification to <%= ngo.ngo_name %>
+  </h4>
+
+  <form method="POST" action="/ngo/<%= ngo._id %>/notify">
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Message</label>
+      <textarea
+        name="message"
+        class="form-control"
+        rows="4"
+        placeholder="Write notification message here..."
+        required></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+      📤 Send Notification
+    </button>
+
+    <a href="/ngo/<%= ngo._id %>/details" class="btn btn-secondary ms-2">
+      Cancel
+    </a>
+
+  </form>
+</div>

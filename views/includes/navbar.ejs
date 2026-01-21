@@ -1,0 +1,51 @@
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/about">
+      <i class="fa-solid fa-bowl-rice"></i> ShareMyFood
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+            data-bs-target="#navbarNavAltMarkup">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-link" href="/about">About</a>
+        <a class="nav-link" href="/works">How it works</a>
+        <a class="nav-link" href="/contact">Contact</a>     
+      </div>
+
+      <div class="navbar-nav ms-auto align-items-center">
+        <!-- Donor Dropdown -->
+        <div class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="donorDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Donor
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="donorDropdown">
+            <li><a class="dropdown-item" href="/donor_signup"><i class="fa fa-user-plus me-2"></i>Signup</a></li>
+            <li><a class="dropdown-item" href="/donor_login"><i class="fa fa-sign-in-alt me-2"></i>Login</a></li>
+          </ul>
+        </div>
+
+        <!-- NGO Dropdown -->
+        <div class="nav-item dropdown ms-3">
+          <a class="nav-link dropdown-toggle" href="#" id="ngoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            NGO
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="ngoDropdown">
+            <li><a class="dropdown-item" href="/ngo_signup"><i class="fa fa-user-plus me-2"></i>Signup</a></li>
+            <li><a class="dropdown-item" href="/ngo_login"><i class="fa fa-sign-in-alt me-2"></i>Login</a></li>
+          </ul>
+        </div>
+
+        <!-- Volunteer Login -->
+         <a class="nav-link ms-3" href="/volunteer_login">Volunteer Login</a>
+
+        <!-- Admin Login -->
+        <a class="nav-link ms-3" href="/admin_login">Admin Login</a>
+
+      </div>
+    </div>
+  </div>
+</nav>

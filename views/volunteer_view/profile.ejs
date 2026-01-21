@@ -1,0 +1,119 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5">
+
+  <!-- Page Title -->
+  <h2 class="text-center mb-4 fw-bold text-success">
+    🙋 Volunteer Profile
+  </h2>
+
+  <!-- Profile Card -->
+  <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width: 650px;">
+    <div class="card-body p-4">
+
+      <h5 class="mb-4 text-success fw-semibold">
+        Personal Information
+      </h5>
+
+      <!-- Profile Update Form -->
+      <form action="/volunteer/profile/update" method="POST">
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Full Name</label>
+          <input
+            type="text"
+            class="form-control"
+            name="name"
+            value="<%= volunteer.name %>"
+            required
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Email</label>
+          <input
+            type="email"
+            class="form-control"
+            value="<%= volunteer.email %>"
+            disabled
+          >
+          <small class="text-muted">Email cannot be changed</small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Phone</label>
+          <input
+            type="text"
+            class="form-control"
+            name="phone"
+            value="<%= volunteer.phone %>"
+            required
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Address</label>
+          <input
+            type="text"
+            class="form-control"
+            name="address"
+            value="<%= volunteer.address %>"
+            required
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">City</label>
+          <input
+            type="text"
+            class="form-control"
+            name="city"
+            value="<%= volunteer.city %>"
+            required
+          >
+        </div>
+
+        <!-- NGO Info -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Assigned NGO</label>
+          <input
+            type="text"
+            class="form-control"
+            value="<%= volunteer.ngo_id?.name || 'Assigned NGO' %>"
+            disabled
+          >
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-grid gap-2 mt-4">
+          <button class="btn btn-success fw-bold">
+            💾 Save Changes
+          </button>
+
+          <a href="/volunteer/change-password" class="btn btn-outline-success">
+            🔑 Change Password
+          </a>
+
+          <a href="/volunteer_dashboard" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+          </a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+  body {
+    background: linear-gradient(145deg, #e8f5e9, #ffffff);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .form-control:focus {
+    border-color: #157347;
+    box-shadow: 0 0 6px rgba(21, 115, 71, 0.3);
+  }
+</style>

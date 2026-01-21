@@ -1,0 +1,39 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+  <h3 class="text-success mb-4 fw-bold">Assign Task</h3>
+
+  <form action="/assign-tasks" method="POST" class="p-4 bg-white shadow rounded">
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">Select Volunteer</label>
+      <select name="volunteer_id" class="form-select" required>
+        <% volunteers.forEach(v => { %>
+          <option value="<%= v._id %>"><%= v.name %> - <%= v.email %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">Select Donation</label>
+      <select name="donation_id" class="form-select" required>
+        <% donations.forEach(d => { %>
+          <option value="<%= d._id %>"><%= d.food_title %> - <%= d.pickup_city %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">Task Title</label>
+      <input type="text" name="task_title" class="form-control" required>
+    </div>
+
+ 
+
+    <button type="submit" class="btn btn-outline-success">Assign Task</button>
+  </form>
+
+  <!-- Back to Dashboard Button -->
+  <div class="text-center mt-4">
+    <a href="/ngo/dashboard" class="btn btn-outline-success btn-sm">⬅ Back to Dashboard</a>
+  </div>
+</div>

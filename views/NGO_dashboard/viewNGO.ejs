@@ -1,0 +1,101 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+
+  <!-- Page Title -->
+  <h3 class="text-success fw-bold mb-4">🏢 NGO Details</h3>
+
+  <!-- NGO Card -->
+  <div class="card shadow p-4">
+
+    <h4 class="fw-bold text-success"><%= ngo.ngo_name %></h4>
+    <p class="text-muted">Registered NGO</p>
+    <hr>
+    <p><strong>Email:</strong> <%= ngo.email %></p>
+    <p><strong>Phone:</strong> <%= ngo.contact_number %></p>
+    <p><strong>Address:</strong> <%= ngo.address %></p>
+    <p><strong>Status:</strong> 
+    <span class="badge bg-success"><%= ngo.status %></span>
+    </p>
+
+   <% if (ngo.verification_documents && ngo.verification_documents.length > 0) { %>
+  <p class="mt-3"><strong>Verification Documents:</strong></p>
+
+  <div class="d-flex flex-wrap gap-3">
+    <% ngo.verification_documents.forEach(doc => { %>
+
+      <div class="border rounded p-2 shadow-sm" style="max-width: 320px;">
+        <p class="fw-semibold mb-1"><%= doc.fileName %></p>
+
+        <!-- Display image or file link depending on type -->
+        <% if (doc.fileUrl.endsWith('.jpg') || doc.fileUrl.endsWith('.jpeg') || doc.fileUrl.endsWith('.png')) { %>
+          <img src="<%= doc.fileUrl %>" 
+               class="img-fluid rounded"
+               style="max-height: 200px; object-fit: cover;">
+        <% } else { %>
+          <a href="<%= doc.fileUrl %>" target="_blank" class="btn btn-sm btn-outline-primary">
+            📄 View Document
+          </a>
+        <% } %>
+
+        <p class="text-muted mt-1" style="font-size: 0.85rem;">
+          Uploaded: <%= new Date(doc.uploadedAt).toLocaleDateString() %>
+        </p>
+      </div>
+
+    <% }) %>
+  </div>
+<% } %>
+
+
+    <hr>
+
+    <!-- Actions Section -->
+    <h5 class="fw-bold text-success mb-3">⚙️ Admin Controls</h5>
+
+    <div class="d-flex flex-wrap gap-2">
+
+      <!-- View Volunteers -->
+      <a href="/ngo/<%= ngo._id %>/volunteers" 
+         class="btn btn-outline-success">
+        👥 View Volunteers
+      </a>
+
+      <!-- View Donations -->
+      <a href="/ngo/<%= ngo._id %>/donations" 
+         class="btn btn-outline-success">
+        🍱 View Claimed Donations
+      </a>
+
+      <!-- View Tasks -->
+      <a href="/ngo/<%= ngo._id %>/tasks" 
+         class="btn btn-outline-success">
+        📋 View Tasks
+      </a>
+
+    
+
+      <!-- Delete NGO -->
+      <a href="/ngo/<%= ngo._id %>/delete" 
+         class="btn btn-danger"
+        >
+        🗑️ Remove/Delete NGO
+      </a>
+
+      <!-- Send Notification -->
+      <a href="/ngo/<%= ngo._id %>/notify" 
+         class="btn btn-outline-success">
+        🔔 Send Notification
+      </a>
+
+    </div>
+
+    <!-- Back Button -->
+    <div class="mt-4">
+      <a href="/all_ngos" class="btn btn-outline-success">
+        ⬅ Back to All NGOs
+      </a>
+    </div>
+
+  </div>
+</div>

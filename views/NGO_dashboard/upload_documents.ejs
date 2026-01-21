@@ -1,0 +1,27 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5">
+  <h2 class="text-success mb-4">📄 Upload Verification Documents</h2>
+
+  <form action="/upload-documents" method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="documents" class="form-label">Select Files</label>
+      <input type="file" class="form-control" id="documents" name="documents" multiple required>
+    </div>
+    <button type="submit" class="btn btn-success">Upload</button>
+  </form>
+
+  <h4 class="mt-5">Previously Uploaded Documents:</h4>
+  <ul>
+ <% ngo.verification_documents.forEach(doc => { %>
+  <li>
+    <a href="<%= doc.fileUrl %>" target="_blank"><%= doc.fileName %></a>
+  </li>
+<% }) %>
+
+  </ul>
+
+  <div class="mt-4">
+    <a href="/ngo/dashboard" class="btn btn-outline-success">← Back to Dashboard</a>
+  </div>
+</div>

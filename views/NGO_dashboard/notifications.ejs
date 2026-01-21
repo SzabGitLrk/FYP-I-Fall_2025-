@@ -1,0 +1,82 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-4">
+
+  <h4 class="text-success mb-4">🔔 Notifications</h4>
+
+  <% if (!notifications || notifications.length === 0) { %>
+    <div class="alert alert-info">
+      No notifications yet.
+    </div>
+  <% } else { %>
+
+    <% notifications.forEach(note => { %>
+      <div class="card mb-3 <%= note.isRead ? '' : 'border-success' %>">
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+          <!-- Notification message -->
+          <div>
+            <p class="mb-1"><%= note.message %></p>
+            <small class="text-muted"><%= new Date(note.createdAt).toLocaleString() %></small>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="d-flex gap-2">
+
+            <% if (!note.isRead) { %>
+              <button class="btn btn-sm btn-success mark-done-btn" data-id="<%= note._id %>">✔ Mark as Done</button>
+            <% } %>
+
+            <button class="btn btn-sm btn-danger delete-btn" data-id="<%= note._id %>">🗑️ Delete</button>
+
+          </div>
+        </div>
+      </div>
+    <% }) %>
+
+  <% } %>
+
+  <!-- Back to Dashboard -->
+  <a href="/ngo/dashboard" class="btn btn-secondary mt-3">
+    ⬅ Back to Dashboard
+  </a>
+
+</div>
+
+<!-- jQuery for AJAX actions -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function(){
+
+    // Mark as Done button
+    $(".mark-done-btn").click(function(e){
+      e.preventDefault();
+      const btn = $(this);
+      const id = btn.data("id");
+
+      $.post(`/ngo/notifications/${id}/mark-read`, function(){
+        // Remove button and update card styling
+        btn.remove();
+        btn.closest(".card").removeClass("border-success");
+      }).fail(function(){
+        alert("Failed to mark notification as done. Please try again.");
+      });
+    });
+
+    // Delete button
+    $(".delete-btn").click(function(e){
+      e.preventDefault();
+      const btn = $(this);
+      const id = btn.data("id");
+
+      $.post(`/ngo/notifications/${id}/delete`, function(){
+        btn.closest(".card").fadeOut(300, function(){
+          $(this).remove();
+        });
+      }).fail(function(){
+        alert("Failed to delete notification. Please try again.");
+      });
+    });
+
+  });
+</script>

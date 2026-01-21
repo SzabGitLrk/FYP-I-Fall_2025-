@@ -1,0 +1,36 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+  <h3 class="text-success fw-bold mb-4">🤝 All Volunteers</h3>
+  <table class="table table-bordered table-hover shadow-sm">
+    <thead class="table-success">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>City</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% volunteer.forEach(v => { %>
+        <tr>
+          <td><%= v.name %></td>
+          <td><%= v.email %></td>
+          <td><%= v.phone %></td>
+          <td><%= v.city %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Back button at bottom -->
+  <div class="mt-4">
+    <a href="/admin/dashboard" class="btn btn-outline-success">
+      ⬅ Back to Dashboard
+    </a>
+  </div>
+</div>
+
+
+

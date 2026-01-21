@@ -1,0 +1,48 @@
+<% layout("/layouts/boilerplate") %>
+
+<body class="bg-light">
+  <section class="py-5">
+    <div class="container">
+      <h2 class="fw-bold text-success mb-4">Claimed Donations</h2>
+
+      <% if (!claim || claim.length === 0) { %>
+        <div class="alert alert-info">You have not claimed any donations yet.</div>
+      <% } else { %>
+        <div class="row g-4">
+          <% claim.forEach(claim => { %>
+            <div class="col-md-6">
+              <div class="card shadow-sm p-4">
+                <h5 class="fw-bold mb-3">
+                  <%= claim.foodDonation ? claim.foodDonation.foodTitle : "Food info not available" %>
+                </h5>
+                <p>
+                  <strong>Donor:</strong>
+                  <%= claim.foodDonation && claim.foodDonation.donor_id
+                    ? claim.foodDonation.donor_id.name
+                    : "Unknown" %>
+                </p>
+                <p>
+                  <strong>Quantity:</strong>
+                  <%= claim.foodDonation ? claim.foodDonation.quantity : "N/A" %>
+                </p>
+                <p><strong>Status:</strong> <%= claim.status %></p>
+                <p>
+                  <strong>Claimed At:</strong>
+                  <%= claim.claimedAt ? claim.claimedAt.toLocaleString() : "N/A" %>
+                </p>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <!-- Back to Dashboard Button at the Bottom -->
+      <div class="mt-5 text-center">
+        <a href="/all_ngos" class="btn btn-outline-success fw-bold">
+          ← Back to all NGOs
+        </a>
+      </div>
+
+    </div>
+  </section>
+</body>

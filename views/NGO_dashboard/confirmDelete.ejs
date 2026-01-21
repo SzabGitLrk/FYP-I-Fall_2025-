@@ -1,0 +1,17 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+  <h3 class="text-danger fw-bold mb-4">⚠️ Confirm Delete</h3>
+
+  <p>Are you sure you want to <strong>delete</strong> the NGO: <%= ngo.name %>?</p>
+
+  <div class="mt-4">
+    <!-- Confirm Delete Form -->
+    <form action="/ngo/<%= ngo._id %>/delete" method="POST" style="display:inline-block;">
+      <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    </form>
+
+    <!-- Cancel Button -->
+    <a href="/all_ngos" class="btn btn-secondary ms-2">Cancel</a>
+  </div>
+</div>

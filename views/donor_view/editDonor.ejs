@@ -1,0 +1,66 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-4">
+  <h3 class="text-success mb-4">Edit Your Information</h3>
+
+  <form action="/donor/edit-info" method="POST" class="p-4 bg-white shadow rounded">
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">Full Name</label>
+      <input type="text" name="name" value="<%= donor.name %>" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">Phone Number</label>
+      <input type="text" name="phone" value="<%= donor.phone %>" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">Address</label>
+      <input type="text" name="address" value="<%= donor.address %>" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">City</label>
+      <input type="text" name="city" value="<%= donor.city %>" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold text-success">Organization Type</label>
+      <select name="organizationType" class="form-select" required>
+        <option <%= donor.organizationType === "Individual" ? "selected" : "" %>>Individual</option>
+        <option <%= donor.organizationType === "Restaurant" ? "selected" : "" %>>Restaurant</option>
+        <option <%= donor.organizationType === "Hotel" ? "selected" : "" %>>Hotel</option>
+        <option <%= donor.organizationType === "Canteen" ? "selected" : "" %>>Canteen</option>
+        <option <%= donor.organizationType === "Wedding Hall" ? "selected" : "" %>>Wedding Hall</option>
+      </select>
+    </div>
+
+    <!-- Save Button -->
+    <button class="btn btn-success w-100 mt-3">Save Changes</button>
+
+    <!-- Back Button at Bottom -->
+    <div class="mt-3 text-center">
+      <a href="/donor/dashboard" class="btn btn-outline-success px-4">← Back to Dashboard</a>
+    </div>
+
+  </form>
+</div>
+
+<style>
+  body {
+    background: linear-gradient(135deg, #e8f5e9, #ffffff);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  form {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 15px;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: #157347;
+    box-shadow: 0 0 5px rgba(21, 115, 71, 0.3);
+  }
+</style>

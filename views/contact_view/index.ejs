@@ -1,0 +1,52 @@
+<% layout("/layouts/boilerplate") %>
+
+<body class="bg-light">
+
+  <section class="py-5 text-center">
+    <div class="container">
+      <h2 class="fw-bold text-success mb-3">Contact Us</h2>
+      <p class="lead mb-5">
+        Have a question, idea, or want to collaborate?  
+        We’d love to hear from you! 🌱
+      </p>
+
+      <div class="row g-5 justify-content-center align-items-stretch">
+        
+        <!-- Contact Form -->
+        <div class="col-md-6 d-flex">
+          <div class="card border-0 shadow-sm p-4 flex-fill">
+            <h5 class="fw-bold mb-4 text-success">Send us a Message</h5>
+            <form action="/contact" method="POST">
+              <div class="mb-3 text-start">
+                <label for="name" class="form-label">Your Name</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter your name" required>
+              </div>
+              <div class="mb-3 text-start">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+              </div>
+              <div class="mb-3 text-start">
+                <label for="message" class="form-label">Your Message</label>
+                <textarea id="message" name="message" class="form-control" rows="4" placeholder="Write your message here..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-success w-100">Send Message</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="col-md-4 d-flex">
+          <div class="card border-0 shadow-sm p-4 flex-fill text-start">
+            <h5 class="fw-bold text-success mb-4">Get in Touch</h5>
+            <p><i class="bi bi-geo-alt-fill text-success"></i> Larkana, Sindh, Pakistan</p>
+            <p><i class="bi bi-telephone-fill text-success"></i> +92 3003422640</p>
+            <p><i class="bi bi-envelope-fill text-success"></i> admin@gmail.com</p>
+            <hr>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</body>

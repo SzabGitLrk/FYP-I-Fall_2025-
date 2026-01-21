@@ -1,0 +1,14 @@
+<% layout("/layouts/boilerplate")%>
+<body>
+
+<% for (let reports of report) { %>
+    <div class="donor-card">
+      <p><strong>Claim ID:</strong> <%= reports._id %></p>
+      <p><strong>Claim Data:</strong> <%= reports. claim_date %></p>
+      <p><strong>Status:</strong> <%= reports. status %></p>
+      <p><strong>Distribution Record:</strong> <%= reports. distribution_record %></p>
+    </div>
+    <hr />
+  <% } %>
+
+</body>

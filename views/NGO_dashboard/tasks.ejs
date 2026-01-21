@@ -1,0 +1,76 @@
+<h2 class="mb-4">📋 Assigned Tasks</h2>
+
+<% if (!tasks || tasks.length === 0) { %>
+  <div class="alert alert-info">
+    No tasks assigned yet.
+  </div>
+<% } else { %>
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Task Title</th>
+        <th>Volunteer</th>
+        <th>Donation</th>
+        <th>Status</th>
+        <th>Assigned At</th>
+        <th>Completed At</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% tasks.forEach(task => { %>
+        <tr>
+          <!-- Task Title -->
+          <td><%= task.task_title %></td>
+
+          <!-- Volunteer -->
+          <td>
+            <% if (task.assigned_to) { %>
+              <%= task.assigned_to.name %><br>
+              <small class="text-muted"><%= task.assigned_to.email %></small>
+            <% } else { %>
+              <em class="text-muted">Volunteer not available</em>
+            <% } %>
+          </td>
+
+          <!-- Donation -->
+          <td>
+            <% if (task.donation_id) { %>
+              <%= task.donation_id.food_title %><br>
+              <small class="text-muted"><%= task.donation_id.food_type %></small>
+            <% } else { %>
+              <em class="text-muted">Donation not available</em>
+            <% } %>
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="badge 
+              <%= task.status === 'Completed' ? 'bg-success' :
+                  task.status === 'In Progress' ? 'bg-warning' :
+                  task.status === 'Failed' ? 'bg-danger' : 'bg-info' %>">
+              <%= task.status %>
+            </span>
+          </td>
+
+          <!-- Assigned Date -->
+          <td>
+            <%= task.assignedAt ? task.assignedAt.toDateString() : "-" %>
+          </td>
+
+          <!-- Completed Date -->
+          <td>
+            <%= task.completedAt ? task.completedAt.toDateString() : "-" %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<!-- Back to Dashboard Button (BOTTOM) -->
+<div class="mt-4">
+  <a href="/admin/dashboard" class="btn btn-secondary">
+    ⬅ Back to Dashboard
+  </a>
+</div>
