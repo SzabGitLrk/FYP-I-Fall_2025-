@@ -401,26 +401,26 @@ app.get("/admin/ngo/:id", isAdminLoggedIn, async (req, res) => {
 
 
 
-// View all tasks assigned by a specific NGO
-app.get("/ngo/:ngoId/tasks", async (req, res) => {
-  try {
-    const { ngoId } = req.params;
+// // View all tasks assigned by a specific NGO
+// app.get("/ngo/:ngoId/tasks", async (req, res) => {
+//   try {
+//     const { ngoId } = req.params;
 
-    const tasks = await task.find({ assigned_by: ngoId })
-      .populate("assigned_to", "name email phone")   // Volunteer details
-      .populate("donation_id", "food_title food_type") // Donation details
-      .sort({ assignedAt: -1 });
+//     const tasks = await task.find({ assigned_by: ngoId })
+//       .populate("assigned_to", "name email phone")   // Volunteer details
+//       .populate("donation_id", "food_title food_type") // Donation details
+//       .sort({ assignedAt: -1 });
 
-    res.render("NGO_dashboard/tasks.ejs", {
-      title: "NGO Tasks",
-      tasks
-    });
+//     res.render("NGO_dashboard/tasks.ejs", {
+//       title: "NGO Tasks",
+//       tasks
+//     });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error loading NGO tasks");
-  }
-});
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Error loading NGO tasks");
+//   }
+// });
 
 
 // =======================
