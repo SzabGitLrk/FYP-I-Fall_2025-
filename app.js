@@ -17,7 +17,7 @@ const { sendEmail } = require("./utils/sendEmail.js");
 const { getCoordinates }=require("./utils/geoCoding.js");
 const multer = require("multer");
 const { storage, cloudinary } = require("./cloudConfig");
-const upload = multer({ storage });
+///const upload = multer({ storage });
 
 // requiring our models 
 // const upload = multer({ storage });
@@ -31,6 +31,8 @@ const claims = require("./models/claim.js");
 const volunteers = require("./models/volunteers.js");
 const Contact = require("./models/contact.js");
 const Notification=require("./models/notification.js");
+const upload = require("./utils/upload.js");
+
 
 // Register ejs-mate BEFORE setting view engine
 app.engine("ejs", ejsMate);
@@ -618,71 +620,80 @@ app.get("/ngo_signup", (req, res) => {
   res.render("ngo_login_view/signup.ejs");
 });
 
-// POST: NGO Signup (Simple Version – No Geolocation)
-app.post("/ngo_signup", async (req, res) => {
-  try {
-    const {
-      ngo_name,
-      licence_number,
-      email,
-      contact_number,
-      address,
-      head_person_name,
-      head_person_contact,
-      password
-    } = req.body;
+app.post(
+  "/ngo_signup",
+  upload.array("verification_documents", 5),
+  async (req, res) => {
+    try {
+      const {
+        ngo_name,
+        licence_number,
+        email,
+        contact_number,
+        address,
+        head_person_name,
+        head_person_contact,
+        password
+      } = req.body;
 
-    // -------------------------------
-    // 1️⃣ Create new NGO object
-    // -------------------------------
-    const newNGO = new NGO({
-      ngo_name,
-      licence_number,
-      email,
-      contact_number,
-      address,
-      head_person_name,
-      head_person_contact,
-      status: "Pending",
-      role: "NGO"
-    });
-    //  Register NGO (passport-local-mongoose)
-    await NGO.register(newNGO, password);
-    // Optional: Notify Admin about new NGO signup
-    const admins = await admin.find({ role: "Admin" });
-
-    if (admins.length > 0) {
-      const notifications = admins.map(admin => ({
-        user_type: "Admin",
-        user_id: admin._id,
-        message: `New NGO signup request from ${ngo_name}. Please review and approve.`,
-        donation_id: null
+      // Map uploaded documents
+      const documents = req.files.map(file => ({
+        fileName: file.originalname,
+        fileUrl: file.path // Cloudinary secure URL
       }));
 
-      await Notification.insertMany(notifications);
+      // Create NGO object
+      const newNGO = new NGO({
+        ngo_name,
+        licence_number,
+        email,
+        contact_number,
+        address,
+        head_person_name,
+        head_person_contact,
+        verification_documents: documents,
+        status: "Pending",
+        role: "NGO"
+      });
+
+      // Register NGO (passport-local-mongoose)
+      await NGO.register(newNGO, password);
+
+      // 🔔 Notify Admins
+      const admins = await admin.find({ role: "Admin" });
+
+      if (admins.length > 0) {
+        const notifications = admins.map(admin => ({
+          user_type: "Admin",
+          user_id: admin._id,
+          message: `New NGO signup request from ${ngo_name}. Please review and approve.`,
+          donation_id: null
+        }));
+        await Notification.insertMany(notifications);
+      }
+
+      req.flash(
+        "success",
+        "Signup successful! Your NGO account is pending admin approval."
+      );
+      return res.redirect("/ngo_login");
+
+    } catch (err) {
+      console.error("NGO Signup Error:", err);
+
+      if (err.name === "UserExistsError") {
+        req.flash("error", "Email already registered.");
+      } else if (err.code === 11000) {
+        req.flash("error", "Email or license number already exists.");
+      } else {
+        req.flash("error", "Signup failed. Please try again.");
+      }
+
+      return res.redirect("/ngo_signup");
     }
-  
-    //Success Response
-    req.flash(
-      "success",
-      "Signup successful! Please wait for admin approval."
-    );
-    return res.redirect("/ngo_login");
-
-  } catch (err) {
-    console.error("NGO Signup Error:", err);
-
-    if (err.name === "UserExistsError") {
-      req.flash("error", "Email already registered.");
-    } else if (err.code === 11000) {
-      req.flash("error", "Email or license number already exists.");
-    } else {
-      req.flash("error", "Signup failed. Please try again.");
-    }
-
-    return res.redirect("/ngo_signup");
   }
-});
+);
+
 
 // GET: NGO Login Page
 app.get("/ngo_login", (req, res) => {
@@ -843,40 +854,7 @@ app.post("/ngo/change-password", isNGOLoggedIn, async (req, res) => {
     res.redirect("/ngo/change-password");
   }
 });
-// ----------------------------
-// GET: Upload Documents Page
-// ----------------------------
-app.get('/upload-documents', isNGOLoggedIn, (req, res) => {
-  res.render('NGO_dashboard/upload_documents.ejs', { ngo: req.user });
-});
-app.post('/upload-documents', isNGOLoggedIn, upload.array('documents', 5), async (req, res) => {
-  try {
-    console.log("FILES RECEIVED:", req.files); // Now you should see actual files
 
-    if (!req.files || req.files.length === 0) {
-      req.flash("error", "No files uploaded.");
-      return res.redirect("/upload-documents");
-    }
-
-    const uploadedDocs = req.files.map(file => ({
-      fileName: file.originalname,
-      fileUrl: file.path, // Cloudinary URL is stored here
-      uploadedAt: new Date(),
-    }));
-
-    await NGO.findByIdAndUpdate(req.user._id, {
-      $push: { verification_documents: { $each: uploadedDocs } }
-    });
-
-    req.flash("success", "Documents uploaded successfully!");
-    res.redirect('/upload-documents');
-
-  } catch (err) {
-    console.error('Upload error:', err);
-    req.flash("error", "Failed to upload documents.");
-    res.redirect('/upload-documents');
-  }
-});
 
 // // GET: NGO - Available Donations
 app.get("/ngo/available-donations", isNGOLoggedIn, async (req, res) => {
