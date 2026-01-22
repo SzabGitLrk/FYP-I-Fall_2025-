@@ -17,4 +17,4 @@
 
 // });
 
-// module.exports={cloudinary, storage};
+// module.exports={cloudinary, storage};npm install cloudinary multer multer-storage-cloudinary

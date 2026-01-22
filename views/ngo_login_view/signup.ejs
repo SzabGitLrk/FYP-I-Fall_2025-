@@ -2,7 +2,6 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,13 +11,14 @@
 <body class="bg-light">
 
   <div class="container mt-5 d-flex justify-content-center">
-
-    <div class="col-md-6" style="max-width: 600px;">
+    <div class="col-md-6" style="max-width: 620px;">
 
       <div class="card shadow-lg border-0 rounded-4">
         <div class="card-body p-4">
 
-          <h3 class="text-center mb-4 text-success fw-bold">Register Your NGO</h3>
+          <h3 class="text-center mb-4 text-success fw-bold">
+            Register Your NGO
+          </h3>
 
           <% if (error && error.length > 0) { %>
             <div class="alert alert-danger"><%= error %></div>
@@ -28,7 +28,8 @@
             <div class="alert alert-success"><%= success %></div>
           <% } %>
 
-          <form action="/ngo_signup" method="POST">
+          <!-- IMPORTANT: multipart/form-data -->
+          <form action="/ngo_signup" method="POST" enctype="multipart/form-data">
 
             <!-- NGO NAME -->
             <div class="mb-3">
@@ -38,13 +39,16 @@
 
             <!-- LICENSE -->
             <div class="mb-3">
-              <label class="form-label">License Number</label>
+              <label class="form-label">NGO License Number</label>
               <input type="text" class="form-control" name="licence_number" required>
+              <small class="text-muted">
+                Enter your official NGO registration/license number.
+              </small>
             </div>
 
             <!-- EMAIL -->
             <div class="mb-3">
-              <label class="form-label">Email Address</label>
+              <label class="form-label">Official Email Address</label>
               <input type="email" class="form-control" name="email" required>
             </div>
 
@@ -54,11 +58,14 @@
               <input type="text" class="form-control" name="contact_number" required>
             </div>
 
-            <!-- ADDRESS (Used for Geocoding) -->
+            <!-- ADDRESS -->
             <div class="mb-3">
               <label class="form-label">Complete Address</label>
-              <input type="text" class="form-control" name="address" placeholder="Enter full NGO address" required>
-              <small class="text-muted">This address will be converted into GPS coordinates.</small>
+              <input type="text" class="form-control" name="address"
+                     placeholder="Enter full NGO address" required>
+              <small class="text-muted">
+                This address will be converted into GPS coordinates for pickup routing.
+              </small>
             </div>
 
             <!-- HEAD NAME -->
@@ -73,22 +80,38 @@
               <input type="text" class="form-control" name="head_person_contact" required>
             </div>
 
+            <!-- VERIFICATION DOCUMENTS -->
+            <div class="mb-3">
+              <label class="form-label">
+                Upload Verification Documents
+              </label>
+              <input type="file"
+                     class="form-control"
+                     name="verification_documents"
+                     multiple
+                     accept=".pdf,.jpg,.jpeg,.png"
+                     required>
+              <small class="text-muted">
+                Upload NGO registration certificate, license, or any official proof (PDF / JPG / PNG).
+              </small>
+            </div>
+
             <!-- PASSWORD -->
             <div class="mb-3">
-              <label class="form-label">Password</label>
+              <label class="form-label">Create Password</label>
               <input type="password" class="form-control" name="password" required>
             </div>
 
             <!-- SUBMIT -->
-            <div class="d-grid mt-3">
+            <div class="d-grid mt-4">
               <button type="submit" class="btn btn-success btn-lg rounded-3">
-                Register
+                Register NGO
               </button>
             </div>
 
             <p class="text-center mt-3 text-muted small">
-              After registration, upload verification documents from your dashboard.
-              Your account will be reviewed by the Admin.
+              After registration, your account will remain <strong>Pending</strong> until
+              documents are reviewed and approved by the Admin.
             </p>
 
           </form>
@@ -97,7 +120,6 @@
       </div>
 
     </div>
-
   </div>
 
 </body>
