@@ -13,7 +13,8 @@
         <th>NGO Name</th>
         <th>Email</th>
         <th>Contact</th>
-        <th>License Number</th>   <!-- Added -->
+        <th>License No</th>
+        <th>Documents</th> <!-- ✅ NEW -->
         <th>Registered On</th>
         <th>Actions</th>
       </tr>
@@ -25,15 +26,38 @@
           <td><%= ngo.ngo_name %></td>
           <td><%= ngo.email %></td>
           <td><%= ngo.contact_number %></td>
-          <td><%= ngo.licence_number %></td>  <!-- Added -->
+          <td><%= ngo.licence_number %></td>
+
+          <!-- 📄 DOCUMENTS COLUMN -->
+          <td>
+            <% if (ngo.verification_documents && ngo.verification_documents.length > 0) { %>
+              <ul class="list-unstyled mb-0">
+                <% ngo.verification_documents.forEach(doc => { %>
+                  <li>
+                    <a 
+                      href="<%= doc.fileUrl %>" 
+                      target="_blank"
+                      class="text-decoration-none"
+                    >
+                      📄 <%= doc.fileName || "View Document" %>
+                    </a>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } else { %>
+              <span class="text-muted">No documents</span>
+            <% } %>
+          </td>
+
           <td><%= ngo.created_at.toDateString() %></td>
 
+          <!-- ACTIONS -->
           <td>
-            <form action="/approve_ngo/<%= ngo._id %>" method="POST" style="display:inline-block;">
+            <form action="/approve_ngo/<%= ngo._id %>" method="POST" class="d-inline">
               <button class="btn btn-success btn-sm">Approve</button>
             </form>
 
-            <form action="/reject_ngo/<%= ngo._id %>" method="POST" style="display:inline-block;">
+            <form action="/reject_ngo/<%= ngo._id %>" method="POST" class="d-inline">
               <button class="btn btn-danger btn-sm">Reject</button>
             </form>
           </td>

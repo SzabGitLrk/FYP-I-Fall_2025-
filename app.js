@@ -236,7 +236,7 @@ app.get("/contactMessages", isAdminLoggedIn, async (req, res) => {
 app.get("/pending_ngos", isAdminLoggedIn, async (req, res) => {
   try {
     const pendingNGOs = await NGO.find({ status: "Pending" })
-      .select("ngo_name email contact_number created_at licence_number");
+      .select("ngo_name email contact_number created_at licence_number verification_documents");
     res.render("admin_view/pendingNgos.ejs", { pendingNGOs });
   } catch (err) {
     console.error("Error loading pending NGOs", err);
