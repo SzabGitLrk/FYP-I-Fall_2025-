@@ -403,27 +403,6 @@ app.get("/admin/ngo/:id", isAdminLoggedIn, async (req, res) => {
 
 
 
-// // View all tasks assigned by a specific NGO
-// app.get("/ngo/:ngoId/tasks", async (req, res) => {
-//   try {
-//     const { ngoId } = req.params;
-
-//     const tasks = await task.find({ assigned_by: ngoId })
-//       .populate("assigned_to", "name email phone")   // Volunteer details
-//       .populate("donation_id", "food_title food_type") // Donation details
-//       .sort({ assignedAt: -1 });
-
-//     res.render("NGO_dashboard/tasks.ejs", {
-//       title: "NGO Tasks",
-//       tasks
-//     });
-
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send("Error loading NGO tasks");
-//   }
-// });
-
 
 // =======================
 // 1️⃣ GET: Send Notification Form
@@ -573,15 +552,103 @@ app.post("/ngo/:ngoId/delete", async (req, res) => {
   }
 });
 
-
-// GET: View All Donors
-app.get("/all_donors", isAdminLoggedIn, async (req, res) => {
+// Middleware
+function isAdminLoggedIn(req, res, next) {
+  if (req.isAuthenticated() && req.user.role === "Admin") return next();
+  req.flash("error", "You must be logged in as an admin!");
+  return res.redirect("/admin/login");
+}// =========================
+// ADMIN DONOR ROUTES
+// =========================
+// GET: View all donors
+app.get("/admin/donors", isAdminLoggedIn, async (req, res) => {
   try {
-    const donor = await donors.find({});
-    res.render("donor_view/alldonors.ejs", { donor });
+    const donorList = await donors.find({});
+    res.render("donor_view/alldonors.ejs", { donor: donorList });
+  } catch (err) {
+    console.log("Error loading donors:", err);
+    req.flash("error", "Unable to load donors.");
+    res.redirect("/admin/dashboard");
+  }
+});
+
+// GET: View donation history of a specific donor
+app.get("/admin/donor/:id/donations", isAdminLoggedIn, async (req, res) => {
+  try {
+    const donor = await donors.findById(req.params.id);
+    if (!donor) {
+      req.flash("error", "Donor not found.");
+      return res.redirect("/admin/donors");
+    }
+
+    const donations = await food_donations
+      .find({ donor_id: donor._id })
+      .sort({ createdAt: -1 });
+
+    res.render("donor_view/donation_history.ejs", { donor, donations });
+  } catch (err) {
+    console.log("Error loading donation history:", err);
+    req.flash("error", "Unable to load donation history.");
+    res.redirect("/admin/donors");
+  }
+});
+
+// PATCH: Suspend or Reactivate donor
+app.patch("/admin/donor/:id/status", isAdminLoggedIn, async (req, res) => {
+  try {
+    const donor = await donors.findById(req.params.id);
+    if (!donor) {
+      req.flash("error", "Donor not found.");
+      return res.redirect("/admin/donors");
+    }
+
+    // Ensure status field exists
+    if (!donor.status) donor.status = "Active";
+
+    // Toggle status
+    donor.status = donor.status === "Active" ? "Suspended" : "Active";
+    await donor.save();
+
+    req.flash("success", `Donor status updated to ${donor.status}`);
+    res.redirect("/admin/donors");
+  } catch (err) {
+    console.log("Error updating donor status:", err);
+    req.flash("error", "Unable to update donor status.");
+    res.redirect("/admin/donors");
+  }
+});
+
+// DELETE: Remove a donor and their // GET: Show confirmation page for deleting a donor
+app.get("/admin/donor/:id/delete", isAdminLoggedIn, async (req, res) => {
+  try {
+    const donorId = req.params.id;
+    const donor = await donors.findById(donorId);
+
+    if (!donor) return res.send("Donor not found");
+
+    res.render("donor_view/confirmDelete.ejs", { donor });
   } catch (err) {
     console.log(err);
-    res.send("Error loading donors");
+    res.send("Error fetching donor!");
+  }
+});
+// POST: Delete donor after confirmation
+app.post("/admin/donor/:id/delete", isAdminLoggedIn, async (req, res) => {
+  try {
+    const donorId = req.params.id;
+
+    // Delete donor
+    await donors.findByIdAndDelete(donorId);
+
+    // Delete all food donations of this donor
+    await food_donations.deleteMany({ donor_id: donorId });
+
+    req.flash("success", "Donor and their donations removed successfully!");
+    res.redirect("/admin/donors");
+  } catch (err) {
+    console.log(err);
+    req.flash("error", "Error deleting donor!");
+    res.redirect("/admin/donors");
   }
 });
 
@@ -1053,24 +1120,16 @@ function isDonorLoggedIn(req, res, next) {
 
 //DONOR SIGNUP
 
-// Signup form
+// Signup
 app.get("/donor_signup", (req, res) => {
   res.render("donor_view/signup.ejs");
 });
 
-// Handle signup form submit
 app.post("/donor_signup", async (req, res) => {
   try {
     const { name, email, phone, address, city, organizationType, password } = req.body;
-    const newDonor = new donors({
-      name,
-      email,
-      phone,
-      address,
-      city,
-      organizationType,
-    });
-    await donors.register(newDonor, password); //Passport-local-mongoose handles hashing
+    const newDonor = new donors({ name, email, phone, address, city, organizationType });
+    await donors.register(newDonor, password);
     req.flash("success", "Registration successful! You can now login.");
     res.redirect("/donor_login");
   } catch (err) {
@@ -1079,144 +1138,81 @@ app.post("/donor_signup", async (req, res) => {
   }
 });
 
-// Login form
-app.get("/donor_login", (req, res) => {
-  res.render("donor_view/login.ejs");
-});
+// Login
+app.get("/donor_login", (req, res) => res.render("donor_view/login.ejs"));
 
-// Handle login submit
-app.post(
-  "/donor_login",
-  passport.authenticate("donor-local", {
-    failureRedirect: "/donor_login",
-    failureFlash: true,
-  }),
-  (req, res) => {
-    res.redirect("/donor/dashboard");
-  }
+app.post("/donor_login",
+  passport.authenticate("donor-local", { failureRedirect: "/donor_login", failureFlash: true }),
+  (req, res) => res.redirect("/donor/dashboard")
 );
 
+// Dashboard
 app.get("/donor/dashboard", isDonorLoggedIn, async (req, res) => {
   try {
     const donor = await donors.findById(req.user._id).populate("foodDonations");
-
-    const totalDonations = donor.foodDonations ? donor.foodDonations.length : 0;
-
+    const totalDonations = donor.foodDonations.length;
     res.render("donor_view/dashboard.ejs", { donor, totalDonations });
   } catch (err) {
-    console.log("Error loading donor dashboard:", err);
+    console.log(err);
     req.flash("error", "Unable to load dashboard");
     res.redirect("/");
   }
 });
 
-
-// GET: Edit Donor Info
+// Edit info
 app.get("/donor/edit-info", isDonorLoggedIn, async (req, res) => {
-  try {
-    const donor = await donors.findById(req.user._id);
-    res.render("donor_view/editDonor.ejs", { donor });
-  } catch (err) {
-    console.log("Error loading donor info:", err);
-    req.flash("error", "Unable to load your information.");
-    res.redirect("/donor/dashboard");
-  }
+  const donor = await donors.findById(req.user._id);
+  res.render("donor_view/editDonor.ejs", { donor });
 });
 
-// POST: Update Donor Information
 app.post("/donor/edit-info", isDonorLoggedIn, async (req, res) => {
   try {
-    const {
-      name,
-      phone,
-      address,
-      city,
-      organizationType
-    } = req.body;
-
-    await donors.findByIdAndUpdate(req.user._id, {
-      name,
-      phone,
-      address,
-      city,
-      organizationType
-    });
-
-    req.flash("success", "Your information has been updated!");
+    const { name, phone, address, city, organizationType } = req.body;
+    await donors.findByIdAndUpdate(req.user._id, { name, phone, address, city, organizationType });
+    req.flash("success", "Information updated!");
     res.redirect("/donor/dashboard");
   } catch (err) {
-    console.log("Donor Update Error:", err);
-    req.flash("error", "Unable to update information.");
+    console.log(err);
+    req.flash("error", "Unable to update information");
     res.redirect("/donor/edit-info");
   }
 });
 
+// Change password
 app.get("/donor/change-password", isDonorLoggedIn, (req, res) => {
   res.render("donor_view/change_password.ejs");
 });
 
-
-
 app.post("/donor/change-password", isDonorLoggedIn, async (req, res) => {
   try {
     const { oldPassword, newPassword, confirmPassword } = req.body;
-
     if (newPassword !== confirmPassword) {
       req.flash("error", "New passwords do not match!");
       return res.redirect("/donor/change-password");
     }
     const donor = await donors.findById(req.user._id);
-
     await donor.changePassword(oldPassword, newPassword);
-    await donor.save();
-
     req.flash("success", "Password updated successfully!");
     res.redirect("/donor/dashboard");
   } catch (err) {
-    console.log("Password Change Error:", err);
+    console.log(err);
     req.flash("error", "Old password is incorrect!");
     res.redirect("/donor/change-password");
   }
 });
 
+// Donate food
+app.get("/donate-food", isDonorLoggedIn, (req, res) => res.render("donor_view/donate_food.ejs"));
 
-
-
-// GET: Show Add Food Donation Form
-app.get("/donate-food", isDonorLoggedIn, (req, res) => {
-  res.render("donor_view/donate_food.ejs");
-});
-// POST: Handle Food Donation Form Submission
 app.post("/donate-food", isDonorLoggedIn, async (req, res) => {
   try {
-    const {
-      food_title,
-      quantity,
-      pickup_address,
-      pickup_city
-    } = req.body;
-
-    //Create new food donation
-    const newDonation = new food_donations({
-      donor_id: req.user._id,
-      food_title,
-      quantity,
-      pickup_address,
-      pickup_city
-    });
-
+    const { food_title, quantity, pickup_address, pickup_city } = req.body;
+    const newDonation = new food_donations({ donor_id: req.user._id, food_title, quantity, pickup_address, pickup_city });
     await newDonation.save();
-    // Update donor stats
-    await donors.findByIdAndUpdate(req.user._id, {
-      $inc: { total_donations: 1 },
-      $push: { foodDonations: newDonation._id }
-    });
 
-    
-    // Notification for NGOs
-    // (No location-based filtering now)
+    await donors.findByIdAndUpdate(req.user._id, { $inc: { total_donations: 1 }, $push: { foodDonations: newDonation._id } });
+
     const approvedNGOs = await NGO.find({ status: "Approved" });
-
     if (approvedNGOs.length > 0) {
       const notifications = approvedNGOs.map(ngo => ({
         user_type: "NGO",
@@ -1224,82 +1220,38 @@ app.post("/donate-food", isDonorLoggedIn, async (req, res) => {
         donation_id: newDonation._id,
         message: `New food donation: ${newDonation.food_title}`
       }));
-
       await Notification.insertMany(notifications);
     }
 
-    // Redirect with success
-    req.flash(
-      "success",
-      `Food donation added! ${approvedNGOs.length} NGOs notified.`
-    );
+    req.flash("success", `Donation added! ${approvedNGOs.length} NGOs notified.`);
     res.redirect("/donor/dashboard");
-
-  } catch (error) {
-    console.error("Donation Error:", error);
-    req.flash("error", "Failed to add donation. Please try again.");
+  } catch (err) {
+    console.log(err);
+    req.flash("error", "Failed to add donation.");
     res.redirect("/donate-food");
   }
 });
 
-
-
-
-
-app.get("/donations-history", isDonorLoggedIn, async (req, res) => {
+// Donor donation history
+app.get("/donor/donations-history", isDonorLoggedIn, async (req, res) => {
   try {
-    const donations = await food_donations.find({
-      donor_id: req.user._id
-    }).populate('claimedBy');
-
+    const donations = await food_donations.find({ donor_id: req.user._id }).populate("claimedBy");
     res.render("donor_view/donation_history.ejs", { donations });
-
   } catch (err) {
-    console.error(err);
-    req.flash("error", "Unable to fetch donation history.");
+    console.log(err);
+    req.flash("error", "Unable to fetch donation history");
     res.redirect("/donor/dashboard");
   }
 });
 
-
-app.get("/donor/total-donations", isDonorLoggedIn, async (req, res) => {
-  try {
-    const donor = await donors.findById(req.user._id);
-
-    if (!donor) {
-      req.flash("error", "Donor not found.");
-      return res.redirect("/donor/dashboard");
-    }
-
-    // Fetch all donations for listing (optional)
-    const donations = await food_donations.find({ donor_id: req.user._id }).sort({ createdAt: -1 });
-
-    const totalDonations = donor.total_donations || donations.length;
-
-    res.render("donor_view/total_donations.ejs", {
-      donor,
-      donations,
-      totalDonations
-    });
-
-  } catch (err) {
-    console.error("TOTAL DONATIONS ERROR:", err);
-    req.flash("error", "Unable to load total donations.");
-    res.redirect("/donor/dashboard");
-  }
-});
-
-
-
-//DONOR LOGOUT
+// Logout
 app.post("/donor_logout", isDonorLoggedIn, (req, res, next) => {
   req.logout(err => {
     if (err) return next(err);
-    req.flash("success", "You have successfully logged out.");
+    req.flash("success", "Logged out successfully");
     res.redirect("/donor_login");
   });
 });
-
 
 
 function isNGOAuthenticated(req, res, next) {

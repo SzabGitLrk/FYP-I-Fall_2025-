@@ -1,4 +1,4 @@
-//Donor Schema
+// Donor Schema
 const mongoose = require("mongoose");
 const passportLocalMongoose = require("passport-local-mongoose");
 
@@ -26,12 +26,15 @@ const donorSchema = new mongoose.Schema({
   ],
 
   // Total Donations count
-  total_donations: { type: Number, default: 0 }, 
+  total_donations: { type: Number, default: 0 },
 
-  createdAt: { type: Date, default: Date.now },
+  // Status for admin control (Active or Suspended)
+  status: { type: String, enum: ["Active", "Suspended"], default: "Active" },
 
   // Role for Passport / user type
   role: { type: String, default: "Donor" },
+
+  createdAt: { type: Date, default: Date.now },
 });
 
 // Passport plugin for authentication (hashes password + adds helper methods)

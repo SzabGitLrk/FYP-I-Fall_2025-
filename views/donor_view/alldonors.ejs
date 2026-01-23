@@ -10,6 +10,8 @@
         <th>Email</th>
         <th>Phone</th>
         <th>City</th>
+        <th>Status</th> <!-- Active/Suspended -->
+        <th>Actions</th>
       </tr>
     </thead>
 
@@ -20,16 +22,37 @@
           <td><%= d.email %></td>
           <td><%= d.phone %></td>
           <td><%= d.city %></td>
+          <td><%= d.status || "Active" %></td>
+
+          <td>
+            <!-- View Donation History -->
+            <a href="/admin/donor/<%= d._id %>/donations"
+               class="btn btn-sm btn-outline-primary mb-1">
+              History
+            </a>
+
+            <!-- Suspend / Reactivate -->
+            <form action="/admin/donor/<%= d._id %>/status?_method=PATCH"
+                  method="POST" style="display:inline-block;">
+              <button class="btn btn-sm btn-warning mb-1">
+                <%= d.status === "Suspended" ? "Activate" : "Suspend" %>
+              </button>
+            </form>
+
+            <!-- Remove Donor: Redirect to confirmation page -->
+            <a href="/admin/donor/<%= d._id %>/delete" 
+               class="btn btn-sm btn-outline-danger mb-1">
+              Remove
+            </a>
+          </td>
         </tr>
       <% }) %>
     </tbody>
   </table>
 
-  <!-- Back button at bottom -->
   <div class="mt-4">
     <a href="/admin/dashboard" class="btn btn-outline-success">
       ⬅ Back to Dashboard
     </a>
   </div>
 </div>
-
