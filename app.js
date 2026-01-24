@@ -438,7 +438,7 @@ app.post("/ngo/:ngoId/notify", async (req, res) => {
       message
     });
       req.flash("success", "Notification sent successfully to the selected NGO");
-      res.redirect("/admin/dashboard");
+      res.redirect("/all_ngos");
   } catch (error) {
     console.error(error);
      req.flash("error", "Failed to send notification");
@@ -667,12 +667,22 @@ app.get("/admin/volunteers", isAdminLoggedIn, async (req, res) => {
     res.redirect("/admin/dashboard");
   }
 });
-//View Volunteer Activity History (Admin)
+
+
+// View Volunteer Activity History (Admin)
 app.get("/admin/volunteer/:id/activity", isAdminLoggedIn, async (req, res) => {
   try {
+    // Find volunteer by ID
     const volunteer = await volunteers
       .findById(req.params.id)
-      .populate("assigned_tasks");
+      .populate({
+        path: "assigned_tasks", // field in Volunteer model that stores task IDs
+        populate: [
+          { path: "assigned_to", model: "Volunteer" }, // matches Task schema
+          { path: "donation_id", model: "FoodDonation" }, // matches Task schema
+          { path: "assigned_by", model: "NGO" } // matches Task schema
+        ]
+      });
 
     if (!volunteer) {
       req.flash("error", "Volunteer not found");

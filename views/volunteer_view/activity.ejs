@@ -7,7 +7,7 @@
     📊 Volunteer Activity Monitoring
   </h2>
 
-  <% if (tasks.length === 0) { %>
+  <% if (!tasks || tasks.length === 0) { %>
     <div class="alert alert-info text-center">
       No volunteer activities found yet.
     </div>
@@ -33,13 +33,24 @@
         <tbody>
           <% tasks.forEach((task, index) => { %>
             <tr>
+              <!-- Serial Number -->
               <td><%= index + 1 %></td>
-              <td><%= task.volunteer_id?.name || "—" %></td>
-              <td><%= task.volunteer_id?.email || "—" %></td>
-              <td><%= task.volunteer_id?.phone || "—" %></td>
-              <td class="fw-semibold"><%= task.task_title %></td>
+
+              <!-- Volunteer Details -->
+              <td><%= task.assigned_to?.name || "—" %></td>
+              <td><%= task.assigned_to?.email || "—" %></td>
+              <td><%= task.assigned_to?.phone || "—" %></td>
+
+              <!-- Task Title -->
+              <td class="fw-semibold"><%= task.task_title || "—" %></td>
+
+              <!-- Donation Title -->
               <td><%= task.donation_id?.food_title || "—" %></td>
-              <td><%= task.assigned_by?.name || "—" %></td>
+
+              <!-- Assigned NGO -->
+              <td><%= task.assigned_by?.ngo_name || "—" %></td>
+
+              <!-- Task Status -->
               <td>
                 <% if (task.status === "Assigned") { %>
                   <span class="badge bg-warning text-dark">Assigned</span>
@@ -49,11 +60,17 @@
                   <span class="badge bg-success">Completed</span>
                 <% } else if (task.status === "Failed") { %>
                   <span class="badge bg-danger">Failed</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">Unknown</span>
                 <% } %>
               </td>
+
+              <!-- Assigned At -->
               <td>
-                <%= task.createdAt ? new Date(task.createdAt).toLocaleString() : "—" %>
+                <%= task.assignedAt ? new Date(task.assignedAt).toLocaleString() : "—" %>
               </td>
+
+              <!-- Completed At -->
               <td>
                 <%= task.completedAt ? new Date(task.completedAt).toLocaleString() : "—" %>
               </td>
