@@ -585,7 +585,7 @@ app.get("/admin/donor/:id/donations", isAdminLoggedIn, async (req, res) => {
       .find({ donor_id: donor._id })
       .sort({ createdAt: -1 });
 
-    res.render("donor_view/donation_history.ejs", { donor, donations });
+    res.render("admin_view/donation_history.ejs", { donor, donations });
   } catch (err) {
     console.log("Error loading donation history:", err);
     req.flash("error", "Unable to load donation history.");
@@ -1221,8 +1221,6 @@ function isDonorLoggedIn(req, res, next) {
 }
 
 //DONOR SIGNUP
-
-// Signup
 app.get("/donor_signup", (req, res) => {
   res.render("donor_view/signup.ejs");
 });
@@ -1345,6 +1343,31 @@ app.get("/donor/donations-history", isDonorLoggedIn, async (req, res) => {
     res.redirect("/donor/dashboard");
   }
 });
+
+// --- Donor Total Donations ---
+app.get("/donor/total-donations", isDonorLoggedIn, async (req, res) => {
+  try {
+    const donor = req.user;
+
+    // Fetch all donations made by this donor
+    const donations = await food_donations.find({ donor_id: donor._id })
+      .sort({ createdAt: -1 });
+
+    // Count total donations
+    const totalDonations = donations.length;
+
+    res.render("donor_view/total_donations.ejs", {
+      donor,
+      donations,
+      totalDonations
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Unable to load donations");
+    res.redirect("/donor/dashboard");
+  }
+});
+
 
 // Logout
 app.post("/donor_logout", isDonorLoggedIn, (req, res, next) => {
@@ -1644,9 +1667,18 @@ app.get("/volunteer/task-history", isVolunteerAuthenticated, async (req, res) =>
   }
 });
 
+app.get("/volunteer/profile", isVolunteerAuthenticated, async (req, res) => {
+  try {
+    // Fetch volunteer with populated NGO info
+    const volunteer = await volunteers.findById(req.user._id)
+      .populate("ngo_id", "ngo_name email"); // populate only required fields
 
-app.get("/volunteer/profile", isVolunteerAuthenticated, (req, res) => {
-  res.render("volunteer_view/profile.ejs", { volunteer: req.user });
+    res.render("volunteer_view/profile.ejs", { volunteer });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Unable to load profile");
+    res.redirect("/volunteer_dashboard");
+  }
 });
 
 app.post("/volunteer/profile/update", isVolunteerAuthenticated, async (req, res) => {
@@ -1719,6 +1751,4 @@ app.post("/volunteer_logout", (req, res, next) => {
 app.listen(port, () => {
   console.log(`App is listening on port ${port}`);
 });
-
-
 

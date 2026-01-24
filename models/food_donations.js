@@ -40,7 +40,7 @@ const foodDonationSchema = new mongoose.Schema({
 
   claimedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Ngo",
+    ref: "NGO",
     default: null
   },
 
