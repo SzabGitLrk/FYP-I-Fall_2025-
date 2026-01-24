@@ -652,16 +652,118 @@ app.post("/admin/donor/:id/delete", isAdminLoggedIn, async (req, res) => {
   }
 });
 
-// GET: View All Volunteers
-app.get("/all_volunteers", isAdminLoggedIn, async (req, res) => {
+//To get Volunteers inside admin dashboard
+app.get("/admin/volunteers", isAdminLoggedIn, async (req, res) => {
   try {
-    const volunteer = await volunteers.find({});
+    const volunteer = await volunteers
+      .find({ status: { $ne: "Removed" } })
+      .populate("ngo_id", "ngo_name email")
+      .sort({ createdAt: -1 });
+
     res.render("volunteer_view/allvolunteers.ejs", { volunteer });
   } catch (err) {
-    console.log(err);
-    res.send("Error loading volunteers");
+    console.error(err);
+    req.flash("error", "Unable to load volunteers");
+    res.redirect("/admin/dashboard");
   }
 });
+//View Volunteer Activity History (Admin)
+app.get("/admin/volunteer/:id/activity", isAdminLoggedIn, async (req, res) => {
+  try {
+    const volunteer = await volunteers
+      .findById(req.params.id)
+      .populate("assigned_tasks");
+
+    if (!volunteer) {
+      req.flash("error", "Volunteer not found");
+      return res.redirect("/admin/volunteers");
+    }
+
+    res.render("volunteer_view/activity.ejs", {
+      volunteer,
+      tasks: volunteer.assigned_tasks || []
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Unable to load volunteer activity");
+    res.redirect("/admin/volunteers");
+  }
+});
+
+
+//Suspend / Reactivate Volunteer (Admin)
+app.patch("/admin/volunteer/:id/status", isAdminLoggedIn, async (req, res) => {
+  try {
+    const volunteer = await volunteers.findById(req.params.id);
+
+    if (!volunteer) {
+      req.flash("error", "Volunteer not found");
+      return res.redirect("/admin/volunteers");
+    }
+
+    volunteer.status =
+      volunteer.status === "Suspended" ? "Active" : "Suspended";
+
+    await volunteer.save();
+
+    req.flash(
+      "success",
+      `Volunteer ${volunteer.status === "Suspended" ? "suspended" : "reactivated"} successfully`
+    );
+    res.redirect("/admin/volunteers");
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Error updating volunteer status");
+    res.redirect("/admin/volunteers");
+  }
+});
+
+//Confirm Volunteer Deletion Page (Admin)
+app.get("/admin/volunteer/:id/delete", isAdminLoggedIn, async (req, res) => {
+  try {
+    const volunteer = await volunteers.findById(req.params.id);
+
+    if (!volunteer) {
+      req.flash("error", "Volunteer not found");
+      return res.redirect("/admin/volunteers");
+    }
+
+    res.render("volunteer_view/confirmDelete.ejs", { volunteer });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Error loading confirmation page");
+    res.redirect("/admin/volunteers");
+  }
+});
+
+//Remove Volunteer (Soft Delete – Admin)
+app.post("/admin/volunteer/:id/delete", isAdminLoggedIn, async (req, res) => {
+  try {
+    const volunteer = await volunteers.findById(req.params.id);
+
+    if (!volunteer) {
+      req.flash("error", "Volunteer not found");
+      return res.redirect("/admin/volunteers");
+    }
+
+    volunteer.status = "Removed";
+    volunteer.removedAt = new Date();
+    await volunteer.save();
+
+    req.flash("success", "Volunteer removed successfully");
+    res.redirect("/admin/volunteers");
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Error removing volunteer");
+    res.redirect("/admin/volunteers");
+  }
+});
+
+
+
+
+
+
 
 
 
@@ -1391,19 +1493,38 @@ app.get("/volunteer_login", (req, res) => {
 
 // --- Volunteer Login (POST) ---
 app.post("/volunteer_login", (req, res, next) => {
-  passport.authenticate("volunteer-local", (err, volunteer, info) => {
-    if (err) return next(err);
-    if (!volunteer) {
-      req.flash("error", info?.message || "Invalid email or password");
+  passport.authenticate("volunteer-local", async (err, volunteer, info) => {
+    try {
+      if (err) return next(err);
+
+      if (!volunteer) {
+        req.flash("error", info?.message || "Invalid email or password");
+        return res.redirect("/volunteer_login");
+      }
+
+      // Check if volunteer has been removed
+      if (volunteer.status === "Removed") {
+        req.flash("error", "Your account has been removed by admin.");
+        return res.redirect("/volunteer_login");
+      }
+
+      // Proceed to login
+      req.login(volunteer, (err) => {
+        if (err) return next(err);
+        req.flash("success", "Login successful!");
+        return res.redirect("/volunteer_dashboard");
+      });
+
+    } catch (error) {
+      console.error("Volunteer login error:", error);
+      req.flash("error", "An unexpected error occurred during login.");
       return res.redirect("/volunteer_login");
     }
-    req.login(volunteer, (err) => {
-      if (err) return next(err);
-      req.flash("success", "Login successful!");
-      return res.redirect("/volunteer_dashboard");
-    });
   })(req, res, next);
 });
+
+
+
 
 // --- Volunteer Dashboard ---
 const isVolunteerAuthenticated = (req, res, next) => {
@@ -1414,12 +1535,14 @@ const isVolunteerAuthenticated = (req, res, next) => {
   next();
 };
 
-
 // --- Volunteer Dashboard ---
 app.get("/volunteer_dashboard", isVolunteerAuthenticated, async (req, res) => {
   try {
-    const volunteer = req.user;
+    // Populate ngo_id to get NGO name
+    const volunteer = await volunteers.findById(req.user._id)
+      .populate("ngo_id", "ngo_name email"); // fetch only ngo_name and email
 
+    // Count stats
     const assigned = await Task.countDocuments({
       assigned_to: volunteer._id,
       status: "Assigned"
@@ -1437,19 +1560,14 @@ app.get("/volunteer_dashboard", isVolunteerAuthenticated, async (req, res) => {
 
     res.render("volunteer_view/dashboard.ejs", {
       volunteer,
-      stats: {
-        assigned,
-        inProgress,
-        completed
-      }
+      stats: { assigned, inProgress, completed }
     });
   } catch (err) {
     console.error(err);
     req.flash("error", "Something went wrong");
     res.redirect("/volunteer_login");
-    }
+  }
 });
-
 
 // --- View Current Tasks ---
 app.get("/volunteer/tasks", isVolunteerAuthenticated, async (req, res) => {
