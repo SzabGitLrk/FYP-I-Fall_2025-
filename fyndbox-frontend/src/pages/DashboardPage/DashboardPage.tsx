@@ -36,6 +36,9 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import { useFooterActions } from '../../hooks/useFooterActions';
 import SearchField from '../../components/SearchField/SearchField';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
+import ActionButtonsGroup from '../../components/ActionButtonsGroup/ActionButtonsGroup';
+import SmartAddModal from '../../components/SmartAdd/SmartAddModal';
+import SmartAddResultDialog from '../../components/SmartAdd/SmartAddResultDialog';
 
 const DashboardPage: FC = () => {
   const { t } = useTranslation();
@@ -48,6 +51,12 @@ const DashboardPage: FC = () => {
   const [entityType, setEntityType] = useState<EntityType>('storage');
   const [editingData, setEditingData] = useState<any | null>(null);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [isSmartAddOpen, setSmartAddOpen] = useState(false);
+  const [smartAddResult, setSmartAddResult] = useState<{
+    open: boolean;
+    message: string;
+    warnings: string[];
+  }>({ open: false, message: '', warnings: [] });
   const { data: storages, isLoading, error } = useStorages(searchKeyword);
   const { mutate: createStorage } = useCreateStorage();
   const { mutate: updateStorage } = useUpdateStorage();
@@ -137,15 +146,31 @@ const DashboardPage: FC = () => {
     setSearchKeyword(keyword);
   };
 
+  const handleSmartAddSaved = (result: {
+    message: string;
+    warnings?: string[];
+    reviewed?: boolean;
+  }) => {
+    setSmartAddResult({
+      open: true,
+      message: result.message,
+      warnings: result.warnings ?? [],
+    });
+  };
+
   return (
     <DashboardContainer>
       <TopBar />
       <SearchField onSearch={handleSearchChange} />
       <MainContainer>
-        {isLoading && <Typography variant="body1">Loading...</Typography>}
+        {isLoading && (
+          <Box display="flex" justifyContent="center" alignItems="center" p={5}>
+            <Typography variant="body1">Loading...</Typography>
+          </Box>
+        )}
         {error && (
           <Typography variant="body1" color="error">
-            Error loading storages
+            {error.message || 'Error loading storages'}
           </Typography>
         )}
         {!isLoading && storages?.length === 0 && (
@@ -216,9 +241,9 @@ const DashboardPage: FC = () => {
             onCancel={handleCancelScan}
           />
         )}
-        <AddEntityButton
-          entityType="storage"
-          onAdd={() => handleAddEntity('storage')}
+        <ActionButtonsGroup
+          onAddStorage={() => handleAddEntity('storage')}
+          onSmartAdd={() => setSmartAddOpen(true)}
         />
       </MainContainer>
       <DashboardFooter
@@ -235,6 +260,19 @@ const DashboardPage: FC = () => {
         initialData={editingData || undefined}
         onSave={handleSave}
         onDelete={handleDelete}
+      />
+      <SmartAddModal
+        open={isSmartAddOpen}
+        onClose={() => setSmartAddOpen(false)}
+        onSaved={handleSmartAddSaved}
+      />
+      <SmartAddResultDialog
+        open={smartAddResult.open}
+        message={smartAddResult.message}
+        warnings={smartAddResult.warnings}
+        onClose={() =>
+          setSmartAddResult((current) => ({ ...current, open: false }))
+        }
       />
       <Sidebar open={isSidebarOpen} onClose={handleCloseSidebar} />
       <FavoritesSidebar

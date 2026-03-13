@@ -5,8 +5,12 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.20.0",
+    "pnpm": ">=9.9.0"
+  },
   "scripts": {
-    "build": "nest build && cp -R node_modules/@fyndbox/shared/constants/i18n dist/i18n",
+    "build": "nest build && node -e \"const fs=require('fs'); fs.cpSync('node_modules/@fyndbox/shared/constants/i18n','dist/i18n',{recursive:true});\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
@@ -84,6 +88,9 @@
       "ts"
     ],
     "rootDir": "src",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    },
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

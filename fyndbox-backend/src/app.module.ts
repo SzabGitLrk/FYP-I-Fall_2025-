@@ -11,12 +11,16 @@ import { ItemModule } from './item/item.module';
 import { ImageModule } from './image/image.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationModule } from './notification/notification.module';
+import { TextProcessingModule } from './text-processing/text-processing.module';
+import { join } from 'path';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
+      // Ensure backend/.env is loaded even when the app is started from the monorepo root.
+      envFilePath: [join(__dirname, '..', '.env')],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -93,6 +97,7 @@ import { NotificationModule } from './notification/notification.module';
     ItemModule,
     ImageModule,
     NotificationModule,
+    TextProcessingModule,
   ],
 })
 export class AppModule {}

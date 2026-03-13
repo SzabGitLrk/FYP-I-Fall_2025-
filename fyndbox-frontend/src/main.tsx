@@ -9,6 +9,7 @@ import App from './App';
 import theme from './theme/theme';
 import i18n from './config/i18n';
 import { LanguageProvider } from './context/LanguageContext';
+import { SnackbarProvider } from 'notistack';
 
 const queryClient = new QueryClient();
 
@@ -21,11 +22,13 @@ root.render(
       <I18nextProvider i18n={i18n}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <LanguageProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </LanguageProvider>
+          <SnackbarProvider maxSnack={3}>
+            <LanguageProvider>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </LanguageProvider>
+          </SnackbarProvider>
         </ThemeProvider>
       </I18nextProvider>
     </QueryClientProvider>

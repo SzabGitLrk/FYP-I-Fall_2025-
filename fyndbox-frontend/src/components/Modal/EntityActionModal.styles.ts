@@ -104,7 +104,6 @@ export const StepperButton = styled(Button)(({ theme }) => ({
 
 export const ActionButtonsContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
-  gap: theme.spacing(2),
   padding: theme.spacing(2, 0),
   position: 'sticky',
   bottom: 0,

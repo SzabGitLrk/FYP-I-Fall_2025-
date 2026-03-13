@@ -1,10 +1,11 @@
 import { FC, useEffect, useState } from 'react';
-import { Button, Modal, Typography } from '@mui/material';
+import { Modal, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { Close } from '@mui/icons-material';
 import CustomTextField from '../CustomTextField/CustomTextField';
 import { EntityType } from '../../types/entityTypes';
 import { TextFieldsContainer } from '../../styles/commonStyles';
+import ActionButtonsGroup from '../ActionButtonsGroup/ActionButtonsGroup';
 import ModalHeading from './ModalHeading';
 import {
   ModalContainer,
@@ -162,14 +163,12 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
             }}
           />
           <ActionButtonsContainer>
-            {mode === 'edit' && onDelete && (
-              <Button variant="outlined" color="error" onClick={onDelete}>
-                {t('modal.delete')}
-              </Button>
-            )}
-            <Button variant="contained" onClick={handleSave}>
-              {t('modal.save')}
-            </Button>
+            <ActionButtonsGroup
+              showDeleteButton={mode === 'edit'}
+              entityType={entityType}
+              onSaveClick={handleSave}
+              onDeleteClick={onDelete}
+            />
           </ActionButtonsContainer>
           {error && (
             <Typography variant="caption" color="error">

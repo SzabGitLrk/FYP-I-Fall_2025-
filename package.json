@@ -2,6 +2,10 @@
   "name": "fyndbox",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.20.0",
+    "pnpm": ">=9.9.0"
+  },
   "description": "",
   "scripts": {
     "build:shared": "pnpm --filter @fyndbox/shared build",
