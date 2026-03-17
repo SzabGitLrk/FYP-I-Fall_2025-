@@ -203,12 +203,20 @@ const DashboardPage: FC = () => {
             {expandedStorageIndex === index && (
               <SubContainer>
                 {storage.boxes && storage.boxes?.length > 0 ? (
-                  storage.boxes?.map((box, boxIndex) => (
-                    <EntityCard
-                      key={boxIndex}
-                      name={box.name}
-                      description={box.description}
-                      iconButton={
+                  // Sort boxes by name for ascending display.
+                  [...storage.boxes]
+                    .sort((left, right) =>
+                      left.name.localeCompare(right.name, undefined, {
+                        numeric: true,
+                        sensitivity: 'base',
+                      }),
+                    )
+                    .map((box, boxIndex) => (
+                      <EntityCard
+                        key={boxIndex}
+                        name={box.name}
+                        description={box.description}
+                        iconButton={
                         <IconButton
                           onClick={() => handleBoxOpen(storage.id, box.id)}
                         >
@@ -221,7 +229,7 @@ const DashboardPage: FC = () => {
                       entityType="box"
                       onEdit={() => handleEditEntity('box', box)}
                     />
-                  ))
+                    ))
                 ) : (
                   <Typography variant="h6" textAlign="center">
                     {t('common.notifications.noBoxForStorage')}

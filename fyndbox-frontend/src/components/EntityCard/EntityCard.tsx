@@ -39,6 +39,10 @@ const EntityCard: FC<EntityCardProps> = ({
     }
   };
 
+  // Clean display text to avoid odd spacing.
+  const displayName = name.trim().replace(/\s+/g, ' ');
+  const displayDescription = description?.trim();
+
   return (
     <EntityCardContainer isBoxCard={entityType === 'box'}>
       <CardContent>
@@ -64,9 +68,14 @@ const EntityCard: FC<EntityCardProps> = ({
             )}
           </Box>
 
-          <Box flex={3}>
-            <Typography variant="h6">{name}</Typography>
-            <Typography variant="body1">{description}</Typography>
+          {/* Allow long names to wrap within the card. */}
+          <Box flex={3} minWidth={0}>
+            <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
+              {displayName}
+            </Typography>
+            <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
+              {displayDescription}
+            </Typography>
           </Box>
 
           {entityType === 'item' && (

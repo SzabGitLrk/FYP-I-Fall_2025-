@@ -194,7 +194,7 @@
     "serviceUnavailable": "Smart Add-tjansten ar inte tillganglig just nu. Starta om backend och forsok igen.",
     "confirmationTitle": "Bekräfta ändringar",
     "confirmationFallback": "Den här åtgärden kan återanvända befintlig lagring, låda eller artikel. Tryck på OK för att fortsätta eller Avbryt för att stoppa utan att spara.",
-    "resultTitle": "Saved successfully",
+    "resultTitle": "Framgångsrikt tillagd",
     "resultClose": "Close",
     "warningsTitle": "Varningar"
   },

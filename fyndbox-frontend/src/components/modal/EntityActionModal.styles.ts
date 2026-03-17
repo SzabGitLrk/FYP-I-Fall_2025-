@@ -1,5 +1,6 @@
 import { Box, Button, IconButton, styled, Typography } from '@mui/material';
 
+// Modal layout styles.
 export const ModalContainer = styled(Box)(({}) => ({
   position: 'fixed',
   top: 0,

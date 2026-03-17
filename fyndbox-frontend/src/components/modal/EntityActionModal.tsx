@@ -18,6 +18,7 @@ import {
   ActionButtonsContainer,
 } from './EntityActionModal.styles';
 import ImageUploader from './ImageUploader';
+import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 
 interface EntityActionModalProps {
   open: boolean;
@@ -57,6 +58,8 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
   const [quantity, setQuantity] = useState(initialData?.quantity ?? 1);
   const [nameError, setNameError] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Confirm delete before executing the action.
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (open && mode === 'add') {
@@ -83,6 +86,21 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
     } else {
       onSave({ name, description, image, quantity });
     }
+  };
+
+  const handleOpenDeleteDialog = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    if (onDelete) {
+      onDelete();
+    }
+    handleCloseDeleteDialog();
   };
 
   const handleIncrease = () => {
@@ -163,7 +181,7 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
           />
           <ActionButtonsContainer>
             {mode === 'edit' && onDelete && (
-              <Button variant="outlined" color="error" onClick={onDelete}>
+              <Button variant="outlined" color="error" onClick={handleOpenDeleteDialog}>
                 {t('modal.delete')}
               </Button>
             )}
@@ -176,6 +194,15 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
               {error}
             </Typography>
           )}
+          <ConfirmationDialog
+            isOpen={isDeleteDialogOpen}
+            titleKey="modal.deleteTitle"
+            messageKey="modal.deleteConfirmation"
+            confirmButtonTextKey="modal.delete"
+            titleParams={{ type: t(`types.${entityType}`) }}
+            onConfirm={handleConfirmDelete}
+            onCancel={handleCloseDeleteDialog}
+          />
         </ModalBox>
       </ModalContainer>
     </Modal>

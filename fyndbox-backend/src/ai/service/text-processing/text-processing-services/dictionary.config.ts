@@ -12,13 +12,13 @@
  *    These are common English words that should NEVER be spell-checked.
  *    Why? Because they're always valid and shouldn't be "corrected".
  *    Example: "the" → if we spell-checked this, it might become "teh" (wrong!)
- *    Used in: text-processing.service.ts line 59 - applySpellCheck()
+ *    Used in: service/text-processing.service.ts line 59 - applySpellCheck()
  * 
  * 2. CONTAINMENT_KEYS (Line ~95)
  *    Words that indicate something is INSIDE something else.
  *    Used to link items to their containing box.
  *    Example: "box Tools containing Hammer" - "containing" tells us Hammer is in Tools
- *    Used in: text-processing.service.ts line 123 - parseExtraction()
+ *    Used in: service/text-processing.service.ts line 123 - parseExtraction()
  * 
  * 3. CONNECTORS (Line ~85)
  *    Words that link a name to an entity.
@@ -39,7 +39,7 @@
  * 7. SPELLCHECK_EXCLUDED_WORDS (Line ~160)
  *    Dictionary words we intentionally do NOT auto-correct to.
  *    Why? These are often valid user-defined names like "Garage", "Tools", or "Archive".
- *    Used in: text-processing.service.ts spell-check candidate generation
+ *    Used in: service/text-processing.service.ts spell-check candidate generation
  * 
  * 8. CUSTOM_NUMBER_MAP (Line ~175)
  *    Words that convert to numbers.
@@ -217,7 +217,7 @@ export const DICTIONARY_CONFIG = {
      */
     NON_SINGULARIZABLE_WORDS: [
         'tools', 'supplies', 'papers', 'clothes', 'goods', 'belongings',
-        'contents', 'scissors', 'glasses', 'series', 'species',
+        'contents', 'scissors', 'glasses', 'series', 'species', 'accessories',
     ],
 
     /**

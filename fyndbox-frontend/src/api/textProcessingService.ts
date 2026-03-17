@@ -20,9 +20,10 @@ export const processTextInstruction = async (
 export const confirmTextInstruction = async (
   parsedData: SmartAddParsedData,
 ): Promise<ApiResponse<SmartAddPersistPayload>> => {
+  // Always mark confirmed saves from the review dialog.
   const response = await apiClient.post<ApiResponse<SmartAddPersistPayload>>(
     '/text-process/confirm',
-    { parsedData },
+    { parsedData, confirmed: true },
   );
 
   return response.data;

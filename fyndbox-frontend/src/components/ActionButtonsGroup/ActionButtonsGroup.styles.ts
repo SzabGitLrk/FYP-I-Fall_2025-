@@ -23,20 +23,22 @@ export const CapsuleButton = styled(Button)(({ theme }) => ({
   whiteSpace: 'nowrap',
 }));
 
-export const AddStorageButton = styled(CapsuleButton)(() => ({
-  backgroundColor: '#000000',
-  color: '#ffffff',
+export const AddStorageButton = styled(CapsuleButton)(({ theme }) => ({
+  // Use primary palette for the main action button.
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
   '&:hover': {
-    backgroundColor: '#333333',
+    backgroundColor: theme.palette.primary.dark,
   },
 }));
 
-export const SmartAddButton = styled(CapsuleButton)(() => ({
-  backgroundColor: '#ffffff',
-  color: '#000000',
-  border: '1px solid #000000',
+export const SmartAddButton = styled(CapsuleButton)(({ theme }) => ({
+  // Use secondary palette for the outlined smart action.
+  backgroundColor: theme.palette.secondary.main,
+  color: theme.palette.secondary.contrastText,
+  border: `1px solid ${theme.palette.secondary.contrastText}`,
   '&:hover': {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.palette.secondary.dark,
   },
 }));
 
