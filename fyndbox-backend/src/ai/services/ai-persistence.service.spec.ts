@@ -1,15 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TextProcessingService } from '../../service/text-processing/text-processing.service';
 import { DataSource } from 'typeorm';
-import { LightNormalizationService } from '../../service/text-processing/text-processing-services/light-normalization.service';
-import { TextParsingService } from '../../service/text-processing/text-processing-services/text-parsing.service';
-import { ValidationService } from '../../service/text-processing/text-processing-services/validation.service';
-import { HeavyNormalizationService } from '../../service/text-processing/text-processing-services/heavy-normalization.service';
-import { DatabaseStorageService } from '../../service/text-processing/text-processing-services/database-storage.service';
-import { AcknowledgementService } from '../../service/text-processing/text-processing-services/acknowledgement.service';
+import { AiPersistenceService } from './ai-persistence.service';
+import { TextParsingService } from './text-parsing.service';
+import { TextProcessingService } from './text-processing.service';
+import { ValidationService } from './validation.service';
 
 describe('Phase 5: Database Persistence', () => {
-    let service: TextProcessingService;
+    let service: AiPersistenceService;
+    let textProcessingService: TextProcessingService;
     let mockQueryRunner: any;
     let mockDataSource: Partial<DataSource>;
 
@@ -44,28 +42,26 @@ describe('Phase 5: Database Persistence', () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 TextProcessingService,
-                LightNormalizationService,
                 TextParsingService,
                 ValidationService,
-                HeavyNormalizationService,
-                DatabaseStorageService,
-                AcknowledgementService,
+                AiPersistenceService,
                 { provide: DataSource, useValue: mockDataSource },
             ],
         }).compile();
 
-        service = module.get<TextProcessingService>(TextProcessingService);
+        service = module.get<AiPersistenceService>(AiPersistenceService);
+        textProcessingService = module.get<TextProcessingService>(TextProcessingService);
     });
 
     describe('prepareNormalizedDataForPersistence', () => {
         it('should replicate per-box items across each expanded box', () => {
-            const parsed = service.parseExtraction(
-                service.lightNormalization(
+            const parsed = textProcessingService.parseExtraction(
+                textProcessingService.lightNormalization(
                     'register a cabinet Accessories containing locker: three clothes 7 shirts each and two watches 5 rolex each',
                 ).normalizedText,
             );
-            const classified = service.intentClassification(parsed);
-            const normalized = service.heavyNormalization(parsed);
+            const classified = textProcessingService.intentClassification(parsed);
+            const normalized = textProcessingService.heavyNormalization(parsed);
             const prepared = service.prepareNormalizedDataForPersistence(
                 { ...normalized, intent: classified.intent, meta: normalized.meta },
                 classified.expandedBoxes,
@@ -84,13 +80,13 @@ describe('Phase 5: Database Persistence', () => {
         });
 
         it('should replicate generic each-has items across every expanded box', () => {
-            const parsed = service.parseExtraction(
-                service.lightNormalization(
+            const parsed = textProcessingService.parseExtraction(
+                textProcessingService.lightNormalization(
                     'create storage A with 5 boxes of B each has 10 items of C',
                 ).normalizedText,
             );
-            const classified = service.intentClassification(parsed);
-            const normalized = service.heavyNormalization(parsed);
+            const classified = textProcessingService.intentClassification(parsed);
+            const normalized = textProcessingService.heavyNormalization(parsed);
             const prepared = service.prepareNormalizedDataForPersistence(
                 { ...normalized, intent: classified.intent, meta: normalized.meta },
                 classified.expandedBoxes,
@@ -109,13 +105,13 @@ describe('Phase 5: Database Persistence', () => {
         });
 
         it('should replicate grouped item-section quantities across every expanded box when using "in each"', () => {
-            const parsed = service.parseExtraction(
-                service.lightNormalization(
+            const parsed = textProcessingService.parseExtraction(
+                textProcessingService.lightNormalization(
                     'add a vualt named ABC containing lockers: three clothes items: 10 shirts in each',
                 ).normalizedText,
             );
-            const classified = service.intentClassification(parsed);
-            const normalized = service.heavyNormalization(parsed);
+            const classified = textProcessingService.intentClassification(parsed);
+            const normalized = textProcessingService.heavyNormalization(parsed);
             const prepared = service.prepareNormalizedDataForPersistence(
                 { ...normalized, intent: classified.intent, meta: normalized.meta },
                 classified.expandedBoxes,
@@ -507,19 +503,122 @@ describe('Phase 5: Database Persistence', () => {
             const module = await Test.createTestingModule({
                 providers: [
                     TextProcessingService,
-                    LightNormalizationService,
                     TextParsingService,
                     ValidationService,
-                    HeavyNormalizationService,
-                    DatabaseStorageService,
-                    AcknowledgementService,
+                    AiPersistenceService,
                 ],
             }).compile();
-            const serviceNoDb = module.get<TextProcessingService>(TextProcessingService);
+            const serviceNoDb = module.get<AiPersistenceService>(AiPersistenceService);
 
             const result = await serviceNoDb.persistToDatabase({}, 'user-123');
             expect(result.success).toBe(false);
             expect(result.message).toContain('Database connection not available');
+        });
+    });
+
+    describe('generateSmartAcknowledgment', () => {
+        it('should acknowledge a newly created storage', () => {
+            const data = { intent: 'create', storageName: 'Garage', boxes: [], items: [] };
+            const actionLog = { storageAction: 'created' as const, boxActions: [], itemActions: [] };
+            expect(service.generateSmartAcknowledgment(data, actionLog)).toContain("Created new storage 'Garage'");
+        });
+
+        it('should combine created storage and a single created box', () => {
+            const data = {
+                intent: 'create',
+                storageName: 'Garage',
+                boxes: [{ name: 'Tools', clientRef: 'b1' }],
+                items: [],
+            };
+            const actionLog = {
+                storageAction: 'created' as const,
+                boxActions: [{ name: 'Tools', action: 'created' as const, items: [] }],
+                itemActions: [],
+            };
+
+            expect(service.generateSmartAcknowledgment(data, actionLog)).toBe(
+                "Created new storage 'Garage' and box 'Tools'.",
+            );
+        });
+
+        it('should call out storage description updates explicitly', () => {
+            const data = { intent: 'update', storageName: 'Garage', boxes: [], items: [] };
+            const actionLog = {
+                storageAction: 'found' as const,
+                storageDescriptionUpdated: true,
+                boxActions: [],
+                itemActions: [],
+            };
+
+            expect(service.generateSmartAcknowledgment(data, actionLog)).toBe(
+                "Storage 'Garage' already exists. Updated the description.",
+            );
+        });
+
+        it('should acknowledge incremental item additions with totals', () => {
+            const data = {
+                intent: 'increment',
+                storageName: 'Garage',
+                boxes: [{ name: 'Tools', clientRef: 'b1' }],
+            };
+            const actionLog = {
+                storageAction: 'found' as const,
+                boxActions: [{ name: 'Tools', action: 'found' as const, items: [] }],
+                itemActions: [{ name: 'Screws', action: 'incremented', oldQty: 3, newQty: 8, boxClientRef: 'b1' }],
+            };
+            const message = service.generateSmartAcknowledgment(data, actionLog);
+
+            expect(message).toContain("Screws already exists in 'Tools'");
+            expect(message).toContain('Added 5 more');
+            expect(message).toContain('New total: 8');
+        });
+
+        it('should describe decrements without saying delete', () => {
+            const data = {
+                intent: 'decrement',
+                storageName: 'Garage',
+                boxes: [{ name: 'Tools', clientRef: 'b1' }],
+            };
+            const actionLog = {
+                storageAction: 'found' as const,
+                boxActions: [{ name: 'Tools', action: 'found' as const, items: [] }],
+                itemActions: [{ name: 'Screws', action: 'decremented', oldQty: 10, newQty: 8, boxClientRef: 'b1' }],
+            };
+            const message = service.generateSmartAcknowledgment(data, actionLog);
+
+            expect(message).toContain('Removed 2 Screws');
+            expect(message).toContain('Remaining: 8');
+            expect(message).not.toContain('Deleted');
+        });
+
+        it('should condense repeated sequential boxes into a grouped acknowledgment', () => {
+            const data = {
+                intent: 'create',
+                storageName: 'Accessory',
+                meta: { mappingStrategy: 'sequential' },
+                boxes: [
+                    { name: 'Clothes with 1', clientRef: 'b1' },
+                    { name: 'Clothes with 2', clientRef: 'b2' },
+                    { name: 'Clothes with 3', clientRef: 'b3' },
+                ],
+            };
+            const actionLog = {
+                storageAction: 'created' as const,
+                boxActions: [
+                    { name: 'Clothes with 1', action: 'created' as const, items: [] },
+                    { name: 'Clothes with 2', action: 'created' as const, items: [] },
+                    { name: 'Clothes with 3', action: 'created' as const, items: [] },
+                ],
+                itemActions: [
+                    { name: 'Shirt', action: 'created', newQty: 5, boxClientRef: 'b1' },
+                    { name: 'Shirt', action: 'created', newQty: 5, boxClientRef: 'b2' },
+                    { name: 'Shirt', action: 'created', newQty: 5, boxClientRef: 'b3' },
+                ],
+            };
+
+            expect(service.generateSmartAcknowledgment(data, actionLog)).toBe(
+                "Created new storage 'Accessory' with 3 boxes of 'Clothes' x5 in each: Clothes with 1, Clothes with 2, Clothes with 3.",
+            );
         });
     });
 });

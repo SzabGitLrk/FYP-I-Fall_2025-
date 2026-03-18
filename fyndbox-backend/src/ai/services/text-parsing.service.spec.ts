@@ -1,11 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TextProcessingService } from '../../service/text-processing/text-processing.service';
-import { LightNormalizationService } from '../../service/text-processing/text-processing-services/light-normalization.service';
-import { TextParsingService } from '../../service/text-processing/text-processing-services/text-parsing.service';
-import { ValidationService } from '../../service/text-processing/text-processing-services/validation.service';
-import { HeavyNormalizationService } from '../../service/text-processing/text-processing-services/heavy-normalization.service';
-import { DatabaseStorageService } from '../../service/text-processing/text-processing-services/database-storage.service';
-import { AcknowledgementService } from '../../service/text-processing/text-processing-services/acknowledgement.service';
+import { AiPersistenceService } from './ai-persistence.service';
+import { TextParsingService } from './text-parsing.service';
+import { TextProcessingService } from './text-processing.service';
+import { ValidationService } from './validation.service';
 
 describe('TextProcessingService', () => {
     let service: TextProcessingService;
@@ -14,12 +11,9 @@ describe('TextProcessingService', () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 TextProcessingService,
-                LightNormalizationService,
                 TextParsingService,
                 ValidationService,
-                HeavyNormalizationService,
-                DatabaseStorageService,
-                AcknowledgementService,
+                AiPersistenceService,
             ],
         }).compile();
 

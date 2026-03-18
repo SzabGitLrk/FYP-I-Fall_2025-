@@ -11,7 +11,7 @@ import { ItemModule } from './item/item.module';
 import { ImageModule } from './image/image.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationModule } from './notification/notification.module';
-import { TextProcessingModule } from './ai/modules/text-processing.module';
+import { AiModule } from './ai/ai.module';
 import { join } from 'path';
 
 @Module({
@@ -97,8 +97,8 @@ import { join } from 'path';
     ItemModule,
     ImageModule,
     NotificationModule,
-    // AI text-processing endpoints.
-    TextProcessingModule,
+    // AI feature entry point.
+    AiModule,
   ],
 })
 export class AppModule {}

@@ -10,7 +10,7 @@ export const processTextInstruction = async (
   text: string,
 ): Promise<ApiResponse<SmartAddProcessPayload>> => {
   const response = await apiClient.post<ApiResponse<SmartAddProcessPayload>>(
-    '/text-process',
+    '/ai/process-text',
     { text },
   );
 
@@ -22,7 +22,7 @@ export const confirmTextInstruction = async (
 ): Promise<ApiResponse<SmartAddPersistPayload>> => {
   // Always mark confirmed saves from the review dialog.
   const response = await apiClient.post<ApiResponse<SmartAddPersistPayload>>(
-    '/text-process/confirm',
+    '/ai/confirm',
     { parsedData, confirmed: true },
   );
 

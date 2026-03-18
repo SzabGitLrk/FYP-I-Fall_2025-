@@ -92,8 +92,8 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
       error instanceof Error ? error.message : t('smartAdd.requestFailed');
 
     // Nest 404 default for missing controller routes:
-    // { message: 'Cannot POST /text-process', error: 'Not Found', statusCode: 404 }
-    if (/Cannot\s+POST\s+\/text-process/i.test(message)) {
+    // { message: 'Cannot POST /ai/process-text', error: 'Not Found', statusCode: 404 }
+    if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
       return t('smartAdd.serviceUnavailable');
     }
 
