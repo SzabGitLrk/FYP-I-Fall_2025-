@@ -103,6 +103,36 @@ describe('TextProcessingService', () => {
                 }
             },
             {
+                input: "update a cabinet Accessories containing closet: clothes and watches items: 10 shirts and rolex 2",
+                expected: {
+                    intent: 'update', storageName: 'accessories', storageDescription: null,
+                    boxes: [
+                        { name: 'clothes', quantity: null, description: null, clientRef: 'b1' },
+                        { name: 'watches', quantity: null, description: null, clientRef: 'b2' }
+                    ],
+                    items: [
+                        { name: 'shirts', quantity: 10, description: null, boxClientRef: 'b1', orphaned: false },
+                        { name: 'rolex', quantity: 2, description: null, boxClientRef: 'b2', orphaned: false }
+                    ],
+                    boxName: 'clothes', boxQuantity: null, boxDescription: null, ambiguous: false
+                }
+            },
+            {
+                input: "update storage X containing A: X and Y items: 10 abc and xyz 2",
+                expected: {
+                    intent: 'update', storageName: 'x', storageDescription: null,
+                    boxes: [
+                        { name: 'x', quantity: null, description: null, clientRef: 'b1' },
+                        { name: 'y', quantity: null, description: null, clientRef: 'b2' }
+                    ],
+                    items: [
+                        { name: 'abc', quantity: 10, description: null, boxClientRef: 'b1', orphaned: false },
+                        { name: 'xyz', quantity: 2, description: null, boxClientRef: 'b2', orphaned: false }
+                    ],
+                    boxName: 'x', boxQuantity: null, boxDescription: null, ambiguous: false
+                }
+            },
+            {
                 input: "Box A and Box B with item 1 and 2",
                 expected: {
                     intent: null, storageName: null, storageDescription: null,
@@ -218,6 +248,91 @@ describe('TextProcessingService', () => {
                 const { rawIntents, totalWords, extractedWordCount, meta, ...phase2Result } = result;
                 expect(phase2Result).toMatchObject(expected);
             });
+        });
+
+        it('should preserve exact numbered box references', () => {
+            const { normalizedText } = service.lightNormalization(
+                'remove 2 pumpy from box shoes 1 in storage stylo mall',
+            );
+            const result = service.parseExtraction(normalizedText);
+
+            expect(result.intent).toBe('decrement');
+            expect(result.storageName).toBe('stylo mall');
+            expect(result.boxes).toMatchObject([
+                { name: 'shoes 1', clientRef: 'b1' },
+            ]);
+            expect(result.items).toMatchObject([
+                { name: 'pumpy', quantity: 2, boxClientRef: 'b1' },
+            ]);
+            expect(result.meta?.boxFamilySelector).toBeNull();
+        });
+
+        it('should parse explicit all-family selectors for numbered boxes', () => {
+            const { normalizedText } = service.lightNormalization(
+                'remove 2 pumpy from all shoes boxes in storage stylo mall',
+            );
+            const result = service.parseExtraction(normalizedText);
+
+            expect(result.intent).toBe('decrement');
+            expect(result.storageName).toBe('stylo mall');
+            expect(result.boxes).toMatchObject([
+                { name: 'shoes', clientRef: 'b1' },
+            ]);
+            expect(result.items).toMatchObject([
+                { name: 'pumpy', quantity: 2, boxClientRef: 'b1' },
+            ]);
+            expect(result.meta?.boxFamilySelector).toBe('all');
+            expect(result.meta?.boxFamilyName).toBe('shoes');
+        });
+
+        it('should parse explicit each-family selectors for numbered boxes', () => {
+            const { normalizedText } = service.lightNormalization(
+                'remove 2 pumpy from each shoes box in storage stylo mall',
+            );
+            const result = service.parseExtraction(normalizedText);
+
+            expect(result.intent).toBe('decrement');
+            expect(result.storageName).toBe('stylo mall');
+            expect(result.boxes).toMatchObject([
+                { name: 'shoes', clientRef: 'b1' },
+            ]);
+            expect(result.items).toMatchObject([
+                { name: 'pumpy', quantity: 2, boxClientRef: 'b1' },
+            ]);
+            expect(result.meta?.boxFamilySelector).toBe('each');
+            expect(result.meta?.boxFamilyName).toBe('shoes');
+        });
+
+        it('should parse add-more prompts as item-plus-box instead of creating a box named more', () => {
+            const { normalizedText } = service.lightNormalization(
+                'add more to box shoes 2 in storage stylo mall',
+            );
+            const result = service.parseExtraction(normalizedText);
+
+            expect(result.intent).toBe('increment');
+            expect(result.storageName).toBe('stylo mall');
+            expect(result.boxes).toMatchObject([
+                { name: 'shoes 2', clientRef: 'b1' },
+            ]);
+            expect(result.items).toMatchObject([
+                { name: 'more', quantity: 1, boxClientRef: 'b1' },
+            ]);
+        });
+
+        it('should parse add-more item names before a target box', () => {
+            const { normalizedText } = service.lightNormalization(
+                'add more pumpy to box shoes 2 in storage stylo mall',
+            );
+            const result = service.parseExtraction(normalizedText);
+
+            expect(result.intent).toBe('increment');
+            expect(result.storageName).toBe('stylo mall');
+            expect(result.boxes).toMatchObject([
+                { name: 'shoes 2', clientRef: 'b1' },
+            ]);
+            expect(result.items).toMatchObject([
+                { name: 'pumpy', quantity: 1, boxClientRef: 'b1' },
+            ]);
         });
     });
 });

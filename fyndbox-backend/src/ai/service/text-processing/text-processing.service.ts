@@ -277,7 +277,8 @@ export class TextProcessingService {
         }
 
         // Phase 4: Heavy normalization
-        const normalized = this.heavyNormalization(parsed);
+        const parsedForPersistence = classified.resolvedParsedData || parsed;
+        const normalized = this.heavyNormalization(parsedForPersistence);
         const prepared = this.prepareNormalizedDataForPersistence(
             normalized,
             classified.expandedBoxes,
@@ -287,7 +288,7 @@ export class TextProcessingService {
         prepared.expandedBoxes = classified.expandedBoxes;
         prepared.suggestions = classified.suggestions;
         prepared.confidence = classified.confidence;
-        prepared.meta = { ...prepared.meta, ...parsed.meta };
+        prepared.meta = { ...prepared.meta, ...parsedForPersistence.meta };
 
         // Phase 5: Confirmation summary
         const confirmationSummary = this.generateConfirmationSummary(prepared);

@@ -12,6 +12,97 @@ export class TextParsingService {
         'things', 'article', 'articles',
     ]);
 
+    private extractExplicitFamilyBoxSelector(
+        text: string,
+    ): { selector: 'all' | 'each'; boxName: string } | null {
+        const match = text.match(
+            /\b(?<selector>all|each)\s+(?<boxName>[a-zA-Z0-9 ]+?)\s+box(?:es)?\b/i,
+        );
+        if (!match?.groups?.selector || !match.groups.boxName) {
+            return null;
+        }
+
+        return {
+            selector: match.groups.selector.toLowerCase() as 'all' | 'each',
+            boxName: match.groups.boxName.trim(),
+        };
+    }
+
+    private isExplicitFamilySelectorArtifact(
+        itemName: string | null | undefined,
+        selector: 'all' | 'each',
+        boxName: string,
+    ): boolean {
+        const normalizedItem = (itemName || '').trim().toLowerCase();
+        if (!normalizedItem) {
+            return false;
+        }
+
+        return normalizedItem === `${selector} ${boxName}`.trim().toLowerCase();
+    }
+
+    private parseDirectionalItemPhrase(
+        itemPhrase: string,
+        itemKeywords: string[],
+    ): { name: string; quantity: number; explicitQuantity: boolean } {
+        const rawPhrase = (itemPhrase || '').trim();
+        if (!rawPhrase) {
+            return { name: '', quantity: 1, explicitQuantity: false };
+        }
+
+        let normalizedPhrase = rawPhrase;
+        if (/^(?:more|extra|additional|another)\s+/i.test(normalizedPhrase)) {
+            normalizedPhrase = normalizedPhrase.replace(
+                /^(?:more|extra|additional|another)\s+/i,
+                '',
+            ).trim();
+        }
+
+        const itemKeywordPattern = this.buildKeywordAlternationPattern(itemKeywords);
+        if (itemKeywordPattern) {
+            normalizedPhrase = normalizedPhrase.replace(
+                new RegExp(`^(?:${itemKeywordPattern})\\s+`, 'i'),
+                '',
+            ).trim();
+        }
+
+        if (!normalizedPhrase) {
+            return {
+                name: rawPhrase.toLowerCase(),
+                quantity: 1,
+                explicitQuantity: false,
+            };
+        }
+
+        const leadingQuantityMatch = normalizedPhrase.match(
+            /^(?<qty>\d+)\s+(?<name>.+)$/i,
+        );
+        if (leadingQuantityMatch?.groups?.qty && leadingQuantityMatch.groups.name) {
+            return {
+                name: leadingQuantityMatch.groups.name.trim(),
+                quantity: parseInt(leadingQuantityMatch.groups.qty, 10),
+                explicitQuantity: true,
+            };
+        }
+
+        const trailingQuantityMatch = normalizedPhrase.match(
+            /^(?<name>.+?)\s+(?<qty>\d+)$/i,
+        );
+        if (trailingQuantityMatch?.groups?.qty && trailingQuantityMatch.groups.name) {
+            return {
+                name: trailingQuantityMatch.groups.name.trim(),
+                quantity: parseInt(trailingQuantityMatch.groups.qty, 10),
+                explicitQuantity: true,
+            };
+        }
+
+        return {
+            name: normalizedPhrase,
+            quantity: 1,
+            explicitQuantity: false,
+        };
+    }
+
 
     private buildKeywordAlternationPattern(entries: string[]): string {
         return Array.from(new Set(entries))
@@ -167,9 +258,12 @@ export class TextParsingService {
         const groupedStorageDescriptionPattern = this.buildKeywordAlternationPattern(
             structuredDescriptionKeys,
         );
+        const incrementIntentPattern = this.buildKeywordAlternationPattern(
+            dict.INTENTS.INCREMENT,
+        );
         const groupedSectionMatch = normalizedText.match(
             new RegExp(
-                `^(?<intent>\\w+)\\s+(?:a\\s+)?(?:${groupedStorageSectionPattern})\\s+(?:(?:${groupedNameConnectorPattern})\\s+)?(?<storage>.+?)(?:\\s+(?:${groupedStorageDescriptionPattern})\\s+(?<storageDesc>.+?))?\\s+containing\\s+(?<boxKeyword>${groupedBoxSectionPattern}):\\s+(?<rest>.+)$`,
+                `^(?<intent>\\w+)\\s+(?:a\\s+)?(?:${groupedStorageSectionPattern})\\s+(?:(?:${groupedNameConnectorPattern})\\s+)?(?<storage>.+?)(?:\\s+(?:${groupedStorageDescriptionPattern})\\s+(?<storageDesc>.+?))?\\s+containing\\s+(?<boxKeyword>[a-zA-Z0-9 ]+?):\\s+(?<rest>.+)$`,
                 'i',
             ),
         );
@@ -241,6 +335,72 @@ export class TextParsingService {
                 },
             };
         }
+        const directionalIncrementMatch = normalizedText.match(
+            new RegExp(
+                `^(?<intent>${incrementIntentPattern})\\s+(?<itemPhrase>.+?)\\s+to\\s+(?<boxPhrase>.+?)(?:\\s+in\\s+(?:${groupedStorageSectionPattern})\\s+(?<storage>.+))?$`,
+                'i',
+            ),
+        );
+        if (directionalIncrementMatch?.groups?.itemPhrase && directionalIncrementMatch.groups.boxPhrase) {
+            const rawBoxPhrase = directionalIncrementMatch.groups.boxPhrase.trim();
+            const explicitFamilyBox = this.extractExplicitFamilyBoxSelector(rawBoxPhrase);
+            const explicitBoxMatch = rawBoxPhrase.match(
+                new RegExp(
+                    `^(?:${groupedBoxSectionPattern})\\s+(?<boxName>.+)$`,
+                    'i',
+                ),
+            );
+            const resolvedBoxName = explicitFamilyBox?.boxName?.trim()
+                || explicitBoxMatch?.groups?.boxName?.trim();
+
+            if (resolvedBoxName) {
+                const parsedItem = this.parseDirectionalItemPhrase(
+                    directionalIncrementMatch.groups.itemPhrase,
+                    itemSyns,
+                );
+                const allWords = normalizedText.split(/\s+/).filter((w) => w.length > 0);
+
+                return {
+                    intent: 'increment',
+                    storageName: directionalIncrementMatch.groups.storage?.trim() || null,
+                    storageDescription: null,
+                    boxes: [
+                        {
+                            name: resolvedBoxName,
+                            quantity: null,
+                            description: null,
+                            clientRef: 'b1',
+                        },
+                    ],
+                    items: parsedItem.name
+                        ? [
+                            {
+                                name: parsedItem.name,
+                                quantity: parsedItem.quantity,
+                                explicitQuantity: parsedItem.explicitQuantity,
+                                description: null,
+                                boxClientRef: 'b1',
+                                orphaned: false,
+                            },
+                        ]
+                        : [],
+                    boxName: resolvedBoxName,
+                    boxQuantity: null,
+                    boxDescription: null,
+                    ambiguous: false,
+                    rawIntents: ['increment'],
+                    totalWords: allWords.length,
+                    extractedWordCount: allWords.length,
+                    meta: {
+                        mappingStrategy: 'direct',
+                        preIntentLocationOverflow: false,
+                        boxFamilySelector: explicitFamilyBox?.selector ?? null,
+                        boxFamilyName: explicitFamilyBox?.boxName ?? null,
+                        ...keywordFlags,
+                    },
+                };
+            }
+        }
         if (
             /\beach\b/i.test(normalizedText)
             && new RegExp(
@@ -270,8 +430,25 @@ export class TextParsingService {
             const groupedBoxes: any[] = [];
             const groupedItems: any[] = [];
             let groupedRefCounter = 1;
+            const itemSectionPattern = new RegExp(
+                `\\s+(?:${groupedItemSectionPattern}):\\s+`,
+                'i',
+            );
+            const itemSectionMatch = itemSectionPattern.exec(rest);
             const boxKeyword = groupedSectionMatch.groups.boxKeyword.toLowerCase();
-            const isGenericBoxKeyword = ['box', 'boxes', 'bin', 'bins', 'crate', 'crates', 'container', 'containers', 'shelf', 'shelves', 'drawer', 'drawers', 'cabinet', 'cabinets'].includes(boxKeyword);
+            const genericBoxSectionKeywords = new Set(
+                boxSyns.flatMap((syn) => {
+                    const normalized = syn.toLowerCase();
+                    return [
+                        normalized,
+                        pluralize.singular(normalized),
+                        pluralize.plural(normalized),
+                    ];
+                }),
+            );
+            // Treat recognized box synonyms, or any label followed by a later item section,
+            // as a grouped box-section header.
+            const isGenericBoxKeyword = genericBoxSectionKeywords.has(boxKeyword) || !!itemSectionMatch;
 
             if (!isGenericBoxKeyword) {
                 groupedBoxes.push({
@@ -281,12 +458,6 @@ export class TextParsingService {
                     clientRef: `b${groupedRefCounter++}`,
                 });
             }
-
-            const itemSectionPattern = new RegExp(
-                `\\s+(?:${groupedItemSectionPattern}):\\s+`,
-                'i',
-            );
-            const itemSectionMatch = itemSectionPattern.exec(rest);
 
             if (itemSectionMatch) {
                 const itemSectionStart = itemSectionMatch.index;
@@ -968,6 +1139,29 @@ export class TextParsingService {
             extractedIntent = 'create';
         }
 
+        const explicitFamilySelector = this.extractExplicitFamilyBoxSelector(normalizedText);
+        if (explicitFamilySelector) {
+            const clientRef = boxes[0]?.clientRef || createBoxRef();
+            boxes = [{
+                name: explicitFamilySelector.boxName,
+                quantity: null,
+                description: boxes[0]?.description ?? null,
+                clientRef,
+            }];
+            items = items
+                .filter((item: any) => !this.isExplicitFamilySelectorArtifact(
+                    item?.name,
+                    explicitFamilySelector.selector,
+                    explicitFamilySelector.boxName,
+                ))
+                .map((item: any) => ({
+                    ...item,
+                    boxClientRef: clientRef,
+                    orphaned: false,
+                    replicatePerExpandedBox: true,
+                }));
+        }
+
         // 3. Contextual Intent: promote INCREMENT -> CREATE when new boxes were created
         // Count extracted words vs total (Set-based to prevent double-counting)
         const sanitizeCountToken = (value: string) =>
@@ -1023,6 +1217,8 @@ export class TextParsingService {
             meta: {
                 mappingStrategy: (boxes.length > 1 && items.length >= boxes.length) ? 'sequential' : 'direct',
                 preIntentLocationOverflow,
+                boxFamilySelector: explicitFamilySelector?.selector ?? null,
+                boxFamilyName: explicitFamilySelector?.boxName ?? null,
                 ...keywordFlags,
             },
         };

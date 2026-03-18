@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { Button, Modal, Typography } from '@mui/material';
+import { Modal, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { Close } from '@mui/icons-material';
 import CustomTextField from '../CustomTextField/CustomTextField';
@@ -16,6 +16,8 @@ import {
   StepperButton,
   QuantityCounter,
   ActionButtonsContainer,
+  DeleteActionButton,
+  SaveActionButton,
 } from './EntityActionModal.styles';
 import ImageUploader from './ImageUploader';
 import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
@@ -181,13 +183,16 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
           />
           <ActionButtonsContainer>
             {mode === 'edit' && onDelete && (
-              <Button variant="outlined" color="error" onClick={handleOpenDeleteDialog}>
+              <DeleteActionButton
+                variant="outlined"
+                onClick={handleOpenDeleteDialog}
+              >
                 {t('modal.delete')}
-              </Button>
+              </DeleteActionButton>
             )}
-            <Button variant="contained" onClick={handleSave}>
+            <SaveActionButton variant="contained" onClick={handleSave}>
               {t('modal.save')}
-            </Button>
+            </SaveActionButton>
           </ActionButtonsContainer>
           {error && (
             <Typography variant="caption" color="error">

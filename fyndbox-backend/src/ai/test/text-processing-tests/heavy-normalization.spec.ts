@@ -55,6 +55,11 @@ describe('TextProcessingService', () => {
             expect(result.boxes[0].name).toBe('Tools');
         });
 
+        it('should preserve numbered box names without singularizing the family label', () => {
+            const result = heavyNorm("remove 2 pumpy from box shoes 1 in storage stylo mall");
+            expect(result.boxes[0].name).toBe('Shoes 1');
+        });
+
         it('should handle irregular plurals (knives -> knife)', () => {
             const result = heavyNorm("create storage Warehouse with box knives");
             expect(result.boxes[0].name).toBe('Knife');

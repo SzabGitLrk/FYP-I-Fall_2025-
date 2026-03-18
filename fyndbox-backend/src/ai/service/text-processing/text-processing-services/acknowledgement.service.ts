@@ -485,9 +485,10 @@ export class AcknowledgementService {
             return null;
         }
 
+        const exactBoxNames = actionLog.boxActions.map((box) => box.name).join(', ');
         const detail = group.quantitySummary
-            ? `${group.count} boxes of '${group.baseName}' ${group.quantitySummary} in each.`
-            : `${group.count} boxes of '${group.baseName}'.`;
+            ? `${group.count} boxes of '${group.baseName}' ${group.quantitySummary} in each: ${exactBoxNames}.`
+            : `${group.count} boxes of '${group.baseName}': ${exactBoxNames}.`;
 
         if (!storageLead) {
             return `Created ${detail}`;

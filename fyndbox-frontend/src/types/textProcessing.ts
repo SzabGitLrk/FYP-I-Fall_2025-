@@ -5,6 +5,12 @@ export interface SmartAddBox {
   quantity?: number | null;
 }
 
+export interface SmartAddClarificationOption {
+  kind: 'box' | 'bulk-all';
+  label: string;
+  prompt: string;
+}
+
 export interface SmartAddItem {
   boxClientRef: string | null;
   description?: string | null;
@@ -41,6 +47,8 @@ export interface SmartAddParsedData {
 
 export interface SmartAddClassification {
   clarification: string | null;
+  clarificationKind?: string | null;
+  clarificationOptions?: SmartAddClarificationOption[];
   confidence: number;
   expandedBoxes?: Array<{
     expandedNames: string[];

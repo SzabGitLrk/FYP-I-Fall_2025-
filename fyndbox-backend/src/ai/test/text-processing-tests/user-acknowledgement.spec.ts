@@ -369,7 +369,9 @@ describe('Phase 7: User Acknowledgment', () => {
             };
 
             const msg = service.generateSmartAcknowledgment(data, actionLog);
-            expect(msg).toBe("Created new storage 'Accessory' with 3 boxes of 'Clothes' x5 in each.");
+            expect(msg).toBe(
+                "Created new storage 'Accessory' with 3 boxes of 'Clothes' x5 in each: Clothes with 1, Clothes with 2, Clothes with 3.",
+            );
         });
 
         it('should treat repeated sequential create instructions as no-op when nothing changes', () => {

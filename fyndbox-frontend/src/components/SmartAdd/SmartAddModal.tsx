@@ -1,11 +1,13 @@
 import { FC, useEffect, useState } from 'react';
 import {
   Alert,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Modal,
+  Stack,
   Typography,
 } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
@@ -22,6 +24,7 @@ import {
   useProcessTextInstruction,
 } from '../../hooks/useTextProcessing';
 import {
+  SmartAddClarificationOption,
   SmartAddProcessPayload,
 } from '../../types/textProcessing';
 import {
@@ -67,6 +70,8 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
     useProcessTextInstruction();
   const { mutateAsync: confirmInstruction, isPending: isConfirming } =
     useConfirmTextInstruction();
+  const clarificationOptions =
+    processResponse?.data?.classified?.clarificationOptions ?? [];
 
   const confirmationMessage = processResponse?.data?.parsedData?.confirmation;
   const isDeleteWarningConfirmation = confirmationMessage?.startsWith(
@@ -111,38 +116,6 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
     setRequestError(null);
   };
 
-  const handleSave = async () => {
-    if (!prompt.trim()) {
-      setRequestError(t('smartAdd.emptyPrompt'));
-      return;
-    }
-
-    try {
-      setPersistResponse(null);
-      const processedResponse = await processInstruction(prompt.trim());
-      setProcessResponse(processedResponse);
-      setPersistResponse(null);
-      setRequestError(null);
-
-      const parsedData = processedResponse.data?.parsedData;
-      if (!processedResponse.success || !parsedData) {
-        return;
-      }
-
-      const shouldConfirm = Boolean(
-        processedResponse.data?.parsedData?.confirmation,
-      );
-      if (shouldConfirm) {
-        return;
-      }
-
-      await handleConfirm(processedResponse);
-    } catch (error) {
-      setRequestError(formatRequestError(error));
-      return;
-    }
-  };
-
   const handleConfirm = async (
     processed = processResponse,
   ) => {
@@ -172,6 +145,49 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
     }
   };
 
+  const submitPrompt = async (nextPrompt: string) => {
+    if (!nextPrompt.trim()) {
+      setRequestError(t('smartAdd.emptyPrompt'));
+      return;
+    }
+
+    try {
+      setPersistResponse(null);
+      const processedResponse = await processInstruction(nextPrompt.trim());
+      setProcessResponse(processedResponse);
+      setPersistResponse(null);
+      setRequestError(null);
+
+      const parsedData = processedResponse.data?.parsedData;
+      if (!processedResponse.success || !parsedData) {
+        return;
+      }
+
+      const shouldConfirm = Boolean(
+        processedResponse.data?.parsedData?.confirmation,
+      );
+      if (shouldConfirm) {
+        return;
+      }
+
+      await handleConfirm(processedResponse);
+    } catch (error) {
+      setRequestError(formatRequestError(error));
+      return;
+    }
+  };
+
+  const handleSave = async () => {
+    await submitPrompt(prompt.trim());
+  };
+
+  const handleClarificationChoice = async (
+    option: SmartAddClarificationOption,
+  ) => {
+    setPrompt(option.prompt);
+    await submitPrompt(option.prompt);
+  };
+
   return (
     <>
       <Modal open={open} onClose={onClose}>
@@ -199,9 +215,41 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
               {requestError && <Alert severity="error">{requestError}</Alert>}
 
               {processResponse && !processResponse.success && (
-                <Alert severity={getAlertSeverity(processResponse)}>
-                  {processResponse.message}
-                </Alert>
+                <Stack spacing={1}>
+                  <Alert severity={getAlertSeverity(processResponse)}>
+                    {processResponse.message}
+                  </Alert>
+                  {clarificationOptions.length > 0 && (
+                    <Stack spacing={1}>
+                      <Typography variant="body2">
+                        {t('smartAdd.suggestions', {
+                          defaultValue: 'Suggestions',
+                        })}
+                      </Typography>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        useFlexGap
+                        flexWrap="wrap"
+                      >
+                        {clarificationOptions.map((option) => (
+                          <Button
+                            key={`${option.kind}:${option.label}`}
+                            variant="outlined"
+                            onClick={() => handleClarificationChoice(option)}
+                            disabled={isProcessing || isConfirming}
+                            sx={{
+                              borderRadius: '999px',
+                              textTransform: 'none',
+                            }}
+                          >
+                            {option.label}
+                          </Button>
+                        ))}
+                      </Stack>
+                    </Stack>
+                  )}
+                </Stack>
               )}
 
               {persistResponse && (

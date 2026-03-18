@@ -81,6 +81,7 @@ export class ValidationService {
             for (const name of entityNamesToCheck) {
                 const fuzzyMatches = allDbNames.filter(
                     (dbName) => dbName.toLowerCase() !== name.toLowerCase()
+                        && !this.isSiblingNumberedFamilyVariant(name, dbName)
                         && this.getLevenshteinDistance(name.toLowerCase(), dbName.toLowerCase()) < 2,
                 );
                 if (fuzzyMatches.length > 0) {
@@ -186,12 +187,120 @@ export class ValidationService {
                         (box: any) => typeof box === 'object' && (box as any).storageId === matchedStorageId,
                     )
                     : existingContext.boxes;
+                const boxResolution = this.resolveNumberedBoxReference(
+                    parsedData,
+                    scopedBoxes,
+                );
+                if (boxResolution?.kind === 'ambiguous-family') {
+                    return this.buildNumberedBoxSelectionResponse(
+                        intent,
+                        scope,
+                        parsedData,
+                        boxResolution.matchedBoxNames,
+                        suggestions,
+                    );
+                }
+                if (boxResolution?.kind === 'missing-explicit-family') {
+                    return {
+                        intent: 'decrement',
+                        isValid: false,
+                        scope,
+                        clarification: this.buildMissingNumberedBoxFamilyClarification(
+                            parsedData,
+                            boxResolution.requestedBoxName,
+                        ),
+                        clarificationKind: 'missing-box-family',
+                        clarificationOptions: [],
+                        suggestions,
+                        confidence: 0,
+                        shouldFallToLLM: false,
+                    };
+                }
+                const effectiveParsedData = boxResolution?.resolvedParsedData || parsedData;
+                const effectiveTargetedItems = effectiveParsedData.items || [];
                 const decrementSummaries: string[] = [];
 
-                for (const item of targetedItems) {
-                    const targetBoxName = parsedData.boxes?.length === 1
-                        ? parsedData.boxes[0].name
-                        : this.getBoxNameForItem(parsedData, item.boxClientRef);
+                if (this.hasPlaceholderItemTarget(effectiveParsedData)) {
+                    return {
+                        intent: 'decrement',
+                        isValid: false,
+                        scope,
+                        clarification: this.buildMissingItemNameClarification(effectiveParsedData),
+                        clarificationKind: 'missing-item-name',
+                        clarificationOptions: [],
+                        suggestions,
+                        confidence: 0,
+                        shouldFallToLLM: false,
+                    };
+                }
+
+                if (boxResolution?.kind === 'explicit-bulk-family') {
+                    const bulkBoxNames = boxResolution.matchedBoxNames;
+                    for (const sourceItem of targetedItems) {
+                        const matchingItems = boxResolution.matchedBoxRecords.map((box: any) => {
+                            const dbItem = existingContext.items.find(
+                                (existingItem: any) =>
+                                    typeof existingItem === 'object'
+                                    && (existingItem as any).boxId === (box as any).id
+                                    && this.normalizeLookupName((existingItem as any).name) === this.normalizeLookupName(sourceItem.name),
+                            );
+
+                            return {
+                                box,
+                                dbItem,
+                            };
+                        });
+
+                        const missingItemBox = matchingItems.find((entry: any) => !entry.dbItem || typeof entry.dbItem === 'string');
+                        if (missingItemBox) {
+                            return {
+                                intent: 'decrement',
+                                isValid: false,
+                                scope,
+                                clarification: `Item '${this.toTitleCase(sourceItem.name)}' does not exist in box '${this.toTitleCase((missingItemBox.box as any).name)}'.`,
+                                clarificationKind: 'missing-item-name',
+                                clarificationOptions: [],
+                                suggestions,
+                                confidence: 0,
+                                shouldFallToLLM: false,
+                            };
+                        }
+
+                        const quantities = matchingItems.map((entry: any) => (entry.dbItem as any).quantity ?? 0);
+                        const sameQuantity = quantities.every((quantity: number) => quantity === quantities[0]);
+                        const displayItemName = this.toTitleCase(sourceItem.name);
+                        const quotedBoxes = bulkBoxNames.map((name: string) => `'${this.toTitleCase(name)}'`);
+                        if (sameQuantity) {
+                            const currentQuantity = quantities[0] ?? 0;
+                            const nextQuantity = Math.max(0, currentQuantity - (sourceItem.quantity || 1));
+                            decrementSummaries.push(
+                                `Deletion is not supported. Decrease '${displayItemName}' from ${currentQuantity} to ${nextQuantity} in boxes ${this.joinHumanList(quotedBoxes)}?`,
+                            );
+                        } else {
+                            decrementSummaries.push(
+                                `Deletion is not supported. Decrease '${displayItemName}' by ${sourceItem.quantity || 1} in boxes ${this.joinHumanList(quotedBoxes)}?`,
+                            );
+                        }
+                    }
+
+                    return {
+                        intent: 'decrement',
+                        isValid: true,
+                        scope,
+                        clarification: null,
+                        confirmation: decrementSummaries.join(' '),
+                        expandedBoxes: null,
+                        suggestions,
+                        confidence: 0.95,
+                        shouldFallToLLM: false,
+                        resolvedParsedData: effectiveParsedData,
+                    };
+                }
+
+                for (const item of effectiveTargetedItems) {
+                    const targetBoxName = effectiveParsedData.boxes?.length === 1
+                        ? effectiveParsedData.boxes[0].name
+                        : this.getBoxNameForItem(effectiveParsedData, item.boxClientRef);
                     const matchedBoxRecord = targetBoxName
                         ? scopedBoxes.find(
                             (box: any) => this.normalizeLookupName(
@@ -245,6 +354,7 @@ export class ValidationService {
                     suggestions,
                     confidence: 0.95,
                     shouldFallToLLM: false,
+                    resolvedParsedData: effectiveParsedData,
                 };
             }
 
@@ -266,6 +376,17 @@ export class ValidationService {
             return {
                 intent, isValid: false, scope,
                 clarification: this.buildMissingBoxClarification(parsedData),
+                suggestions, confidence: 0, shouldFallToLLM: !canDirectClarify,
+            };
+        }
+
+        if (scope.affectsItems && !scope.affectsBoxes && !parsedData.storageName) {
+            const canDirectClarify = !hasUnrecognizedWords
+                && !hasConversationalNoise
+                && Boolean(parsedData.meta?.itemKeywordSeen);
+            return {
+                intent, isValid: false, scope,
+                clarification: this.buildMissingBoxAndStorageClarification(parsedData),
                 suggestions, confidence: 0, shouldFallToLLM: !canDirectClarify,
             };
         }
@@ -324,7 +445,72 @@ export class ValidationService {
                     (box: any) => typeof box === 'object' && (box as any).storageId === storageId,
                 )
                 : (existingContext?.boxes || []);
-            const missingBoxes = (parsedData.boxes || [])
+            const boxResolution = this.resolveNumberedBoxReference(
+                parsedData,
+                scopedBoxes,
+            );
+            if (boxResolution?.kind === 'ambiguous-family') {
+                return this.buildNumberedBoxSelectionResponse(
+                    intent,
+                    scope,
+                    parsedData,
+                    boxResolution.matchedBoxNames,
+                    suggestions,
+                );
+            }
+            if (boxResolution?.kind === 'missing-explicit-family') {
+                return {
+                    intent,
+                    isValid: false,
+                    scope,
+                    clarification: this.buildMissingNumberedBoxFamilyClarification(
+                        parsedData,
+                        boxResolution.requestedBoxName,
+                    ),
+                    clarificationKind: 'missing-box-family',
+                    clarificationOptions: [],
+                    suggestions,
+                    confidence: 0,
+                    shouldFallToLLM: false,
+                };
+            }
+
+            const effectiveParsedData = boxResolution?.resolvedParsedData || parsedData;
+            if (this.hasPlaceholderItemTarget(effectiveParsedData)) {
+                return {
+                    intent,
+                    isValid: false,
+                    scope,
+                    clarification: this.buildMissingItemNameClarification(
+                        effectiveParsedData,
+                        intent,
+                    ),
+                    clarificationKind: 'missing-item-name',
+                    clarificationOptions: [],
+                    suggestions,
+                    confidence: 0,
+                    shouldFallToLLM: false,
+                };
+            }
+            if (boxResolution?.kind === 'explicit-bulk-family') {
+                return {
+                    intent,
+                    isValid: true,
+                    scope,
+                    clarification: null,
+                    confirmation: this.buildBulkBoxActionConfirmation(
+                        intent,
+                        effectiveParsedData,
+                    ),
+                    expandedBoxes: null,
+                    suggestions,
+                    confidence: 0.85,
+                    shouldFallToLLM: false,
+                    resolvedParsedData: effectiveParsedData,
+                };
+            }
+
+            const missingBoxes = (effectiveParsedData.boxes || [])
                 .map((box: any) => box?.name)
                 .filter(Boolean)
                 .filter((boxName: string) => !scopedBoxes.some(
@@ -352,6 +538,7 @@ export class ValidationService {
                     suggestions,
                     confidence: 0.85,
                     shouldFallToLLM: false,
+                    resolvedParsedData: effectiveParsedData,
                 };
             }
         }
@@ -647,7 +834,7 @@ export class ValidationService {
         const targets: string[] = [];
         parsedData.boxes?.forEach((box: any) => targets.push(`box '${box.name}'`));
         parsedData.items?.forEach((item: any) => {
-            if (item?.name && item.name.toLowerCase() !== 'items') {
+            if (item?.name && !this.isPlaceholderItemName(item.name)) {
                 targets.push(`item '${item.name}'`);
             }
         });
@@ -663,7 +850,7 @@ export class ValidationService {
     private buildMissingBoxClarification(parsedData: any): string {
         const visibleItems = (parsedData.items || [])
             .map((item: any) => item.name)
-            .filter((name: string) => name && name.toLowerCase() !== 'items')
+            .filter((name: string) => name && !this.isPlaceholderItemName(name))
             .map((name: string) => `'${name}'`);
         const itemLabel = visibleItems.length > 0
             ? ` for ${this.joinHumanList(visibleItems)}`
@@ -675,11 +862,23 @@ export class ValidationService {
         return `Please specify a box${storageLabel}${itemLabel}.`;
     }
 
+    private buildMissingBoxAndStorageClarification(parsedData: any): string {
+        const visibleItems = (parsedData.items || [])
+            .map((item: any) => item.name)
+            .filter((name: string) => name && !this.isPlaceholderItemName(name))
+            .map((name: string) => `'${name}'`);
+        const itemLabel = visibleItems.length > 0
+            ? ` for ${this.joinHumanList(visibleItems)}`
+            : '';
+
+        return `Please specify a box and storage${itemLabel}.`;
+    }
+
     private buildMissingStorageClarification(parsedData: any): string {
         const targets: string[] = [];
         parsedData.boxes?.forEach((box: any) => targets.push(`'${box.name}'`));
         parsedData.items?.forEach((item: any) => {
-            if (item?.name && item.name.toLowerCase() !== 'items') {
+            if (item?.name && !this.isPlaceholderItemName(item.name)) {
                 targets.push(`'${item.name}'`);
             }
         });
@@ -688,6 +887,371 @@ export class ValidationService {
             : '';
 
         return `Please specify the storage${targetLabel}.`;
+    }
+
+    private resolveNumberedBoxReference(
+        parsedData: any,
+        scopedBoxes: Array<string | { id?: string; name: string }>,
+    ): {
+        kind: 'exact' | 'single-family' | 'ambiguous-family' | 'explicit-bulk-family' | 'missing' | 'missing-explicit-family';
+        requestedBoxName: string;
+        matchedBoxNames: string[];
+        matchedBoxRecords: Array<string | { id?: string; name: string }>;
+        resolvedParsedData?: any;
+    } | null {
+        if ((parsedData.boxes?.length || 0) !== 1) {
+            return null;
+        }
+
+        const requestedBoxName = parsedData.boxes[0]?.name;
+        if (!requestedBoxName) {
+            return null;
+        }
+
+        const exactMatch = scopedBoxes.find(
+            (box: any) => this.normalizeLookupName(
+                typeof box === 'string' ? box : box.name,
+            ) === this.normalizeLookupName(requestedBoxName),
+        );
+        if (exactMatch) {
+            return {
+                kind: 'exact',
+                requestedBoxName,
+                matchedBoxNames: [typeof exactMatch === 'string' ? exactMatch : exactMatch.name],
+                matchedBoxRecords: [exactMatch],
+                resolvedParsedData: this.applyResolvedBoxNames(
+                    parsedData,
+                    [typeof exactMatch === 'string' ? exactMatch : exactMatch.name],
+                ),
+            };
+        }
+
+        const familyMatches = scopedBoxes.filter((box: any) => {
+            const boxName = typeof box === 'string' ? box : box.name;
+            const familyBase = this.getNumberedFamilyBaseName(boxName);
+            return familyBase
+                && this.normalizeLookupName(familyBase) === this.normalizeLookupName(requestedBoxName);
+        });
+        const matchedBoxNames = familyMatches.map((box: any) => typeof box === 'string' ? box : box.name);
+        const familySelector = parsedData.meta?.boxFamilySelector;
+
+        if (familySelector && familyMatches.length > 0) {
+            return {
+                kind: 'explicit-bulk-family',
+                requestedBoxName,
+                matchedBoxNames,
+                matchedBoxRecords: familyMatches,
+                resolvedParsedData: this.applyResolvedBoxNames(
+                    parsedData,
+                    matchedBoxNames,
+                    true,
+                ),
+            };
+        }
+
+        if (familyMatches.length === 1) {
+            return {
+                kind: 'single-family',
+                requestedBoxName,
+                matchedBoxNames,
+                matchedBoxRecords: familyMatches,
+                resolvedParsedData: this.applyResolvedBoxNames(
+                    parsedData,
+                    matchedBoxNames,
+                ),
+            };
+        }
+
+        if (familyMatches.length > 1) {
+            return {
+                kind: 'ambiguous-family',
+                requestedBoxName,
+                matchedBoxNames,
+                matchedBoxRecords: familyMatches,
+            };
+        }
+
+        if (familySelector) {
+            return {
+                kind: 'missing-explicit-family',
+                requestedBoxName,
+                matchedBoxNames: [],
+                matchedBoxRecords: [],
+            };
+        }
+
+        return {
+            kind: 'missing',
+            requestedBoxName,
+            matchedBoxNames: [],
+            matchedBoxRecords: [],
+        };
+    }
+
+    private applyResolvedBoxNames(
+        parsedData: any,
+        resolvedBoxNames: string[],
+        replicateItemsAcrossBoxes: boolean = false,
+    ): any {
+        const sourceBox = parsedData.boxes?.[0] || {
+            name: resolvedBoxNames[0],
+            quantity: null,
+            description: null,
+            clientRef: 'b1',
+        };
+        const resolvedBoxes = resolvedBoxNames.map((name, index) => ({
+            ...sourceBox,
+            name,
+            quantity: null,
+            clientRef: resolvedBoxNames.length > 1 || replicateItemsAcrossBoxes
+                ? `${sourceBox.clientRef}:${index + 1}`
+                : sourceBox.clientRef,
+        }));
+
+        let resolvedItems = [...(parsedData.items || [])];
+        if (resolvedItems.length > 0) {
+            if (resolvedBoxes.length === 1 && !replicateItemsAcrossBoxes) {
+                resolvedItems = resolvedItems.map((item: any) => ({
+                    ...item,
+                    boxClientRef: resolvedBoxes[0].clientRef,
+                    orphaned: false,
+                    replicatePerExpandedBox: false,
+                }));
+            } else {
+                resolvedItems = resolvedBoxes.flatMap((box: any) =>
+                    (parsedData.items || []).map((item: any) => ({
+                        ...item,
+                        boxClientRef: box.clientRef,
+                        orphaned: false,
+                        replicatePerExpandedBox: false,
+                    })),
+                );
+            }
+        }
+
+        return {
+            ...parsedData,
+            boxes: resolvedBoxes,
+            items: resolvedItems,
+            boxName: resolvedBoxes[0]?.name ?? null,
+            boxQuantity: null,
+            meta: {
+                ...parsedData.meta,
+                resolvedNumberedBoxes: resolvedBoxNames,
+            },
+        };
+    }
+
+    private buildNumberedBoxSelectionResponse(
+        intent: string | null,
+        scope: {
+            affectsBoxes: boolean;
+            affectsItems: boolean;
+            affectsStorage: boolean;
+        },
+        parsedData: any,
+        matchedBoxNames: string[],
+        suggestions: string[],
+    ) {
+        const quotedBoxes = matchedBoxNames.map((name: string) => `'${this.toTitleCase(name)}'`);
+        const targetBoxName = this.toTitleCase(parsedData.boxes?.[0]?.name || 'box');
+        const storageLabel = parsedData.storageName
+            ? ` in storage '${this.toTitleCase(parsedData.storageName)}'`
+            : '';
+
+        return {
+            intent,
+            isValid: false,
+            scope,
+            clarification: `Multiple boxes match '${targetBoxName}'${storageLabel}: ${this.joinHumanList(quotedBoxes)}. Please choose one or use a bulk option.`,
+            clarificationKind: 'box-family-selection',
+            clarificationOptions: this.buildNumberedBoxSelectionOptions(parsedData, matchedBoxNames),
+            suggestions,
+            confidence: 0,
+            shouldFallToLLM: false,
+        };
+    }
+
+    private buildNumberedBoxSelectionOptions(parsedData: any, matchedBoxNames: string[]) {
+        const familyName = this.toTitleCase(parsedData.boxes?.[0]?.name || 'Box');
+        return [
+            ...matchedBoxNames.map((name: string) => ({
+                label: this.toTitleCase(name),
+                prompt: this.buildClarificationPrompt(parsedData, 'box', name),
+                kind: 'box',
+            })),
+            {
+                label: `All ${familyName} boxes`,
+                prompt: this.buildClarificationPrompt(parsedData, 'bulk-all'),
+                kind: 'bulk-all',
+            },
+        ];
+    }
+
+    private buildClarificationPrompt(
+        parsedData: any,
+        optionKind: 'box' | 'bulk-all' | 'bulk-each',
+        resolvedBoxName?: string,
+    ): string {
+        const storageSegment = parsedData.storageName
+            ? ` in storage ${this.toTitleCase(parsedData.storageName)}`
+            : '';
+        const itemPrompt = this.buildItemPrompt(parsedData, parsedData.intent);
+        const familyName = this.toTitleCase(parsedData.boxes?.[0]?.name || 'Box');
+        const boxTarget = optionKind === 'box'
+            ? `box ${this.toTitleCase(resolvedBoxName || familyName)}`
+            : optionKind === 'bulk-all'
+                ? `all ${familyName} boxes`
+                : `each ${familyName} box`;
+
+        if (parsedData.intent === 'decrement') {
+            return itemPrompt
+                ? `remove ${itemPrompt} from ${boxTarget}${storageSegment}`
+                : `remove from ${boxTarget}${storageSegment}`;
+        }
+
+        if (parsedData.intent === 'increment') {
+            return itemPrompt
+                ? `add ${itemPrompt} to ${boxTarget}${storageSegment}`
+                : `add items to ${boxTarget}${storageSegment}`;
+        }
+
+        if (parsedData.intent === 'update') {
+            return itemPrompt
+                ? `update ${boxTarget}${storageSegment} with ${parsedData.items?.length === 1 ? 'item' : 'items'} ${itemPrompt}`
+                : `update ${boxTarget}${storageSegment}`;
+        }
+
+        return `update ${boxTarget}${storageSegment}`;
+    }
+
+    private buildItemPrompt(parsedData: any, intent: string | null): string {
+        const items = (parsedData.items || []).map((item: any) => {
+            const itemName = this.toTitleCase(item.name);
+            const quantity = item.quantity || 1;
+
+            if (intent === 'update') {
+                return quantity > 1 ? `${itemName} ${quantity}` : itemName;
+            }
+
+            return quantity > 1 ? `${quantity} ${itemName}` : itemName;
+        });
+
+        return this.joinHumanList(items);
+    }
+
+    private buildBulkBoxActionConfirmation(intent: string | null, parsedData: any): string {
+        const quotedBoxes = (parsedData.boxes || []).map((box: any) => `'${box.name}'`);
+        const boxLabel = this.joinHumanList(quotedBoxes);
+
+        if (intent === 'increment' && (parsedData.items?.length || 0) > 0) {
+            const itemLabels = this.joinHumanList(
+                this.getDistinctItemsForConfirmation(parsedData).map((item: any) =>
+                    `'${this.toTitleCase(item.name)}'${(item.quantity || 1) > 1 ? ` (x${item.quantity || 1})` : ''}`,
+                ),
+            );
+            return `Add ${itemLabels} to boxes ${boxLabel}?`;
+        }
+
+        if (intent === 'update' && (parsedData.items?.length || 0) > 0) {
+            const itemLabels = this.joinHumanList(
+                this.getDistinctItemsForConfirmation(parsedData).map((item: any) =>
+                    `'${this.toTitleCase(item.name)}'${(item.quantity || 1) > 1 ? ` (x${item.quantity || 1})` : ''}`,
+                ),
+            );
+            return `Apply this update for ${itemLabels} to boxes ${boxLabel}?`;
+        }
+
+        return `Apply this ${intent || 'update'} to boxes ${boxLabel}?`;
+    }
+
+    private getDistinctItemsForConfirmation(parsedData: any): any[] {
+        const seen = new Set<string>();
+        return (parsedData.items || []).filter((item: any) => {
+            const key = `${this.normalizeLookupName(item.name)}::${item.quantity || 1}`;
+            if (seen.has(key)) {
+                return false;
+            }
+            seen.add(key);
+            return true;
+        });
+    }
+
+    private buildMissingNumberedBoxFamilyClarification(parsedData: any, boxName: string): string {
+        const storageLabel = parsedData.storageName
+            ? ` in storage '${this.toTitleCase(parsedData.storageName)}'`
+            : '';
+        return `No boxes matching '${this.toTitleCase(boxName)}' exist${storageLabel}.`;
+    }
+
+    private buildMissingItemNameClarification(
+        parsedData: any,
+        intent: string | null = 'decrement',
+    ): string {
+        const quotedBoxes = (parsedData.boxes || []).map((box: any) => `'${this.toTitleCase(box.name)}'`);
+        const boxLabel = quotedBoxes.length === 1
+            ? `box ${quotedBoxes[0]}`
+            : `boxes ${this.joinHumanList(quotedBoxes)}`;
+        const storageLabel = parsedData.storageName
+            ? ` in storage '${this.toTitleCase(parsedData.storageName)}'`
+            : '';
+
+        if (intent === 'increment') {
+            return `Please specify which item to add to ${boxLabel}${storageLabel}.`;
+        }
+
+        if (intent === 'update') {
+            return `Please specify which item to update in ${boxLabel}${storageLabel}.`;
+        }
+
+        return `Please specify which item to remove from ${boxLabel}${storageLabel}.`;
+    }
+
+    private hasPlaceholderItemTarget(parsedData: any): boolean {
+        const items = parsedData.items || [];
+        return items.length > 0 && items.every((item: any) => this.isPlaceholderItemName(item?.name));
+    }
+
+    private isPlaceholderItemName(name: string | null | undefined): boolean {
+        const normalized = this.normalizeLookupName(name);
+        if (/^\d+$/.test((name || '').trim())) {
+            return true;
+        }
+
+        return [
+            'item',
+            'items',
+            'more',
+            'extra',
+            'additional',
+            'another',
+            'thing',
+            'things',
+            'object',
+            'objects',
+            'article',
+            'articles',
+            'stuff',
+        ].includes(normalized);
+    }
+
+    private getNumberedFamilyBaseName(name: string | null | undefined): string | null {
+        const match = (name || '').trim().match(/^(.*?)(?:\s+(?:with\s+)?\d+)$/i);
+        return match?.[1]?.trim() || null;
+    }
+
+    private isSiblingNumberedFamilyVariant(
+        leftName: string | null | undefined,
+        rightName: string | null | undefined,
+    ): boolean {
+        const leftBase = this.getNumberedFamilyBaseName(leftName);
+        const rightBase = this.getNumberedFamilyBaseName(rightName);
+
+        if (!leftBase || !rightBase) {
+            return false;
+        }
+
+        return this.normalizeLookupName(leftBase) === this.normalizeLookupName(rightBase);
     }
 
     private getLevenshteinDistance(a: string, b: string): number {

@@ -81,7 +81,10 @@ export class HeavyNormalizationService {
         const normalizeEntityName = (name: string): string => {
             const synonymResult = this.applySynonymMapping(name);
             const wasMapped = synonymResult !== name;
-            const singularized = wasMapped ? synonymResult : this.toSingular(synonymResult);
+            const hasNumberedSuffix = /\b\d+\s*$/.test(synonymResult.trim());
+            const singularized = wasMapped || hasNumberedSuffix
+                ? synonymResult
+                : this.toSingular(synonymResult);
             return this.toTitleCase(singularized);
         };
 

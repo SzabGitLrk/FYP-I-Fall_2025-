@@ -27,13 +27,13 @@ const SmartAddResultDialog: FC<SmartAddResultDialogProps> = ({
 }) => {
   const { t } = useTranslation();
   const showWarningsOnly = warnings.length > 0;
-
+  const savedSuccessfullyText = 'Saved successfully';
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
         {showWarningsOnly
           ? t('smartAdd.warningsTitle', { defaultValue: 'Warnings' })
-          : t('smartAdd.resultTitle', { defaultValue: 'Saved successfully' })}
+          : savedSuccessfullyText}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>

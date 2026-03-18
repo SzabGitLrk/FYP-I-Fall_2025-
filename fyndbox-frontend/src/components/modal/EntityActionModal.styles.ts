@@ -105,12 +105,39 @@ export const StepperButton = styled(Button)(({ theme }) => ({
 
 export const ActionButtonsContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
+  flexDirection: 'row',
   gap: theme.spacing(2),
-  padding: theme.spacing(2, 0),
+  padding: theme.spacing(3, 0),
   position: 'sticky',
   bottom: 0,
   backgroundColor: theme.palette.secondary.main,
   zIndex: 10,
   justifyContent: 'center',
   alignItems: 'center',
+}));
+
+const EntityActionButton = styled(Button)(({ theme }) => ({
+  borderRadius: '8px',
+  padding: theme.spacing(1, 4),
+  textTransform: 'none',
+  fontSize: '1.25rem',
+  minWidth: '120px',
+}));
+
+export const DeleteActionButton = styled(EntityActionButton)(({ theme }) => ({
+  backgroundColor: 'transparent',
+  color: theme.palette.error.main,
+  border: `1px solid ${theme.palette.error.light}`,
+  '&:hover': {
+    backgroundColor: 'rgba(175, 87, 87, 0.04)',
+    border: `1px solid ${theme.palette.error.main}`,
+  },
+}));
+
+export const SaveActionButton = styled(EntityActionButton)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  '&:hover': {
+    backgroundColor: theme.palette.primary.dark,
+  },
 }));

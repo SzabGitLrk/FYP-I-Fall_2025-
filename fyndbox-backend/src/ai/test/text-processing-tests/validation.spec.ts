@@ -167,6 +167,13 @@ describe('TextProcessingService', () => {
             expect(result.shouldFallToLLM).toBe(true);
         });
 
+        it('should directly ask for box and storage when only an item is named', () => {
+            const result = classify("create a item called Tools");
+            expect(result.isValid).toBe(false);
+            expect(result.clarification).toBe("Please specify a box and storage for 'tools'.");
+            expect(result.shouldFallToLLM).toBe(false);
+        });
+
         it('should expand multi-box with auto-naming and confirmation', () => {
             const result = classify("Create storage Garage with 3 boxes Tools");
             expect(result.isValid).toBe(true);
@@ -258,6 +265,40 @@ describe('TextProcessingService', () => {
             expect(result.isValid).toBe(true);
             expect(result.shouldFallToLLM).toBe(false);
             expect(result.confidence).toBeGreaterThan(0.5);
+        });
+
+        it('should treat closet as a grouped box section keyword for update prompts', () => {
+            const result = classify(
+                "update a cabinet Accessories containing closet: clothes and watches items: 10 shirts and rolex 2",
+                {
+                    storages: [{ id: 'storage-1', name: 'Accessories' }] as any,
+                    boxes: [],
+                    items: [],
+                },
+            );
+            expect(result.intent).toBe('update');
+            expect(result.isValid).toBe(true);
+            expect(result.shouldFallToLLM).toBe(false);
+            expect(result.confirmation).toBe(
+                "Boxes 'Clothes' and 'Watches' do not exist in storage 'Accessories'. Create them?",
+            );
+        });
+
+        it('should treat arbitrary grouped labels as box sections for update prompts', () => {
+            const result = classify(
+                "update storge X containing A: X and Y items: 10 abc and xyz 2",
+                {
+                    storages: [{ id: 'storage-1', name: 'X' }] as any,
+                    boxes: [],
+                    items: [],
+                },
+            );
+            expect(result.intent).toBe('update');
+            expect(result.isValid).toBe(true);
+            expect(result.shouldFallToLLM).toBe(false);
+            expect(result.confirmation).toBe(
+                "Boxes 'X' and 'Y' do not exist in storage 'X'. Create them?",
+            );
         });
 
         it('should confirm create when update target storage is missing', () => {
@@ -354,6 +395,118 @@ describe('TextProcessingService', () => {
             );
         });
 
+        it('should ask the user to choose a numbered box family member for decrement prompts', () => {
+            const result = classify(
+                'remove 2 pumpy from box shoes in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }] as any,
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ] as any,
+                    items: [
+                        { id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-1' },
+                        { id: 'item-2', name: 'Pumpy', quantity: 10, boxId: 'box-2' },
+                        { id: 'item-3', name: 'Pumpy', quantity: 10, boxId: 'box-3' },
+                    ] as any,
+                },
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.shouldFallToLLM).toBe(false);
+            expect(result.clarificationKind).toBe('box-family-selection');
+            expect(result.clarification).toBe(
+                "Multiple boxes match 'Shoes' in storage 'Stylo Mall': 'Shoes 1', 'Shoes 2', and 'Shoes 3'. Please choose one or use a bulk option.",
+            );
+            expect(result.clarificationOptions).toEqual([
+                {
+                    label: 'Shoes 1',
+                    prompt: 'remove 2 Pumpy from box Shoes 1 in storage Stylo Mall',
+                    kind: 'box',
+                },
+                {
+                    label: 'Shoes 2',
+                    prompt: 'remove 2 Pumpy from box Shoes 2 in storage Stylo Mall',
+                    kind: 'box',
+                },
+                {
+                    label: 'Shoes 3',
+                    prompt: 'remove 2 Pumpy from box Shoes 3 in storage Stylo Mall',
+                    kind: 'box',
+                },
+                {
+                    label: 'All Shoes boxes',
+                    prompt: 'remove 2 Pumpy from all Shoes boxes in storage Stylo Mall',
+                    kind: 'bulk-all',
+                },
+            ]);
+        });
+
+        it('should return bulk confirmation instead of create-box confirmation for explicit family selectors', () => {
+            const result = classify(
+                'add 2 pumpy to all shoes boxes in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }] as any,
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ] as any,
+                    items: [] as any,
+                },
+            );
+
+            expect(result.isValid).toBe(true);
+            expect(result.shouldFallToLLM).toBe(false);
+            expect(result.confirmation).toBe(
+                "Add 'Pumpy' (x2) to boxes 'Shoes 1', 'Shoes 2', and 'Shoes 3'?",
+            );
+        });
+
+        it('should preserve exact numbered box references without sibling ambiguity suggestions', () => {
+            const result = classify(
+                'remove 2 pumpy from box shoes 1 in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }] as any,
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ] as any,
+                    items: [{ id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-1' }] as any,
+                },
+            );
+
+            expect(result.isValid).toBe(true);
+            expect(result.confirmation).toBe(
+                "Deletion is not supported. Decrease 'Pumpy' from 10 to 8?",
+            );
+            expect(result.suggestions).toEqual([]);
+        });
+
+        it('should ask for the item name when an add-more prompt targets a specific box', () => {
+            const result = classify(
+                'add more to box shoes 2 in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }] as any,
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ] as any,
+                    items: [{ id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-2' }] as any,
+                },
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.shouldFallToLLM).toBe(false);
+            expect(result.clarificationKind).toBe('missing-item-name');
+            expect(result.clarification).toBe(
+                "Please specify which item to add to box 'Shoes 2' in storage 'Stylo Mall'.",
+            );
+        });
+
         it('should detect fuzzy ambiguity (Levenshtein distance = 1)', () => {
             const result = classify("update storage Garag", {
                 storages: ['Garage', 'Garden'], boxes: [], items: []
@@ -434,6 +587,13 @@ describe('TextProcessingService', () => {
             expect(result.message).toBe("Please specify a box in storage 'Garage'.");
         });
 
+        it('should return direct clarification when an item is given without box or storage', () => {
+            const result = service.processInput("create a item called Tools");
+            expect(result.success).toBe(false);
+            expect(result.fallbackToLLM).toBe(false);
+            expect(result.message).toBe("Please specify a box and storage for 'tools'.");
+        });
+
         it('should return direct clarification when a placeholder quantity target is missing storage', () => {
             const result = service.processInput("add 3 to box winter");
             expect(result.success).toBe(false);
@@ -474,6 +634,150 @@ describe('TextProcessingService', () => {
             expect(result.success).toBe(true);
             expect(result.fallbackToLLM).toBe(false);
             expect(result.message).toContain('Confirm?');
+        });
+
+        it('should return numbered-box clarification options through processInput', () => {
+            const result = service.processInput(
+                'remove 2 pumpy from box shoes in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ],
+                    items: [
+                        { id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-1' },
+                        { id: 'item-2', name: 'Pumpy', quantity: 10, boxId: 'box-2' },
+                        { id: 'item-3', name: 'Pumpy', quantity: 10, boxId: 'box-3' },
+                    ],
+                },
+            );
+
+            expect(result.success).toBe(false);
+            expect(result.fallbackToLLM).toBe(false);
+            expect(result.message).toBe(
+                "Multiple boxes match 'Shoes' in storage 'Stylo Mall': 'Shoes 1', 'Shoes 2', and 'Shoes 3'. Please choose one or use a bulk option.",
+            );
+            expect(result.classified?.clarificationOptions).toHaveLength(4);
+        });
+
+        it('should ask for the box family choice before asking for a missing item name', () => {
+            const result = service.processInput(
+                'remove two items from box shoes storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ],
+                    items: [],
+                },
+            );
+
+            expect(result.success).toBe(false);
+            expect(result.message).toBe(
+                "Multiple boxes match 'Shoes' in storage 'Stylo Mall': 'Shoes 1', 'Shoes 2', and 'Shoes 3'. Please choose one or use a bulk option.",
+            );
+            expect(result.classified?.clarificationKind).toBe('box-family-selection');
+        });
+
+        it('should ask for the missing item name after the user chooses a specific numbered box', () => {
+            const result = service.processInput(
+                'remove 2 items from box shoes 1 in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ],
+                    items: [{ id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-1' }],
+                },
+            );
+
+            expect(result.success).toBe(false);
+            expect(result.fallbackToLLM).toBe(false);
+            expect(result.message).toBe(
+                "Please specify which item to remove from box 'Shoes 1' in storage 'Stylo Mall'.",
+            );
+            expect(result.classified?.clarificationKind).toBe('missing-item-name');
+            expect(result.classified?.suggestions).toEqual([]);
+        });
+
+        it('should expand explicit bulk family selectors into concrete numbered boxes through processInput', () => {
+            const result = service.processInput(
+                'remove 2 pumpy from all shoes boxes in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ],
+                    items: [
+                        { id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-1' },
+                        { id: 'item-2', name: 'Pumpy', quantity: 10, boxId: 'box-2' },
+                        { id: 'item-3', name: 'Pumpy', quantity: 10, boxId: 'box-3' },
+                    ],
+                },
+            );
+
+            expect(result.success).toBe(true);
+            expect(result.fallbackToLLM).toBe(false);
+            expect(result.data.boxes.map((box: any) => box.name)).toEqual([
+                'Shoes 1',
+                'Shoes 2',
+                'Shoes 3',
+            ]);
+            expect(result.data.confirmation).toBe(
+                "Deletion is not supported. Decrease 'Pumpy' from 10 to 8 in boxes 'Shoes 1', 'Shoes 2', and 'Shoes 3'?",
+            );
+        });
+
+        it('should not create an item named more when the user says add more', () => {
+            const result = service.processInput(
+                'add more to box shoes 2 in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ],
+                    items: [{ id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-2' }],
+                },
+            );
+
+            expect(result.success).toBe(false);
+            expect(result.fallbackToLLM).toBe(false);
+            expect(result.message).toBe(
+                "Please specify which item to add to box 'Shoes 2' in storage 'Stylo Mall'.",
+            );
+        });
+
+        it('should treat add-more-with-item prompts as adding that item to the selected numbered box', () => {
+            const result = service.processInput(
+                'add more pumpy to box shoes 2 in storage stylo mall',
+                {
+                    storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+                    boxes: [
+                        { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+                        { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+                        { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+                    ],
+                    items: [{ id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-2' }],
+                },
+            );
+
+            expect(result.success).toBe(true);
+            expect(result.fallbackToLLM).toBe(false);
+            expect(result.data.boxes.map((box: any) => box.name)).toEqual(['Shoes 2']);
+            expect(result.data.items).toMatchObject([
+                { name: 'Pumpy', quantity: 1, boxClientRef: 'b1' },
+            ]);
+            expect(result.data.confirmation).toBeNull();
         });
 
         it('should process update prompts with add-item wording without falling to LLM', () => {
@@ -524,6 +828,18 @@ describe('TextProcessingService', () => {
             expect(result.success).toBe(true);
             expect(result.fallbackToLLM).toBe(false);
             expect(result.data.confirmation).toBe("Storage 'Car' does not exist. Create it?");
+        });
+
+        it('should return confirmation for generic grouped update input via processInput', () => {
+            const result = service.processInput(
+                "update storge X containing A: X and Y items: 10 abc and xyz 2",
+                { storages: [{ id: 'storage-1', name: 'X' }], boxes: [], items: [] },
+            );
+            expect(result.success).toBe(true);
+            expect(result.fallbackToLLM).toBe(false);
+            expect(result.data.confirmation).toBe(
+                "Boxes 'X' and 'Y' do not exist in storage 'X'. Create them?",
+            );
         });
 
         it('should return confirmation when increment targets a missing box via processInput', () => {

@@ -196,7 +196,7 @@
     "confirmationFallback": "This action may reuse existing storage, box, or item entries. Press OK to continue or Cancel to stop without saving.",
     "confirmationFallbackShort": "Please review this action before saving.",
     "confirmationExistingShort": "Matching items already exist. Reuse them and add what is missing?",
-    "resultTitle": "Successfully Added",
+    "resultTitle": "Saved successfully",
     "resultClose": "Close",
     "warningsTitle": "Warnings"
   },
