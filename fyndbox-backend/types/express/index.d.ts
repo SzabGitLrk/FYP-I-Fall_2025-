@@ -1,7 +1,7 @@
 import 'express';
 
 declare module 'express' {
-  export interface Request {
+  interface Request {
     language?: string;
   }
 }
