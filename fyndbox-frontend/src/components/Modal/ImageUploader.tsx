@@ -50,18 +50,35 @@ const ImageUploader: FC<ImageUploaderProps> = ({
 
   const handleClearImage = () => {
     if (image) {
-      const imageKey = new URL(image).pathname.substring(1);
-      const decodedKey = decodeURIComponent(imageKey);
+      try {
+        // If it's a full URL, extract the path. If not, assume it's already the key/path.
+        let imageKey = image;
+        if (image.startsWith('http')) {
+          const url = new URL(image);
+          imageKey = url.pathname.substring(1);
+        } else if (image.startsWith('/')) {
+          imageKey = image.substring(1);
+        }
 
-      deleteImage(decodedKey, {
-        onSuccess: () => {
-          setImage('');
-          onImageUpload('');
-        },
-        onError: (err) => {
-          console.error('Error deleting image:', err);
-        },
-      });
+        const decodedKey = decodeURIComponent(imageKey);
+
+        deleteImage(decodedKey, {
+          onSuccess: () => {
+            setImage('');
+            onImageUpload('');
+          },
+          onError: (err) => {
+            console.error('Error deleting image:', err);
+            // Even if delete fails on server, clear locally to unblock user
+            setImage('');
+            onImageUpload('');
+          },
+        });
+      } catch (e) {
+        console.error('Invalid image URL or path:', image);
+        setImage('');
+        onImageUpload('');
+      }
     }
   };
 
