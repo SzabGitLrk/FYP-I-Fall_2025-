@@ -1,4 +1,5 @@
-import * as bcrypt from 'bcrypt';
+// Replaced 'bcrypt' with 'bcryptjs' to avoid native binding issues on Windows
+import * as bcrypt from 'bcryptjs';
 import { Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
