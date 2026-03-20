@@ -10,7 +10,8 @@
     "pnpm": ">=9.9.0"
   },
   "scripts": {
-    "build": "nest build && node -e \"const fs=require('fs'); fs.cpSync('node_modules/@fyndbox/shared/constants/i18n','dist/i18n',{recursive:true});\"",
+    "build": "nest build",
+    "postbuild": "cpy \"node_modules/@fyndbox/shared/constants/i18n/*.json\" dist/i18n",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
@@ -41,7 +42,7 @@
     "@nestjs/typeorm": "^10.0.2",
     "@types/multer": "^1.4.12",
     "aws-sdk": "^2.1691.0",
-    "bcryptjs": "^3.0.3",
+    "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.5",

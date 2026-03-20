@@ -8,12 +8,12 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "pnpm run create-env && vite",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "clean": "rimraf dist",
-    "create-env": "node -e \"const fs = require('fs'); if (!fs.existsSync('.env') && fs.existsSync('.env.template')) fs.copyFileSync('.env.template', '.env')\""
+    "create-env": "cpy .env.template .env --ignore-existing"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
