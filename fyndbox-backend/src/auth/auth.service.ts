@@ -6,8 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-// Replaced 'bcrypt' with 'bcryptjs' to avoid native binding issues on Windows
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import * as postmark from 'postmark';
 import * as crypto from 'crypto';
 import { UserService } from '../user/user.service';
