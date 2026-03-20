@@ -4,12 +4,12 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run create-env && vite",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "clean": "rimraf dist",
-    "create-env": "cp -n .env.template .env || true"
+    "create-env": "cpy .env.template .env --ignore-existing"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
