@@ -5,7 +5,7 @@ export type ProcessTextResponseDto = {
   confidence: number | null;
   rawInput: string;
   llmBackup: string;
-  _meta: {
+  meta: {
     processedAt: string;
     processingTimeMs: number;
     inputLength: number;

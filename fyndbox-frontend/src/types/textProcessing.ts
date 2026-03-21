@@ -67,7 +67,7 @@ export interface SmartAddClassification {
 }
 
 export interface SmartAddProcessPayload {
-  _meta: {
+  meta: {
     inputLength: number;
     processedAt: string;
     processingTimeMs: number;

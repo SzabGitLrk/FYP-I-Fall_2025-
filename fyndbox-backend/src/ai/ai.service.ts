@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ApiResponse } from '@fyndbox/shared/types/api-response';
-import { ConfirmAiResultDto } from './dto/confirm-ai-result.dto';
 import { ProcessTextRequestDto } from './dto/process-text-request.dto';
+import { ProcessTextResponseDto } from './dto/process-text-response.dto';
 import { AiPersistenceService } from './services/ai-persistence.service';
 import { TextProcessingService } from './services/text-processing.service';
-import { ProcessTextResponseDto } from './dto/process-text-response.dto';
+import { ConfirmAiResultRequestDto } from './dto/confirm-ai-result-request.dto';
+import { ConfirmAiResultResponseDto } from './dto/confirm-ai-result-response.dto';
 
 @Injectable()
 export class AiService {
@@ -13,25 +13,23 @@ export class AiService {
     private readonly aiPersistenceService: AiPersistenceService,
   ) {}
 
-  // Route text requests through the dedicated text-processing pipeline.
-  processText(
-    userId: string | undefined,
+  async processText(
+    userId: string,
     processTextRequestDto: ProcessTextRequestDto,
-  ): Promise<ApiResponse<ProcessTextResponseDto>> {
+  ): Promise<ProcessTextResponseDto> {
     return this.textProcessingService.processTextRequest(
       userId,
       processTextRequestDto,
     );
   }
 
-  // Confirmation requests go straight to the persistence workflow.
-  confirmResult(
-    userId: string | undefined,
-    confirmDto: ConfirmAiResultDto,
-  ): Promise<ApiResponse<any>> {
+  async confirmResult(
+    userId: string,
+    confirmAiResultRequestDto: ConfirmAiResultRequestDto,
+  ): Promise<ConfirmAiResultResponseDto> {
     return this.aiPersistenceService.confirmAndPersistRequest(
       userId,
-      confirmDto,
+      confirmAiResultRequestDto,
     );
   }
 }

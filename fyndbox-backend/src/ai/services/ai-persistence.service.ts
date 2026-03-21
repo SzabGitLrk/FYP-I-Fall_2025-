@@ -1,10 +1,16 @@
-import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
-import { ApiResponse } from '@fyndbox/shared/types/api-response';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import * as pluralize from 'pluralize';
 import { DataSource } from 'typeorm';
 import { Storage } from '../../storage/storage.entity';
 import { DICTIONARY_CONFIG } from '../config/nlp-dictionary.config';
-import { ConfirmAiResultDto } from '../dto/confirm-ai-result.dto';
+import { ConfirmAiResultRequestDto } from '../dto/confirm-ai-result-request.dto';
+import { ConfirmAiResultResponseDto } from '../dto/confirm-ai-result-response.dto';
 
 @Injectable()
 export class AiPersistenceService {
@@ -16,56 +22,58 @@ export class AiPersistenceService {
   constructor(@Optional() private readonly dataSource?: DataSource) {}
 
   async confirmAndPersistRequest(
-    userId: string | undefined,
-    confirmDto: ConfirmAiResultDto,
-  ): Promise<ApiResponse<any>> {
+    userId: string,
+    confirmDto: ConfirmAiResultRequestDto,
+  ): Promise<ConfirmAiResultResponseDto> {
     try {
-      const parsedData = confirmDto.parsedData ?? confirmDto.data;
+      const parsedData = confirmDto.parsedData;
 
       if (!parsedData) {
-        return {
-          statusCode: HttpStatus.BAD_REQUEST,
-          success: false,
-          message: 'No data provided for persistence',
-          data: null,
-        };
+        throw new BadRequestException('No data provided for persistence');
       }
 
-      if (parsedData.confirmation && !confirmDto.confirmed) {
-        return {
-          statusCode: HttpStatus.BAD_REQUEST,
-          success: false,
-          message: 'Please confirm this change before saving.',
-          data: null,
-        };
+      if (
+        typeof parsedData === 'object' &&
+        parsedData !== null &&
+        'confirmation' in parsedData &&
+        (parsedData as { confirmation?: unknown }).confirmation &&
+        !confirmDto.confirmed
+      ) {
+        throw new BadRequestException(
+          'Please confirm this change before saving.',
+        );
       }
 
-      const result = await this.persistToDatabase(parsedData, userId || '');
+      const result = await this.persistToDatabase(parsedData, userId);
 
-      if (result.success) {
-        this.logger.log(`Data persisted successfully for user ${userId}`);
-      } else {
+      if (!result.success) {
         this.logger.warn(`Persistence failed: ${result.message}`);
+        throw new BadRequestException(result.message || 'Persistence failed');
       }
+
+      this.logger.log(`Data persisted successfully for user ${userId}`);
 
       return {
-        statusCode: result.success ? HttpStatus.OK : HttpStatus.BAD_REQUEST,
-        success: result.success,
+        persisted: true,
         message: result.message,
-        data: result,
+        storageId: result.ids?.storageId,
+        boxIds: result.ids?.boxIds,
+        itemIds: result.ids?.itemIds,
+        warnings: result.warnings,
       };
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
       this.logger.error(
         `Error persisting data for user ${userId}: ${(error as Error).message}`,
         (error as Error).stack,
       );
 
-      return {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        success: false,
-        message: 'Failed to save data. Please try again.',
-        data: null,
-      };
+      throw new InternalServerErrorException(
+        'Failed to save data. Please try again.',
+      );
     }
   }
 

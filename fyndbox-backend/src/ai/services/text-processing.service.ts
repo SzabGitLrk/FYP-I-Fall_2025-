@@ -1,14 +1,17 @@
-import { Injectable, HttpStatus, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import * as pluralize from 'pluralize';
-import { ApiResponse } from '@fyndbox/shared/types/api-response';
 import wordsToNumbers from 'words-to-numbers';
 import { DICTIONARY_CONFIG } from '../config/nlp-dictionary.config';
-import { ConfirmAiResultDto } from '../dto/confirm-ai-result.dto';
+import { ProcessTextRequestDto } from '../dto/process-text-request.dto';
+import { ProcessTextResponseDto } from '../dto/process-text-response.dto';
 import { AiPersistenceService } from './ai-persistence.service';
 import { TextParsingService } from './text-parsing.service';
 import { ValidationService } from './validation.service';
-import { ProcessTextRequestDto } from '../dto/process-text-request.dto';
-import { ProcessTextResponseDto } from '../dto/process-text-response.dto';
 
 @Injectable()
 export class TextProcessingService {
@@ -38,6 +41,7 @@ export class TextProcessingService {
     'handful',
   ]);
   private readonly SPELLCHECK_CANDIDATES = this.buildSpellCheckCandidates();
+
   private SYNONYM_MAP: Record<string, string> = {
     'car stuff': 'Car Care',
     'car things': 'Car Care',
@@ -67,41 +71,53 @@ export class TextProcessingService {
     private readonly aiPersistenceService: AiPersistenceService,
   ) {}
 
-  // Facade methods used by controllers and tests.
   lightNormalization(text: string): {
     normalizedText: string;
     llmBackup: string;
     typoCount: number;
   } {
     if (!text) return { normalizedText: '', llmBackup: '', typoCount: 0 };
+
     const input = this.isShouting(text)
       ? this.normalizeShoutingInput(text)
       : text;
+
     let cleaned = input
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .trim()
       .replace(/\s+/g, ' ');
+
     cleaned = this.removeStopWords(cleaned);
     cleaned = this.applyPhraseAliases(cleaned.trim().replace(/\s+/g, ' '));
     cleaned = this.convertWordsToNumbers(cleaned.trim().replace(/\s+/g, ' '));
+
     const tokens = cleaned.split(/(\b)/);
     let typoCount = 0;
+
     const result = tokens
       .map((token) => {
         if (!token.match(/^[a-zA-Z0-9]+$/)) return token;
         if (token.match(/^[A-Z]{3,}$/)) return token;
+
         const corrected = this.applySpellCheck(token);
-        if (corrected !== token.toLowerCase() && corrected !== token)
+        if (corrected !== token.toLowerCase() && corrected !== token) {
           typoCount++;
+        }
+
         return corrected;
       })
       .join('')
       .replace(/\s+/g, ' ')
       .trim();
-    return { normalizedText: result, llmBackup: result, typoCount };
+
+    return {
+      normalizedText: result,
+      llmBackup: result,
+      typoCount,
+    };
   }
 
-  parseExtraction(normalizedText: string): any {
+  parseExtraction(normalizedText: string): unknown {
     return this.textParsingService.parseExtraction(normalizedText);
   }
 
@@ -116,6 +132,7 @@ export class TextProcessingService {
         wasMapped || hasNumberedSuffix
           ? synonymResult
           : this.toSingular(synonymResult);
+
       return this.toTitleCase(singularized);
     };
 
@@ -181,17 +198,6 @@ export class TextProcessingService {
     return { ...this.SYNONYM_MAP };
   }
 
-  // Keep the old service API available while editor/index caches catch up.
-  confirmAndPersistRequest(
-    userId: string | undefined,
-    confirmDto: ConfirmAiResultDto,
-  ): Promise<ApiResponse<any>> {
-    return this.aiPersistenceService.confirmAndPersistRequest(
-      userId,
-      confirmDto,
-    );
-  }
-
   generateConfirmationSummary(normalizedData: any): string {
     const lines: string[] = ['Ready to save:'];
 
@@ -218,6 +224,7 @@ export class TextProcessingService {
         const boxName = box ? box.name : 'Unknown';
         return `${item.name} (x${qty}) -> ${boxName}`;
       });
+
       lines.push(`  Items: ${itemDescriptions.join(', ')}`);
     }
 
@@ -225,73 +232,54 @@ export class TextProcessingService {
     return lines.join('\n');
   }
 
-  // Handle the full text-processing request flow.
   async processTextRequest(
-    userId: string | undefined,
+    userId: string,
     processTextDto: ProcessTextRequestDto,
-  ): Promise<ApiResponse<ProcessTextResponseDto>> {
+  ): Promise<ProcessTextResponseDto> {
     const startTime = Date.now();
 
     try {
-      // Step 1: Basic input checks.
       if (!processTextDto.text || processTextDto.text.trim().length === 0) {
         this.logger.warn(`Empty input from user ${userId}`);
-        return {
-          statusCode: HttpStatus.BAD_REQUEST,
-          success: false,
-          message: 'Text input is required. Please enter an instruction.',
-          data: undefined,
-        };
+        throw new BadRequestException(
+          'Text input is required. Please enter an instruction.',
+        );
       }
 
       if (processTextDto.text.length > this.maxInputLength) {
         this.logger.warn(
           `Input too long from user ${userId}: ${processTextDto.text.length} chars`,
         );
-        return {
-          statusCode: HttpStatus.BAD_REQUEST,
-          success: false,
-          message: `Input too long. Maximum ${this.maxInputLength} characters allowed.`,
-          data: undefined,
-        };
+        throw new BadRequestException(
+          `Input too long. Maximum ${this.maxInputLength} characters allowed.`,
+        );
       }
 
-      // Step 2: Sanitize input.
       const sanitizedText = this.sanitizeInput(processTextDto.text);
       if (sanitizedText !== processTextDto.text) {
         this.logger.debug(`Input sanitized for user ${userId}`);
       }
 
-      // Step 3: Service-level validation.
       const validation = this.validateInput(sanitizedText);
       if (!validation.isValid) {
         this.logger.debug(`Validation failed: ${validation.message}`);
-        return {
-          statusCode: HttpStatus.BAD_REQUEST,
-          success: false,
-          message: validation.message || undefined,
-          data: undefined,
-        };
+        throw new BadRequestException(validation.message || 'Invalid input.');
       }
 
-      // Step 4: Load context for intent decisions.
       let existingContext;
-      if (userId) {
-        try {
-          existingContext =
-            await this.aiPersistenceService.getExistingContext(userId);
-        } catch (error) {
-          this.logger.warn(
-            `Failed to fetch context: ${(error as Error).message}`,
-          );
-          existingContext = undefined;
-        }
+      try {
+        existingContext =
+          await this.aiPersistenceService.getExistingContext(userId);
+      } catch (error) {
+        this.logger.warn(
+          `Failed to fetch context: ${(error as Error).message}`,
+        );
+        existingContext = undefined;
       }
 
-      // Step 5: Process the text pipeline.
       const result = this.processInput(sanitizedText, existingContext);
-
       const duration = Date.now() - startTime;
+
       this.logger.log(
         `Processed "${sanitizedText.substring(0, 50)}..." ` +
           `| Intent: ${result.data?.intent || 'none'} ` +
@@ -300,54 +288,44 @@ export class TextProcessingService {
           `| User: ${userId}`,
       );
 
+      if (!result.success) {
+        throw new BadRequestException(result.message || 'Processing failed.');
+      }
+
       return {
-        statusCode: HttpStatus.OK,
-        success: result.success,
-        message:
-          result.message ||
-          (result.success
-            ? 'Text processed successfully'
-            : 'Processing failed'),
-        data: {
-          parsedData: result.data ?? null,
-          classified: result.classified ?? null,
-          fallbackToLLM: result.fallbackToLLM ?? false,
-          confidence:
-            result.confidence ?? result.classified?.confidence ?? null,
-          rawInput: result.rawInput ?? sanitizedText,
-          llmBackup: result.llmBackup ?? sanitizedText,
-          _meta: {
-            processedAt: new Date().toISOString(),
-            processingTimeMs: duration,
-            inputLength: sanitizedText.length,
-          },
+        parsedData: result.data ?? null,
+        classified: result.classified ?? null,
+        fallbackToLLM: result.fallbackToLLM ?? false,
+        confidence: result.confidence ?? result.classified?.confidence ?? null,
+        rawInput: result.rawInput ?? sanitizedText,
+        llmBackup: result.llmBackup ?? sanitizedText,
+        meta: {
+          processedAt: new Date().toISOString(),
+          processingTimeMs: duration,
+          inputLength: sanitizedText.length,
         },
       };
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
       this.logger.error(
         `Error processing text from user ${userId}: ${(error as Error).message}`,
         (error as Error).stack,
       );
 
-      return {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        success: false,
-        message:
-          'Something went wrong while processing your request. Please try again.',
-        data: undefined,
-      };
+      throw new InternalServerErrorException(
+        'Something went wrong while processing your request. Please try again.',
+      );
     }
   }
 
   processInput(rawInput: string, existingContext?: any): any {
-    // Phase 1: Light normalization
     const { normalizedText, llmBackup, typoCount } =
       this.lightNormalization(rawInput);
 
-    // Phase 2: Parsing and extraction
     const parsed = this.parseExtraction(normalizedText);
-
-    // Phase 3: Intent classification and validation
     const classified = this.intentClassification(
       parsed,
       existingContext,
@@ -362,6 +340,7 @@ export class TextProcessingService {
         typeof classified.shouldFallToLLM === 'boolean'
           ? classified.shouldFallToLLM
           : this.shouldFallbackInvalidClarificationToLLM(clarification);
+
       return {
         success: false,
         fallbackToLLM,
@@ -373,9 +352,6 @@ export class TextProcessingService {
     }
 
     if (classified.shouldFallToLLM) {
-      console.log(
-        `[LLM Fallback] Confidence: ${classified.confidence} | Input: "${rawInput}" | Backup: "${llmBackup}"`,
-      );
       return {
         success: false,
         fallbackToLLM: true,
@@ -387,7 +363,6 @@ export class TextProcessingService {
       };
     }
 
-    // Phase 4: Heavy normalization
     const parsedForPersistence = classified.resolvedParsedData || parsed;
     const normalized = this.heavyNormalization(parsedForPersistence);
     const prepared =
@@ -395,6 +370,7 @@ export class TextProcessingService {
         normalized,
         classified.expandedBoxes,
       );
+
     prepared.intent = classified.intent;
     prepared.confirmation = classified.confirmation;
     prepared.expandedBoxes = classified.expandedBoxes;
@@ -402,7 +378,6 @@ export class TextProcessingService {
     prepared.confidence = classified.confidence;
     prepared.meta = { ...prepared.meta, ...parsedForPersistence.meta };
 
-    // Phase 5: Confirmation summary
     const confirmationSummary = this.generateConfirmationSummary(prepared);
 
     return {
@@ -426,6 +401,7 @@ export class TextProcessingService {
       'good evening',
       'sorry',
     ]);
+
     const boundaryStopWordPhrases = [...boundaryStopWords]
       .filter((word) => word.includes(' '))
       .sort((a, b) => b.length - a.length);
@@ -442,6 +418,7 @@ export class TextProcessingService {
     }
 
     const tokens = result.trim().split(/\s+/).filter(Boolean);
+
     while (tokens.length > 2) {
       const firstToken = tokens[0]
         .replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, '')
@@ -466,8 +443,10 @@ export class TextProcessingService {
     const matrix = Array.from({ length: a.length + 1 }, () =>
       Array(b.length + 1).fill(0),
     );
+
     for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
     for (let j = 1; j <= b.length; j++) matrix[0][j] = j;
+
     for (let i = 1; i <= a.length; i++) {
       for (let j = 1; j <= b.length; j++) {
         const cost = a[i - 1] === b[j - 1] ? 0 : 1;
@@ -476,11 +455,13 @@ export class TextProcessingService {
           matrix[i][j - 1] + 1,
           matrix[i - 1][j - 1] + cost,
         );
+
         if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
           matrix[i][j] = Math.min(matrix[i][j], matrix[i - 2][j - 2] + 1);
         }
       }
     }
+
     return matrix[a.length][b.length];
   }
 
@@ -513,6 +494,7 @@ export class TextProcessingService {
 
     const distance = this.getLevenshteinDistance(word, candidate);
     if (distance > 1) return false;
+
     const isTransposition = this.isAdjacentTransposition(word, candidate);
     const sameEnding = word.slice(-1) === candidate.slice(-1);
 
@@ -536,9 +518,7 @@ export class TextProcessingService {
     );
 
     for (const [alias, replacement] of aliases) {
-      if (this.DISABLED_PHRASE_ALIASES.has(alias)) {
-        continue;
-      }
+      if (this.DISABLED_PHRASE_ALIASES.has(alias)) continue;
       result = result.replace(new RegExp(`\\b${alias}\\b`, 'gi'), replacement);
     }
 
@@ -598,34 +578,41 @@ export class TextProcessingService {
 
   private convertWordsToNumbers(text: string): string {
     let result = text;
+
     for (const [key, value] of Object.entries(this.CUSTOM_NUMBER_MAP)) {
       result = result.replace(
         new RegExp(`\\b${key}\\b`, 'gi'),
         value.toString(),
       );
     }
+
     const protect = [
       { word: 'a', token: '___A_PROT___' },
       { word: 'to', token: '___TO_PROT___' },
       { word: 'for', token: '___FOR_PROT___' },
     ];
+
     protect.forEach((entry) => {
       result = result.replace(
         new RegExp(`\\b${entry.word}\\b`, 'gi'),
         entry.token,
       );
     });
+
     const converted = wordsToNumbers(result);
     let final = converted ? converted.toString() : result;
+
     protect.forEach((entry) => {
       final = final.replace(new RegExp(entry.token, 'g'), entry.word);
     });
+
     return final;
   }
 
   private isShouting(text: string): boolean {
     const alphas = text.replace(/[^a-zA-Z]/g, '');
     if (alphas.length === 0) return false;
+
     const uppers = alphas.replace(/[^A-Z]/g, '');
     return uppers.length / alphas.length > 0.3;
   }
@@ -670,9 +657,11 @@ export class TextProcessingService {
         ) {
           return word;
         }
+
         if (/\d/.test(word)) {
           return word;
         }
+
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       })
       .join(' ');
@@ -688,9 +677,11 @@ export class TextProcessingService {
         ) {
           return word;
         }
+
         if (this.NON_SINGULARIZABLE_WORDS.has(word.toLowerCase())) {
           return word;
         }
+
         return pluralize.singular(word);
       })
       .join(' ');
@@ -711,16 +702,10 @@ export class TextProcessingService {
   }
 
   private sanitizeInput(input: string): string {
-    return (
-      input
-        // Remove null bytes
-        .replace(/\0/g, '')
-        // Remove vertical tab and form feed
-        .replace(/[\v\f]/g, '')
-        // Normalize multiple spaces to single space
-        .replace(/\s+/g, ' ')
-        // Trim leading/trailing whitespace
-        .trim()
-    );
+    return input
+      .replace(/\0/g, '')
+      .replace(/[\v\f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 }
