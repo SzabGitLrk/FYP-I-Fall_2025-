@@ -4,13 +4,11 @@ import { ApiResponse } from '@fyndbox/shared/types/api-response';
 import wordsToNumbers from 'words-to-numbers';
 import { DICTIONARY_CONFIG } from '../config/nlp-dictionary.config';
 import { ConfirmAiResultDto } from '../dto/confirm-ai-result.dto';
-import {
-  ProcessTextDto,
-  ProcessTextResponseDto,
-} from '../dto/process-text-request.dto';
 import { AiPersistenceService } from './ai-persistence.service';
 import { TextParsingService } from './text-parsing.service';
 import { ValidationService } from './validation.service';
+import { ProcessTextRequestDto } from '../dto/process-text-request.dto';
+import { ProcessTextResponseDto } from '../dto/process-text-response.dto';
 
 @Injectable()
 export class TextProcessingService {
@@ -230,7 +228,7 @@ export class TextProcessingService {
   // Handle the full text-processing request flow.
   async processTextRequest(
     userId: string | undefined,
-    processTextDto: ProcessTextDto,
+    processTextDto: ProcessTextRequestDto,
   ): Promise<ApiResponse<ProcessTextResponseDto>> {
     const startTime = Date.now();
 
@@ -326,7 +324,6 @@ export class TextProcessingService {
         },
       };
     } catch (error) {
-      const duration = Date.now() - startTime;
       this.logger.error(
         `Error processing text from user ${userId}: ${(error as Error).message}`,
         (error as Error).stack,
