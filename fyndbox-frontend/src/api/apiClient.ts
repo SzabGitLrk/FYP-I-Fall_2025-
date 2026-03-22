@@ -45,8 +45,30 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (!error.response) {
+      return Promise.reject(
+        new Error(
+          'Unable to reach the server. Please make sure the backend is running and try again.',
+        ),
+      );
+    }
+
+    const status: number | undefined = error.response.status;
+    const data = error.response.data as { error?: string } | string | undefined;
+
+    if (status && [500, 502, 503, 504].includes(status)) {
+      return Promise.reject(
+        new Error(
+          'Unable to reach the server. Please make sure the backend is running and try again.',
+        ),
+      );
+    }
+
     const errorMessage =
-      error.response?.data?.error || 'An error occurred. Please try again.';
+      typeof data === 'object' && data
+        ? data.error || 'An error occurred. Please try again.'
+        : 'An error occurred. Please try again.';
+
     return Promise.reject(new Error(errorMessage));
   },
 );
