@@ -117,7 +117,7 @@ export class TextProcessingService {
     };
   }
 
-  parseExtraction(normalizedText: string): unknown {
+  parseExtraction(normalizedText: string): any {
     return this.textParsingService.parseExtraction(normalizedText);
   }
 

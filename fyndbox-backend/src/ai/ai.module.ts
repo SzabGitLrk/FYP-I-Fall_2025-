@@ -10,17 +10,17 @@ import { ValidationService } from './services/validation.service';
 import { VoiceProcessingService } from './services/voice-processing.service';
 
 @Module({
-    controllers: [AiController],
-    providers: [
-        AiService,
-        AiPersistenceService,
-        ImageProcessingService,
-        LlmFallbackService,
-        TextParsingService,
-        TextProcessingService,
-        ValidationService,
-        VoiceProcessingService,
-    ],
-    exports: [AiService, AiPersistenceService, TextProcessingService],
+  controllers: [AiController],
+  providers: [
+    AiService,
+    AiPersistenceService,
+    ImageProcessingService,
+    LlmFallbackService,
+    TextParsingService,
+    TextProcessingService,
+    ValidationService,
+    VoiceProcessingService,
+  ],
+  exports: [AiService, AiPersistenceService, TextProcessingService],
 })
 export class AiModule {}
