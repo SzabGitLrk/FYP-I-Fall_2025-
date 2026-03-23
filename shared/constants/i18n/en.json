@@ -183,6 +183,8 @@
     "placeholder": "Example: Create storage Garage with box Tools and 5 hammers",
     "process": "Preview",
     "processing": "Previewing...",
+    "submit": "Submit",
+    "submitting": "Submitting...",
     "confirm": "Save",
     "approve": "OK",
     "confirming": "Saving...",

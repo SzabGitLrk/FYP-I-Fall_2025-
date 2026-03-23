@@ -183,6 +183,8 @@
     "placeholder": "Exempel: Skapa lagring Garage med lådan Tools och 5 hammare",
     "process": "Förhandsgranska",
     "processing": "Bearbetar...",
+    "submit": "Skicka in",
+    "submitting": "Skickar in...",
     "confirm": "Spara",
     "approve": "OK",
     "confirming": "Sparar...",

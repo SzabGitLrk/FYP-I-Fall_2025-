@@ -259,13 +259,12 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
                 <SmartAddPrimaryButton
                   variant="contained"
-                  startIcon={<Check />}
                   onClick={handleSave}
                   disabled={isProcessing || isConfirming}
                 >
                   {isProcessing || isConfirming
                     ? t('smartAdd.confirming')
-                    : t('smartAdd.confirm')}
+                    : t('smartAdd.submit')}
                 </SmartAddPrimaryButton>
               </SmartAddActionRow>
             </SmartAddContent>
