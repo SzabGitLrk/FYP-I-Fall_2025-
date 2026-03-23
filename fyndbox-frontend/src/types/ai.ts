@@ -19,7 +19,28 @@ export interface SmartAddItem {
   quantity: number;
 }
 
-export interface SmartAddParsedData {
+export interface ProcessTextClassification {
+  clarification: string | null;
+  clarificationKind?: string | null;
+  clarificationOptions?: SmartAddClarificationOption[];
+  confidence: number;
+  expandedBoxes?: Array<{
+    expandedNames: string[];
+    originalName: string;
+    quantity: number;
+  }> | null;
+  intent: string | null;
+  isValid: boolean;
+  scope: {
+    affectsBoxes: boolean;
+    affectsItems: boolean;
+    affectsStorage: boolean;
+  };
+  shouldFallToLLM: boolean;
+  suggestions: string[];
+}
+
+export interface ProcessTextParsedData {
   ambiguous: boolean;
   boxDescription?: string | null;
   boxName?: string | null;
@@ -45,48 +66,34 @@ export interface SmartAddParsedData {
   totalWords?: number;
 }
 
-export interface SmartAddClassification {
-  clarification: string | null;
-  clarificationKind?: string | null;
-  clarificationOptions?: SmartAddClarificationOption[];
-  confidence: number;
-  expandedBoxes?: Array<{
-    expandedNames: string[];
-    originalName: string;
-    quantity: number;
-  }> | null;
-  intent: string | null;
-  isValid: boolean;
-  scope: {
-    affectsBoxes: boolean;
-    affectsItems: boolean;
-    affectsStorage: boolean;
-  };
-  shouldFallToLLM: boolean;
-  suggestions: string[];
+export interface ProcessTextRequest {
+  text: string;
 }
 
-export interface SmartAddProcessPayload {
+export interface ProcessTextResult {
+  parsedData: ProcessTextParsedData | null;
+  classified: ProcessTextClassification | null;
+  fallbackToLLM: boolean;
+  confidence: number | null;
+  rawInput: string;
+  llmBackup: string;
   meta: {
-    inputLength: number;
     processedAt: string;
     processingTimeMs: number;
+    inputLength: number;
   };
-  classified: SmartAddClassification | null;
-  confidence: number | null;
-  fallbackToLLM: boolean;
-  llmBackup: string;
-  parsedData: SmartAddParsedData | null;
-  rawInput: string;
 }
 
-export interface SmartAddPersistPayload {
-  ids?: {
-    boxIds?: Record<string, string>;
-    itemIds?: string[];
-    storageId?: string;
-  };
+export interface ConfirmAiResultRequest {
+  parsedData: unknown;
+  confirmed: boolean;
+}
+
+export interface ConfirmAiResult {
+  persisted: boolean;
   message: string;
-  success: boolean;
+  storageId?: string | null;
+  boxIds?: Record<string, string>;
+  itemIds?: string[];
   warnings?: string[];
 }

@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
@@ -12,21 +12,18 @@ import {
 } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { ApiResponse } from '@fyndbox/shared/types/api-response';
 import CustomTextField from '../CustomTextField/CustomTextField';
 import {
   CancelButton,
   ModalBox,
   ModalContainer,
 } from '../Modal/EntityActionModal.styles';
+import { useProcessTextInput, useConfirmAiResult } from '../../hooks/useAi';
 import {
-  useConfirmTextInstruction,
-  useProcessTextInstruction,
-} from '../../hooks/useTextProcessing';
-import {
+  ConfirmAiResultRequest,
+  ProcessTextResult,
   SmartAddClarificationOption,
-  SmartAddProcessPayload,
-} from '../../types/textProcessing';
+} from '../../types/ai';
 import {
   SmartAddActionRow,
   SmartAddContent,
@@ -45,54 +42,56 @@ interface SmartAddModalProps {
   open: boolean;
 }
 
-const getAlertSeverity = (
-  response: ApiResponse<SmartAddProcessPayload> | null,
-): 'success' | 'info' | 'warning' => {
-  if (!response) {
-    return 'info';
-  }
-
-  if (response.success) {
-    return 'success';
-  }
-
-  return response.data?.fallbackToLLM ? 'warning' : 'info';
-};
-
 const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
   const { t } = useTranslation();
-  const [prompt, setPrompt] = useState('');
-  const [processResponse, setProcessResponse] =
-    useState<ApiResponse<SmartAddProcessPayload> | null>(null);
-  const [persistResponse, setPersistResponse] = useState<string | null>(null);
-  const [requestError, setRequestError] = useState<string | null>(null);
-  const { mutateAsync: processInstruction, isPending: isProcessing } =
-    useProcessTextInstruction();
-  const { mutateAsync: confirmInstruction, isPending: isConfirming } =
-    useConfirmTextInstruction();
-  const clarificationOptions =
-    processResponse?.data?.classified?.clarificationOptions ?? [];
 
-  const confirmationMessage = processResponse?.data?.parsedData?.confirmation;
+  const [prompt, setPrompt] = useState('');
+  const [processResult, setProcessResult] = useState<ProcessTextResult | null>(
+    null,
+  );
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [persistError, setPersistError] = useState<string | null>(null);
+
+  const { mutateAsync: processText, isPending: isProcessing } =
+    useProcessTextInput();
+  const { mutateAsync: confirmAiResult, isPending: isConfirming } =
+    useConfirmAiResult();
+
+  useEffect(() => {
+    if (!open) {
+      setPrompt('');
+      setProcessResult(null);
+      setRequestError(null);
+      setPersistError(null);
+    }
+  }, [open]);
+
+  const clarificationOptions: SmartAddClarificationOption[] =
+    processResult?.classified?.clarificationOptions ?? [];
+
+  const confirmationMessage = processResult?.parsedData?.confirmation;
+  const requiresConfirmation = Boolean(
+    processResult?.parsedData && confirmationMessage,
+  );
+
   const isDeleteWarningConfirmation = confirmationMessage?.startsWith(
     'Deletion is not supported.',
   );
-  const requiresConfirmation = Boolean(
-    processResponse?.success
-      && processResponse.data?.parsedData
-      && confirmationMessage,
-  );
-  const reviewMessage = confirmationMessage
-    ?? t('smartAdd.confirmationFallbackShort', {
+
+  const reviewMessage =
+    confirmationMessage ??
+    t('smartAdd.confirmationFallbackShort', {
       defaultValue: 'Please review this action before saving.',
     });
 
-  const formatRequestError = (error: unknown) => {
+  const fallbackAlertSeverity = useMemo<'warning' | 'info'>(() => {
+    return processResult?.fallbackToLLM ? 'warning' : 'info';
+  }, [processResult]);
+
+  const formatRequestError = (error: unknown): string => {
     const message =
       error instanceof Error ? error.message : t('smartAdd.requestFailed');
 
-    // Nest 404 default for missing controller routes:
-    // { message: 'Cannot POST /ai/process-text', error: 'Not Found', statusCode: 404 }
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
       return t('smartAdd.serviceUnavailable');
     }
@@ -100,48 +99,43 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
     return message || t('smartAdd.requestFailed');
   };
 
-  useEffect(() => {
-    if (!open) {
-      setPrompt('');
-      setProcessResponse(null);
-      setPersistResponse(null);
-      setRequestError(null);
-    }
-  }, [open]);
+  const resetFeedback = () => {
+    setRequestError(null);
+    setPersistError(null);
+  };
 
   const handlePromptChange = (value: string) => {
     setPrompt(value);
-    setProcessResponse(null);
-    setPersistResponse(null);
-    setRequestError(null);
+    setProcessResult(null);
+    resetFeedback();
   };
 
-  const handleConfirm = async (
-    processed = processResponse,
-  ) => {
-    const parsedData = processed?.data?.parsedData;
+  const handleConfirm = async (resultToConfirm = processResult) => {
+    const parsedData = resultToConfirm?.parsedData;
     if (!parsedData) {
       return;
     }
 
     try {
-      const persistResult = await confirmInstruction(parsedData);
-      if (!persistResult.success) {
-        setPersistResponse(
-          persistResult.message ?? t('smartAdd.requestFailed'),
-        );
-        return;
-      }
+      setPersistError(null);
+      setRequestError(null);
+
+      const payload: ConfirmAiResultRequest = {
+        parsedData,
+        confirmed: true,
+      };
+
+      const persistResult = await confirmAiResult(payload);
 
       onSaved({
-        message: persistResult.message ?? t('smartAdd.requestFailed'),
-        warnings: persistResult.data?.warnings ?? [],
-        reviewed: Boolean(processed?.data?.parsedData?.confirmation),
+        message: persistResult.message,
+        warnings: persistResult.warnings ?? [],
+        reviewed: Boolean(resultToConfirm?.parsedData?.confirmation),
       });
+
       onClose();
     } catch (error) {
-      setRequestError(formatRequestError(error));
-      return;
+      setPersistError(formatRequestError(error));
     }
   };
 
@@ -152,28 +146,22 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
     }
 
     try {
-      setPersistResponse(null);
-      const processedResponse = await processInstruction(nextPrompt.trim());
-      setProcessResponse(processedResponse);
-      setPersistResponse(null);
-      setRequestError(null);
+      resetFeedback();
 
-      const parsedData = processedResponse.data?.parsedData;
-      if (!processedResponse.success || !parsedData) {
+      const processed = await processText({ text: nextPrompt.trim() });
+      setProcessResult(processed);
+
+      if (!processed.parsedData) {
         return;
       }
 
-      const shouldConfirm = Boolean(
-        processedResponse.data?.parsedData?.confirmation,
-      );
-      if (shouldConfirm) {
+      if (processed.parsedData.confirmation) {
         return;
       }
 
-      await handleConfirm(processedResponse);
+      await handleConfirm(processed);
     } catch (error) {
       setRequestError(formatRequestError(error));
-      return;
     }
   };
 
@@ -199,6 +187,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
             <SmartAddContent>
               <Typography variant="h4">{t('smartAdd.title')}</Typography>
+
               <SmartAddDescription variant="body1">
                 {t('smartAdd.description')}
               </SmartAddDescription>
@@ -214,11 +203,15 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
               {requestError && <Alert severity="error">{requestError}</Alert>}
 
-              {processResponse && !processResponse.success && (
+              {processResult?.fallbackToLLM && (
                 <Stack spacing={1}>
-                  <Alert severity={getAlertSeverity(processResponse)}>
-                    {processResponse.message}
+                  <Alert severity={fallbackAlertSeverity}>
+                    {t('smartAdd.fallbackToLlm', {
+                      defaultValue:
+                        'This instruction needs manual review and will fall back to AI assistance.',
+                    })}
                   </Alert>
+
                   {clarificationOptions.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="body2">
@@ -226,6 +219,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
                           defaultValue: 'Suggestions',
                         })}
                       </Typography>
+
                       <Stack
                         direction="row"
                         spacing={1}
@@ -252,16 +246,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
                 </Stack>
               )}
 
-              {persistResponse && (
-                <Alert severity="error">
-                  {persistResponse}
-                  {processResponse?.data?.parsedData ? (
-                    <Typography variant="body2" sx={{ marginTop: 1 }}>
-                      {processResponse.message}
-                    </Typography>
-                  ) : null}
-                </Alert>
-              )}
+              {persistError && <Alert severity="error">{persistError}</Alert>}
 
               <SmartAddActionRow>
                 <SmartAddSecondaryButton
@@ -271,6 +256,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
                 >
                   {t('modal.cancel')}
                 </SmartAddSecondaryButton>
+
                 <SmartAddPrimaryButton
                   variant="contained"
                   startIcon={<Check />}
@@ -289,30 +275,33 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
       <Dialog
         open={requiresConfirmation}
-        onClose={() => setProcessResponse(null)}
+        onClose={() => setProcessResult(null)}
         fullWidth
         maxWidth="sm"
       >
-          <DialogTitle>
-            {t('smartAdd.confirmationTitle', {
+        <DialogTitle>
+          {t('smartAdd.confirmationTitle', {
             defaultValue: 'Confirm Changes',
           })}
-          </DialogTitle>
+        </DialogTitle>
+
         <DialogContent dividers>
           <Alert severity="info" sx={{ borderRadius: 2 }}>
             {reviewMessage}
           </Alert>
         </DialogContent>
+
         <DialogActions sx={{ padding: 2 }}>
           <SmartAddSecondaryButton
             variant="outlined"
-            onClick={() => setProcessResponse(null)}
+            onClick={() => setProcessResult(null)}
             disabled={isConfirming}
           >
             {isDeleteWarningConfirmation
               ? t('modal.cancel', { defaultValue: 'Cancel' })
               : t('smartAdd.reject', { defaultValue: 'No' })}
           </SmartAddSecondaryButton>
+
           <SmartAddPrimaryButton
             variant="contained"
             startIcon={<Check />}
