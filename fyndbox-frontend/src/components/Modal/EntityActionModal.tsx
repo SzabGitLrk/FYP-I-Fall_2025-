@@ -5,6 +5,7 @@ import { Close } from '@mui/icons-material';
 import CustomTextField from '../CustomTextField/CustomTextField';
 import { EntityType } from '../../types/entityTypes';
 import { TextFieldsContainer } from '../../styles/commonStyles';
+import ActionButtonsGroup from '../ActionButtonsGroup/ActionButtonsGroup';
 import ModalHeading from './ModalHeading';
 import {
   ModalContainer,
@@ -16,11 +17,8 @@ import {
   StepperButton,
   QuantityCounter,
   ActionButtonsContainer,
-  DeleteActionButton,
-  SaveActionButton,
 } from './EntityActionModal.styles';
 import ImageUploader from './ImageUploader';
-import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 
 interface EntityActionModalProps {
   open: boolean;
@@ -60,8 +58,6 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
   const [quantity, setQuantity] = useState(initialData?.quantity ?? 1);
   const [nameError, setNameError] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Confirm delete before executing the action.
-  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (open && mode === 'add') {
@@ -88,21 +84,6 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
     } else {
       onSave({ name, description, image, quantity });
     }
-  };
-
-  const handleOpenDeleteDialog = () => {
-    setDeleteDialogOpen(true);
-  };
-
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-  };
-
-  const handleConfirmDelete = () => {
-    if (onDelete) {
-      onDelete();
-    }
-    handleCloseDeleteDialog();
   };
 
   const handleIncrease = () => {
@@ -182,32 +163,18 @@ const EntityActionModal: FC<EntityActionModalProps> = ({
             }}
           />
           <ActionButtonsContainer>
-            {mode === 'edit' && onDelete && (
-              <DeleteActionButton
-                variant="outlined"
-                onClick={handleOpenDeleteDialog}
-              >
-                {t('modal.delete')}
-              </DeleteActionButton>
-            )}
-            <SaveActionButton variant="contained" onClick={handleSave}>
-              {t('modal.save')}
-            </SaveActionButton>
+            <ActionButtonsGroup
+              showDeleteButton={mode === 'edit'}
+              entityType={entityType}
+              onSaveClick={handleSave}
+              onDeleteClick={onDelete}
+            />
           </ActionButtonsContainer>
           {error && (
             <Typography variant="caption" color="error">
               {error}
             </Typography>
           )}
-          <ConfirmationDialog
-            isOpen={isDeleteDialogOpen}
-            titleKey="modal.deleteTitle"
-            messageKey="modal.deleteConfirmation"
-            confirmButtonTextKey="modal.delete"
-            titleParams={{ type: t(`types.${entityType}`) }}
-            onConfirm={handleConfirmDelete}
-            onCancel={handleCloseDeleteDialog}
-          />
         </ModalBox>
       </ModalContainer>
     </Modal>
