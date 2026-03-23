@@ -21,11 +21,19 @@ const ActionButtonsGroup: FC<ActionButtonsGroupProps> = ({
 
   return (
     <ActionsContainer>
-      <AddStorageButton variant="contained" onClick={onAddStorage} startIcon={<Add />}>
+      <AddStorageButton
+        variant="contained"
+        onClick={onAddStorage}
+        startIcon={<Add />}
+      >
         {t('dashboard.entity.addStorage')}
       </AddStorageButton>
-      <SmartAddButton variant="outlined" onClick={onSmartAdd} startIcon={<AutoAwesomeIcon />}>
-        {t('smartAdd.title', { defaultValue: 'Smart Add' })}
+      <SmartAddButton
+        variant="outlined"
+        onClick={onSmartAdd}
+        startIcon={<AutoAwesomeIcon />}
+      >
+        {t('smartAdd.title')}
       </SmartAddButton>
     </ActionsContainer>
   );

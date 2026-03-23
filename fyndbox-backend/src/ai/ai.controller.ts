@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpException,
   HttpStatus,
-  Post,
+  InternalServerErrorException,
   Request,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -38,11 +40,32 @@ export class AiController {
         data: result,
       };
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: 'Failed to process input',
+          error: error.message,
+        };
+      }
+
+      if (error instanceof InternalServerErrorException) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            success: false,
+            message: 'Failed to process input',
+            error: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           success: false,
-          message: 'Failed to process text',
+          message: 'Failed to process input',
           error: error instanceof Error ? error.message : 'Unknown error',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -68,18 +91,12 @@ export class AiController {
         data: result,
       };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-
-      if (
-        errorMessage === 'No data provided for persistence' ||
-        errorMessage === 'Please confirm this change before saving.'
-      ) {
+      if (error instanceof BadRequestException) {
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           success: false,
-          message: errorMessage,
-          error: errorMessage,
+          message: 'Failed to confirm AI result',
+          error: error.message,
           data: null,
         };
       }
@@ -89,7 +106,7 @@ export class AiController {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           success: false,
           message: 'Failed to confirm AI result',
-          error: errorMessage,
+          error: error instanceof Error ? error.message : 'Unknown error',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
