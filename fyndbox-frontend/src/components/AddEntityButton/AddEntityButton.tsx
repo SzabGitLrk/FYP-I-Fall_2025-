@@ -20,7 +20,7 @@ const AddEntityButton: FC<AddEntityButtonProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const getLabel = (entityType: string): string => {
+  const getLabel = (entityType: EntityType): string => {
     switch (entityType) {
       case 'box':
         return t('dashboard.entity.addBox');
