@@ -1,41 +1,82 @@
-import { FC } from 'react';
-import { Add } from '@mui/icons-material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { FC, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActionsContainer,
-  AddStorageButton,
-  SmartAddButton,
-} from './ActionButtonsGroup.styles';
+import { Check, Delete } from '@mui/icons-material';
+import { ButtonsGroupWrapper, CustomIcon } from '../../styles/commonStyles';
+import { DeleteButton, SaveButton } from './ActionButtonsGroup.styles';
+import { EntityType } from '../../types/entityTypes';
+import ConfirmationDialog from '../ConfirmationDialog/ConfirmationDialog';
 
 interface ActionButtonsGroupProps {
-  onAddStorage: () => void;
-  onSmartAdd: () => void;
+  showDeleteButton?: boolean;
+  entityType: EntityType;
+  onSaveClick?: (data?: any) => void;
+  onDeleteClick?: () => void;
 }
 
 const ActionButtonsGroup: FC<ActionButtonsGroupProps> = ({
-  onAddStorage,
-  onSmartAdd,
+  showDeleteButton = false,
+  entityType,
+  onSaveClick,
+  onDeleteClick,
 }) => {
   const { t } = useTranslation();
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleOpenDeleteDialog = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    if (onDeleteClick) {
+      onDeleteClick();
+    }
+    handleCloseDeleteDialog();
+  };
 
   return (
-    <ActionsContainer>
-      <AddStorageButton
-        variant="contained"
-        onClick={onAddStorage}
-        startIcon={<Add />}
-      >
-        {t('dashboard.entity.addStorage')}
-      </AddStorageButton>
-      <SmartAddButton
-        variant="outlined"
-        onClick={onSmartAdd}
-        startIcon={<AutoAwesomeIcon />}
-      >
-        {t('smartAdd.title')}
-      </SmartAddButton>
-    </ActionsContainer>
+    <>
+      <ButtonsGroupWrapper>
+        <SaveButton
+          variant="contained"
+          startIcon={
+            <CustomIcon>
+              <Check />
+            </CustomIcon>
+          }
+          onClick={() => onSaveClick && onSaveClick()}
+        >
+          {t('modal.save')}
+        </SaveButton>
+
+        {showDeleteButton && (
+          <DeleteButton
+            variant="contained"
+            startIcon={
+              <CustomIcon>
+                <Delete />
+              </CustomIcon>
+            }
+            onClick={handleOpenDeleteDialog}
+          >
+            {t('modal.delete')}
+          </DeleteButton>
+        )}
+      </ButtonsGroupWrapper>
+
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        titleKey="modal.deleteTitle"
+        messageKey="modal.deleteConfirmation"
+        confirmButtonTextKey="modal.delete"
+        titleParams={{ type: t(`types.${entityType}`) }}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCloseDeleteDialog}
+      />
+    </>
   );
 };
 

@@ -4,7 +4,13 @@ import { Edit } from '@mui/icons-material';
 import StorageIconSvg from '../../assets/storage-icon.svg';
 import BoxIconSvg from '../../assets/box-icon.svg';
 import { CustomIcon } from '../../styles/commonStyles';
-import { EntityCardContainer, ImageBox } from './EntityCard.styles';
+import {
+  ContentBox,
+  DescriptionText,
+  EntityCardContainer,
+  ImageBox,
+  NameText,
+} from './EntityCard.styles';
 import { EntityType } from '../../types/entityTypes';
 import { useTranslation } from 'react-i18next';
 
@@ -39,10 +45,6 @@ const EntityCard: FC<EntityCardProps> = ({
     }
   };
 
-  // Clean display text to avoid odd spacing.
-  const displayName = name.trim().replace(/\s+/g, ' ');
-  const displayDescription = description?.trim();
-
   return (
     <EntityCardContainer isBoxCard={entityType === 'box'}>
       <CardContent>
@@ -68,15 +70,10 @@ const EntityCard: FC<EntityCardProps> = ({
             )}
           </Box>
 
-          {/* Allow long names to wrap within the card. */}
-          <Box flex={3} minWidth={0}>
-            <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
-              {displayName}
-            </Typography>
-            <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
-              {displayDescription}
-            </Typography>
-          </Box>
+          <ContentBox>
+            <NameText variant="h6">{name}</NameText>
+            <DescriptionText variant="body1">{description}</DescriptionText>
+          </ContentBox>
 
           {entityType === 'item' && (
             <Box flex={1}>

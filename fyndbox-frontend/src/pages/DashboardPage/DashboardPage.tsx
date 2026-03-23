@@ -36,7 +36,6 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import { useFooterActions } from '../../hooks/useFooterActions';
 import SearchField from '../../components/SearchField/SearchField';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
-import ActionButtonsGroup from '../../components/ActionButtonsGroup/ActionButtonsGroup';
 import SmartAddModal from '../../components/SmartAdd/SmartAddModal';
 import SmartAddResultDialog from '../../components/SmartAdd/SmartAddResultDialog';
 
@@ -203,20 +202,12 @@ const DashboardPage: FC = () => {
             {expandedStorageIndex === index && (
               <SubContainer>
                 {storage.boxes && storage.boxes?.length > 0 ? (
-                  // Sort boxes by name for ascending display.
-                  [...storage.boxes]
-                    .sort((left, right) =>
-                      left.name.localeCompare(right.name, undefined, {
-                        numeric: true,
-                        sensitivity: 'base',
-                      }),
-                    )
-                    .map((box, boxIndex) => (
-                      <EntityCard
-                        key={boxIndex}
-                        name={box.name}
-                        description={box.description}
-                        iconButton={
+                  storage.boxes?.map((box, boxIndex) => (
+                    <EntityCard
+                      key={boxIndex}
+                      name={box.name}
+                      description={box.description}
+                      iconButton={
                         <IconButton
                           onClick={() => handleBoxOpen(storage.id, box.id)}
                         >
@@ -229,7 +220,7 @@ const DashboardPage: FC = () => {
                       entityType="box"
                       onEdit={() => handleEditEntity('box', box)}
                     />
-                    ))
+                  ))
                 ) : (
                   <Typography variant="h6" textAlign="center">
                     {t('common.notifications.noBoxForStorage')}
@@ -249,9 +240,9 @@ const DashboardPage: FC = () => {
             onCancel={handleCancelScan}
           />
         )}
-        <ActionButtonsGroup
-          onAddStorage={() => handleAddEntity('storage')}
-          onSmartAdd={() => setSmartAddOpen(true)}
+        <AddEntityButton
+          entityType="storage"
+          onAdd={() => handleAddEntity('storage')}
         />
       </MainContainer>
       <DashboardFooter

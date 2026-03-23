@@ -1,4 +1,4 @@
-import { Card, styled } from '@mui/material';
+import { Box, Card, styled, Typography } from '@mui/material';
 
 interface EntityCardContainerProps {
   isBoxCard: boolean;
@@ -21,3 +21,16 @@ export const ImageBox = styled('img')(({ theme }) => ({
   marginRight: theme.spacing(2),
   objectFit: 'cover',
 }));
+
+export const ContentBox = styled(Box)({
+  flex: 3,
+  minWidth: 0,
+});
+
+export const NameText = styled(Typography)({
+  wordBreak: 'break-word',
+});
+
+export const DescriptionText = styled(Typography)({
+  wordBreak: 'break-word',
+});
