@@ -22,17 +22,17 @@ import { useProcessTextInput, useConfirmAiResult } from '../../hooks/useAi';
 import {
   ConfirmAiResultRequest,
   ProcessTextResult,
-  SmartAddClarificationOption,
+  SmartAssistClarificationOption,
 } from '../../types/ai';
 import {
-  SmartAddActionRow,
-  SmartAddContent,
-  SmartAddDescription,
-  SmartAddPrimaryButton,
-  SmartAddSecondaryButton,
-} from './SmartAddModal.styles';
+  SmartAssistActionRow,
+  SmartAssistContent,
+  SmartAssistDescription,
+  SmartAssistPrimaryButton,
+  SmartAssistSecondaryButton,
+} from './SmartAssistModal.styles';
 
-interface SmartAddModalProps {
+interface SmartAssistModalProps {
   onClose: () => void;
   onSaved: (result: {
     message: string;
@@ -42,7 +42,11 @@ interface SmartAddModalProps {
   open: boolean;
 }
 
-const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
+const SmartAssistModal: FC<SmartAssistModalProps> = ({
+  onClose,
+  onSaved,
+  open,
+}) => {
   const { t } = useTranslation();
 
   const [prompt, setPrompt] = useState('');
@@ -66,7 +70,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
     }
   }, [open]);
 
-  const clarificationOptions: SmartAddClarificationOption[] =
+  const clarificationOptions: SmartAssistClarificationOption[] =
     processResult?.classified?.clarificationOptions ?? [];
 
   const confirmationMessage = processResult?.parsedData?.confirmation;
@@ -80,7 +84,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
   const reviewMessage =
     confirmationMessage ??
-    t('smartAdd.confirmationFallbackShort', {
+    t('smartAssist.confirmationFallbackShort', {
       defaultValue: 'Please review this action before saving.',
     });
 
@@ -90,13 +94,13 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
   const formatRequestError = (error: unknown): string => {
     const message =
-      error instanceof Error ? error.message : t('smartAdd.requestFailed');
+      error instanceof Error ? error.message : t('smartAssist.requestFailed');
 
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
-      return t('smartAdd.serviceUnavailable');
+      return t('smartAssist.serviceUnavailable');
     }
 
-    return message || t('smartAdd.requestFailed');
+    return message || t('smartAssist.requestFailed');
   };
 
   const resetFeedback = () => {
@@ -141,7 +145,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
   const submitPrompt = async (nextPrompt: string) => {
     if (!nextPrompt.trim()) {
-      setRequestError(t('smartAdd.emptyPrompt'));
+      setRequestError(t('smartAssist.emptyPrompt'));
       return;
     }
 
@@ -170,7 +174,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
   };
 
   const handleClarificationChoice = async (
-    option: SmartAddClarificationOption,
+    option: SmartAssistClarificationOption,
   ) => {
     setPrompt(option.prompt);
     await submitPrompt(option.prompt);
@@ -185,16 +189,16 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
               <Close />
             </CancelButton>
 
-            <SmartAddContent>
-              <Typography variant="h4">{t('smartAdd.title')}</Typography>
+            <SmartAssistContent>
+              <Typography variant="h4">{t('smartAssist.title')}</Typography>
 
-              <SmartAddDescription variant="body1">
-                {t('smartAdd.description')}
-              </SmartAddDescription>
+              <SmartAssistDescription variant="body1">
+                {t('smartAssist.description')}
+              </SmartAssistDescription>
 
               <CustomTextField
-                label={t('smartAdd.instructionLabel')}
-                placeholder={t('smartAdd.placeholder')}
+                label={t('smartAssist.instructionLabel')}
+                placeholder={t('smartAssist.placeholder')}
                 value={prompt}
                 multiline
                 minRows={4}
@@ -206,7 +210,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
               {processResult?.fallbackToLLM && (
                 <Stack spacing={1}>
                   <Alert severity={fallbackAlertSeverity}>
-                    {t('smartAdd.fallbackToLlm', {
+                    {t('smartAssist.fallbackToLlm', {
                       defaultValue:
                         'This instruction needs manual review and will fall back to AI assistance.',
                     })}
@@ -215,7 +219,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
                   {clarificationOptions.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="body2">
-                        {t('smartAdd.suggestions', {
+                        {t('smartAssist.suggestions', {
                           defaultValue: 'Suggestions',
                         })}
                       </Typography>
@@ -248,26 +252,26 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
 
               {persistError && <Alert severity="error">{persistError}</Alert>}
 
-              <SmartAddActionRow>
-                <SmartAddSecondaryButton
+              <SmartAssistActionRow>
+                <SmartAssistSecondaryButton
                   variant="outlined"
                   onClick={onClose}
                   disabled={isProcessing || isConfirming}
                 >
                   {t('modal.cancel')}
-                </SmartAddSecondaryButton>
+                </SmartAssistSecondaryButton>
 
-                <SmartAddPrimaryButton
+                <SmartAssistPrimaryButton
                   variant="contained"
                   onClick={handleSave}
                   disabled={isProcessing || isConfirming}
                 >
                   {isProcessing || isConfirming
-                    ? t('smartAdd.confirming')
-                    : t('smartAdd.submit')}
-                </SmartAddPrimaryButton>
-              </SmartAddActionRow>
-            </SmartAddContent>
+                    ? t('smartAssist.confirming')
+                    : t('smartAssist.submit')}
+                </SmartAssistPrimaryButton>
+              </SmartAssistActionRow>
+            </SmartAssistContent>
           </ModalBox>
         </ModalContainer>
       </Modal>
@@ -279,7 +283,7 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
         maxWidth="sm"
       >
         <DialogTitle>
-          {t('smartAdd.confirmationTitle', {
+          {t('smartAssist.confirmationTitle', {
             defaultValue: 'Confirm Changes',
           })}
         </DialogTitle>
@@ -291,32 +295,32 @@ const SmartAddModal: FC<SmartAddModalProps> = ({ onClose, onSaved, open }) => {
         </DialogContent>
 
         <DialogActions sx={{ padding: 2 }}>
-          <SmartAddSecondaryButton
+          <SmartAssistSecondaryButton
             variant="outlined"
             onClick={() => setProcessResult(null)}
             disabled={isConfirming}
           >
             {isDeleteWarningConfirmation
               ? t('modal.cancel', { defaultValue: 'Cancel' })
-              : t('smartAdd.reject', { defaultValue: 'No' })}
-          </SmartAddSecondaryButton>
+              : t('smartAssist.reject', { defaultValue: 'No' })}
+          </SmartAssistSecondaryButton>
 
-          <SmartAddPrimaryButton
+          <SmartAssistPrimaryButton
             variant="contained"
             startIcon={<Check />}
             onClick={() => handleConfirm()}
             disabled={isConfirming}
           >
             {isConfirming
-              ? t('smartAdd.confirming')
+              ? t('smartAssist.confirming')
               : isDeleteWarningConfirmation
-                ? t('smartAdd.ok', { defaultValue: 'OK' })
-                : t('smartAdd.approve', { defaultValue: 'Yes' })}
-          </SmartAddPrimaryButton>
+                ? t('smartAssist.ok', { defaultValue: 'OK' })
+                : t('smartAssist.approve', { defaultValue: 'Yes' })}
+          </SmartAssistPrimaryButton>
         </DialogActions>
       </Dialog>
     </>
   );
 };
 
-export default SmartAddModal;
+export default SmartAssistModal;

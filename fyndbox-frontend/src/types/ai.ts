@@ -1,17 +1,17 @@
-export interface SmartAddBox {
+export interface SmartAssistBox {
   clientRef: string;
   description?: string | null;
   name: string;
   quantity?: number | null;
 }
 
-export interface SmartAddClarificationOption {
+export interface SmartAssistClarificationOption {
   kind: 'box' | 'bulk-all';
   label: string;
   prompt: string;
 }
 
-export interface SmartAddItem {
+export interface SmartAssistItem {
   boxClientRef: string | null;
   description?: string | null;
   name: string;
@@ -22,7 +22,7 @@ export interface SmartAddItem {
 export interface ProcessTextClassification {
   clarification: string | null;
   clarificationKind?: string | null;
-  clarificationOptions?: SmartAddClarificationOption[];
+  clarificationOptions?: SmartAssistClarificationOption[];
   confidence: number;
   expandedBoxes?: Array<{
     expandedNames: string[];
@@ -45,7 +45,7 @@ export interface ProcessTextParsedData {
   boxDescription?: string | null;
   boxName?: string | null;
   boxQuantity?: number | null;
-  boxes: SmartAddBox[];
+  boxes: SmartAssistBox[];
   confidence?: number;
   confirmation?: string | null;
   expandedBoxes?: Array<{
@@ -55,7 +55,7 @@ export interface ProcessTextParsedData {
   }> | null;
   extractedWordCount?: number;
   intent: string | null;
-  items: SmartAddItem[];
+  items: SmartAssistItem[];
   meta?: {
     mappingStrategy?: 'direct' | 'sequential';
   };

@@ -9,6 +9,7 @@ import TopBar from '../../components/TopBar/TopBar';
 import EntityCard from '../../components/EntityCard/EntityCard';
 import AddEntityButton from '../../components/AddEntityButton/AddEntityButton';
 import DashboardFooter from '../../components/DashboardFooter/DashboardFooter';
+import SmartAssistButton from '../../components/SmartAssist/SmartAssistButton';
 import { CustomIcon } from '../../styles/commonStyles';
 import {
   DashboardContainer,
@@ -36,8 +37,8 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import { useFooterActions } from '../../hooks/useFooterActions';
 import SearchField from '../../components/SearchField/SearchField';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
-import SmartAddModal from '../../components/SmartAdd/SmartAddModal';
-import SmartAddResultDialog from '../../components/SmartAdd/SmartAddResultDialog';
+import SmartAssistModal from '../../components/SmartAssist/SmartAssistModal';
+import SmartAssistResultDialog from '../../components/SmartAssist/SmartAssistResultDialog';
 
 const DashboardPage: FC = () => {
   const { t } = useTranslation();
@@ -145,6 +146,10 @@ const DashboardPage: FC = () => {
     setSearchKeyword(keyword);
   };
 
+  const handleOpenSmartAssistModal = () => {
+    setSmartAddOpen(true);
+  };
+
   const handleSmartAddSaved = (result: {
     message: string;
     warnings?: string[];
@@ -244,6 +249,7 @@ const DashboardPage: FC = () => {
           entityType="storage"
           onAdd={() => handleAddEntity('storage')}
         />
+        <SmartAssistButton onClick={handleOpenSmartAssistModal} />
       </MainContainer>
       <DashboardFooter
         onFavoriteClick={handleFavoriteClick}
@@ -260,12 +266,12 @@ const DashboardPage: FC = () => {
         onSave={handleSave}
         onDelete={handleDelete}
       />
-      <SmartAddModal
+      <SmartAssistModal
         open={isSmartAddOpen}
         onClose={() => setSmartAddOpen(false)}
         onSaved={handleSmartAddSaved}
       />
-      <SmartAddResultDialog
+      <SmartAssistResultDialog
         open={smartAddResult.open}
         message={smartAddResult.message}
         warnings={smartAddResult.warnings}

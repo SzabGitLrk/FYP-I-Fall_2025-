@@ -176,9 +176,9 @@
     "deactivateTitle": "Deactivate Account ?",
     "deactivateConfirmation": "Are you sure you want to deactivate the account? This action cannot be undone."
   },
-  "smartAdd": {
-    "title": "Smart Add",
-    "description": "Describe a storage action in one sentence. Smart Add will interpret it and save the result in one step.",
+  "smartAssist": {
+    "title": "Smart Assist",
+    "description": "Describe a storage action in one sentence. Smart Assist will interpret it and save the result in one step.",
     "instructionLabel": "Instruction",
     "placeholder": "Example: Create storage Garage with box Tools and 5 hammers",
     "process": "Preview",
@@ -191,9 +191,9 @@
     "reset": "Reset",
     "preview": "Preview",
     "suggestions": "Suggestions",
-    "emptyPrompt": "Enter an instruction before saving it.",
+    "emptyPrompt": "Enter an instruction before submitting it.",
     "requestFailed": "Unable to process the instruction right now.",
-    "serviceUnavailable": "Smart Add service isn't available right now. Please restart the backend and try again.",
+    "serviceUnavailable": "Smart Assist service isn't available right now. Please restart the backend and try again.",
     "confirmationTitle": "Confirm Changes",
     "confirmationFallback": "This action may reuse existing storage, box, or item entries. Press OK to continue or Cancel to stop without saving.",
     "confirmationFallbackShort": "Please review this action before saving.",

@@ -19,7 +19,7 @@ interface SmartAddResultDialogProps {
   warnings: string[];
 }
 
-const SmartAddResultDialog: FC<SmartAddResultDialogProps> = ({
+const SmartAssistResultDialog: FC<SmartAddResultDialogProps> = ({
   message,
   onClose,
   open,
@@ -32,7 +32,7 @@ const SmartAddResultDialog: FC<SmartAddResultDialogProps> = ({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
         {showWarningsOnly
-          ? t('smartAdd.warningsTitle', { defaultValue: 'Warnings' })
+          ? t('smartAssist.warningsTitle', { defaultValue: 'Warnings' })
           : savedSuccessfullyText}
       </DialogTitle>
       <DialogContent dividers>
@@ -50,7 +50,7 @@ const SmartAddResultDialog: FC<SmartAddResultDialogProps> = ({
             <Stack spacing={1}>
               {!showWarningsOnly && (
                 <Typography variant="subtitle2">
-                  {t('smartAdd.warningsTitle', { defaultValue: 'Warnings' })}
+                  {t('smartAssist.warningsTitle', { defaultValue: 'Warnings' })}
                 </Typography>
               )}
               {warnings.map((warning) => (
@@ -73,11 +73,11 @@ const SmartAddResultDialog: FC<SmartAddResultDialogProps> = ({
             textTransform: 'none',
           }}
         >
-          {t('smartAdd.resultClose', { defaultValue: 'Close' })}
+          {t('smartAssist.resultClose', { defaultValue: 'Close' })}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default SmartAddResultDialog;
+export default SmartAssistResultDialog;
