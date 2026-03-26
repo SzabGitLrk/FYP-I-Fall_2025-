@@ -98,12 +98,11 @@
 
 <div class="container mt-5">
 
-  <!-- Title -->
   <h2 class="text-center mb-5 dashboard-title">🌿 NGO Dashboard</h2>
 
   <div class="card-container">
 
-    <!-- My Profile Card -->
+    <!-- My Profile -->
     <div class="main-card col-md-3 col-sm-6">
       <h5 class="card-title">My Profile</h5>
       <ul>
@@ -112,7 +111,7 @@
       </ul>
     </div>
 
-    <!-- Volunteers Card -->
+    <!-- Volunteers -->
     <div class="main-card col-md-3 col-sm-6">
       <h5 class="card-title">Volunteers</h5>
       <ul>
@@ -122,45 +121,51 @@
       </ul>
     </div>
 
-    <!-- Claimed Donations Card -->
+    <!-- Claimed Donations -->
     <div class="main-card col-md-3 col-sm-6">
       <h5 class="card-title">Claimed Donations</h5>
       <ul>
         <li><a href="/ngo/claimed-donations">📦 View Your Claims</a></li>
-        <li>Total Claimed: <%= ngo.claimed_count %></li>
+        <li>Total Claimed: <%= ngo.claimed_count || 0 %></li>
       </ul>
     </div>
 
-    <!-- Notifications Card -->
-    <div class="main-card col-md-3 col-sm-6">
-      <h5 class="card-title">Notifications</h5>
-      <ul>
-        <li>
-          <a href="/ngo/notifications">🔔 View Notifications</a>
-          <% if (unreadCount && unreadCount > 0) { %>
-            <span class="notification-badge"><%= unreadCount %></span>
-          <% } %>
-        </li>
-        <li>📬 Stay updated with admin alerts</li>
-      </ul>
-    </div>
-
-    <!-- NGO Insights Card (Informational) -->
+    <!-- NGO Insights -->
     <div class="main-card col-md-3 col-sm-6">
       <h5 class="card-title">NGO Insights</h5>
       <ul>
-        <li>👥 Volunteers Count: <%= ngo.volunteers_count %></li>
-        <li>📅 Joined On: <%= ngo.created_at.toDateString() %></li>
+        <li>👥 Volunteers Count: <%= ngo.volunteers_count || 0 %></li>
+        <li>📅 Joined On: <%= ngo.created_at ? ngo.created_at.toDateString() : 'N/A' %></li>
         <li>📧 Contact: <%= ngo.email %></li>
       </ul>
     </div>
 
-  </div>
+    <!-- Alerts -->
+    <div class="main-card col-md-3 col-sm-6">
+      <h5 class="card-title">Alerts</h5>
+      <ul>
+        <li>
+          <a href="/ngo/notifications">
+            🔔 View Notifications
+            <% if (unreadCount > 0) { %>
+              <span class="notification-badge"><%= unreadCount %></span>
+            <% } %>
+          </a>
+        </li>
+        <li>
+          <small class="text-muted">Stay updated on food claims.</small>
+        </li>
+      </ul>
+    </div>
 
-  <!-- Logout Button -->
+  </div> <!-- End card-container -->
+
+  <!-- Logout -->
   <div class="text-center mt-5 mb-4">
     <form action="/ngo_logout" method="post">
-      <button type="submit" class="btn btn-outline-success btn-logout">Logout</button>
+      <button type="submit" class="btn btn-outline-success btn-logout">
+        Logout
+      </button>
     </form>
   </div>
 

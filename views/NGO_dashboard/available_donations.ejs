@@ -14,14 +14,7 @@
              value="<%= city || '' %>">
     </div>
 
-    <!-- <div class="col-md-4">
-      <select name="type" class="form-select border-success">
-        <option value="">All Types</option>
-        <option value="Cooked" <%= type==="Cooked" ? "selected" : "" %>>Cooked</option>
-        <option value="Uncooked" <%= type==="Uncooked" ? "selected" : "" %>>Uncooked</option>
-        <option value="Packaged" <%= type==="Packaged" ? "selected" : "" %>>Packaged</option>
-      </select>
-    </div> -->
+
 
     <div class="col-md-4">
       <button class="btn btn-success w-100 fw-bold">Apply Filters</button>
@@ -39,9 +32,9 @@
         <div class="card shadow-sm h-100">
           <div class="card-body d-flex flex-column">
             <h5 class="fw-bold text-success"><%= d.food_title %></h5>
-            <p class="mb-1"><%= d.food_description %></p>
-            <p class="mb-1"><strong>Type:</strong> <%= d.food_type %></p>
+            <p class="mb-1"><%= d.description %></p>
             <p class="mb-1"><strong>Quantity:</strong> <%= d.quantity %></p>
+            <p class="mb-1"><strong>Pickup Address:</strong> <%= d.pickup_address %></p>
             <p class="mb-1"><strong>Pickup City:</strong> <%= d.pickup_city %></p>
             <p class="mb-3"><strong>Donor:</strong> <%= d.donor_id ? d.donor_id.name : "Unknown" %></p>
 <form method="POST" action="/ngo/claim/<%= d._id %>" class="mt-auto">

@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 const express = require("express");
 const app = express();
@@ -13,14 +14,10 @@ const session = require("express-session");
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
-const { sendEmail } = require("./utils/sendEmail.js");
-const { getCoordinates }=require("./utils/geoCoding.js");
-const multer = require("multer");
 const { storage, cloudinary } = require("./cloudConfig");
-///const upload = multer({ storage });
+
 
 // requiring our models 
-// const upload = multer({ storage });
 const admin = require("./models/admin.js");
 const Task = require("./models/task.js");
 const NGO = require("./models/NGO.js");
@@ -32,6 +29,9 @@ const volunteers = require("./models/volunteers.js");
 const Contact = require("./models/contact.js");
 const Notification=require("./models/notification.js");
 const upload = require("./utils/upload.js");
+const getCoordinates=require("./utils/getCoordinates.js");
+const sendEmail=require("./utils/emailService.js");
+
 
 
 // Register ejs-mate BEFORE setting view engine
@@ -163,7 +163,6 @@ app.get("/contact", (req, res) => {
 app.post("/contact", async (req, res) => {
   try {
     const { name, email, message } = req.body;
-
     // Validation: all fields required
     if (!name || !email || !message) {
       req.flash("error", "All fields are required!");
@@ -403,70 +402,6 @@ app.get("/admin/ngo/:id", isAdminLoggedIn, async (req, res) => {
 
 
 
-
-// =======================
-// 1️⃣ GET: Send Notification Form
-// =======================
-app.get("/ngo/:ngoId/notify", async (req, res) => {
-  try {
-    const ngo = await NGO.findById(req.params.ngoId);
-
-    if (!ngo) {
-      return res.status(404).send("NGO not found");
-    }
-
-    res.render("NGO_dashboard/sendNotification.ejs", {
-      title: "Send Notification",
-      ngo
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Unable to load notification page");
-  }
-});
-
-// =======================
-// 2️⃣ POST: Send Notification
-// =======================
-app.post("/ngo/:ngoId/notify", async (req, res) => {
-  try {
-    const { message } = req.body;
-    await Notification.create({
-      user_type: "NGO",
-      user_id: req.params.ngoId,
-      message
-    });
-      req.flash("success", "Notification sent successfully to the selected NGO");
-      res.redirect("/all_ngos");
-  } catch (error) {
-    console.error(error);
-     req.flash("error", "Failed to send notification");
-    res.status(500).send("Failed to send notification");
-  }
-});
-
-// =======================
-// 3️⃣ GET: View NGO Notifications
-// =======================
-app.get("/ngo/:ngoId/notifications", async (req, res) => {
-  try {
-    const notifications = await Notification.find({
-      user_type: "NGO",
-      user_id: req.params.ngoId
-    }).sort({ createdAt: -1 });
-
-    res.render("NGO_dashboard/notifications.ejs", {
-      title: "NGO Notifications",
-      notifications
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Unable to load notifications");
-  }
-});
-
 // =======================
 // 4️⃣ Optional: NGO Details Page (so redirects work)
 // =======================
@@ -499,17 +434,16 @@ app.get("/ngo/:ngoId/volunteers", async (req, res) => {
   }
 });
 
+
 //to see all claimed donations
 app.get("/ngo/:ngoId/donations", async (req, res) => {
   try {
     const ngoId = req.params.ngoId;
-
     // Find the NGO
     const ngo = await NGO.findById(ngoId);
     if (!ngo) {
       return res.send("NGO not found");
     }
-
     // Find all claims made by this NGO
     const claim= await claims.find({ claimedBy: ngoId })
       .populate("foodDonation") // get food donation details
@@ -557,7 +491,8 @@ function isAdminLoggedIn(req, res, next) {
   if (req.isAuthenticated() && req.user.role === "Admin") return next();
   req.flash("error", "You must be logged in as an admin!");
   return res.redirect("/admin/login");
-}// =========================
+}
+// =========================
 // ADMIN DONOR ROUTES
 // =========================
 // GET: View all donors
@@ -771,12 +706,6 @@ app.post("/admin/volunteer/:id/delete", isAdminLoggedIn, async (req, res) => {
 
 
 
-
-
-
-
-
-
 //------------------------------------
 // Middleware: Check if NGO is logged in AND approved
 //------------------------------------
@@ -792,7 +721,6 @@ function isNGOLoggedIn(req, res, next) {
   req.flash("error", "Please login first!");
   return res.redirect("/ngo_login");
 }
-
 
 // GET: NGO Signup Page
 app.get("/ngo_signup", (req, res) => {
@@ -810,24 +738,47 @@ app.post(
         email,
         contact_number,
         address,
+        city,
         head_person_name,
         head_person_contact,
         password
       } = req.body;
 
-      // Map uploaded documents
+      if (
+        !ngo_name ||
+        !licence_number ||
+        !email ||
+        !contact_number ||
+        !address ||
+        !city ||
+        !head_person_name ||
+        !head_person_contact ||
+        !password
+      ) {
+        req.flash("error", "Please fill all required fields.");
+        return res.redirect("/ngo_signup");
+      }
+
+      // ✅ Get Coordinates from OpenStreetMap
+      const fullAddress = `${address}, ${city}`;
+      const { latitude, longitude } = await getCoordinates(fullAddress);
+
       const documents = req.files.map(file => ({
         fileName: file.originalname,
-        fileUrl: file.path // Cloudinary secure URL
+        fileUrl: file.path
       }));
 
-      // Create NGO object
       const newNGO = new NGO({
         ngo_name,
         licence_number,
         email,
         contact_number,
         address,
+        city,
+        location: {
+          type: "Point",
+          coordinates: [longitude, latitude] // IMPORTANT ORDER
+        },
         head_person_name,
         head_person_contact,
         verification_documents: documents,
@@ -835,40 +786,15 @@ app.post(
         role: "NGO"
       });
 
-      // Register NGO (passport-local-mongoose)
       await NGO.register(newNGO, password);
 
-      // 🔔 Notify Admins
-      const admins = await admin.find({ role: "Admin" });
-
-      if (admins.length > 0) {
-        const notifications = admins.map(admin => ({
-          user_type: "Admin",
-          user_id: admin._id,
-          message: `New NGO signup request from ${ngo_name}. Please review and approve.`,
-          donation_id: null
-        }));
-        await Notification.insertMany(notifications);
-      }
-
-      req.flash(
-        "success",
-        "Signup successful! Your NGO account is pending admin approval."
-      );
-      return res.redirect("/ngo_login");
+      req.flash("success", "Signup successful! Pending approval.");
+      res.redirect("/ngo_login");
 
     } catch (err) {
-      console.error("NGO Signup Error:", err);
-
-      if (err.name === "UserExistsError") {
-        req.flash("error", "Email already registered.");
-      } else if (err.code === 11000) {
-        req.flash("error", "Email or license number already exists.");
-      } else {
-        req.flash("error", "Signup failed. Please try again.");
-      }
-
-      return res.redirect("/ngo_signup");
+      console.error(err);
+      req.flash("error", "Signup failed.");
+      res.redirect("/ngo_signup");
     }
   }
 );
@@ -906,23 +832,28 @@ app.post(
 // NGO Dashboard (Protected Route)
 app.get("/ngo/dashboard", isNGOLoggedIn, async (req, res) => {
   try {
-    const ngoId = req.user._id;
-    // Count unread notifications for this NGO
-    const unreadCount = await Notification.countDocuments({
-      user_type: "NGO",
-      user_id: ngoId,
-      isRead: false
-    });
+    // 1. Fetch notifications from DB (ensure you have required the Notification model at the top of app.js)
+    const notifications = await Notification.find({ 
+      user_id: req.user._id, 
+      user_type: "NGO" 
+    }).sort({ createdAt: -1 });
+
+    // 2. Count unread
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+
+    // 3. Render with ALL required variables
     res.render("NGO_dashboard/index.ejs", {
       ngo: req.user,
-      unreadCount
+      notifications: notifications, // This stops the "not defined" error
+      unreadCount: unreadCount      // This satisfies line 190
     });
-
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Error loading NGO dashboard");
+    console.error("Dashboard Error:", error);
+    res.status(500).send("Error loading dashboard");
   }
 });
+
+
 
 app.get("/edit-ngo", isNGOLoggedIn, (req, res) => {
   res.render("NGO_dashboard/edit_ngoInfo.ejs", { ngo: req.user });
@@ -951,59 +882,6 @@ app.post("/edit-ngo", isNGOLoggedIn, async (req, res) => {
 });
 
 
-// =======================
-// GET: View NGO Notifications (Protected)
-// =======================
-app.get("/ngo/notifications", isNGOLoggedIn, async (req, res) => {
-  try {
-    const ngoId = req.user._id;
-
-    // Fetch all notifications for this NGO
-    const notifications = await Notification.find({
-      user_type: "NGO",
-      user_id: ngoId
-    }).sort({ createdAt: -1 });
-
-    // Optional: mark all unread as read
-    await Notification.updateMany(
-      { user_type: "NGO", user_id: ngoId, isRead: false },
-      { isRead: true }
-    );
-    res.render("NGO_dashboard/notifications.ejs", {
-      title: "NGO Notifications",
-      notifications
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Unable to load notifications");
-  }
-});
-
-
-//Mark Notification as Read
-app.post("/ngo/notifications/:id/mark-read", isNGOLoggedIn, async (req, res) => {
-  try {
-    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
-    res.redirect("/ngo/notifications"); // Redirect back to notifications page
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Failed to mark notification as read");
-  }
-});
-
-
-//Delete Notification
-app.post("/ngo/notifications/:id/delete", isNGOLoggedIn, async (req, res) => {
-  try {
-    await Notification.findByIdAndDelete(req.params.id);
-    res.redirect("/ngo/notifications"); // Redirect back to notifications page
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Failed to delete notification");
-  }
-});
-
 app.get("/ngo/change-password", isNGOLoggedIn, (req, res) => {
   res.render("NGO_dashboard/change_password.ejs");
 });
@@ -1020,9 +898,7 @@ app.post("/ngo/change-password", isNGOLoggedIn, async (req, res) => {
         req.flash("error", "Incorrect old password.");
         return res.redirect("/ngo/change-password");
       }
-
       await ngo.save();
-
       req.flash("success", "Password updated successfully.");
       res.redirect("/ngo/dashboard");
     });
@@ -1035,28 +911,42 @@ app.post("/ngo/change-password", isNGOLoggedIn, async (req, res) => {
 });
 
 
-// // GET: NGO - Available Donations
+// GET: NGO - Available Donations
 app.get("/ngo/available-donations", isNGOLoggedIn, async (req, res) => {
   try {
     const city = req.query.city || "";
-    const type = req.query.type || "";
 
-    let filter = { status: "Pending" };
+    // Base filter
+    let filter = {
+      status: { $in: ["Pending", "Notified"] }
+    };
 
+    // 🔹 1️⃣ LOCATION PERSONALIZATION (5km radius)
+    if (req.user.location && req.user.location.coordinates) {
+      filter.pickup_location = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: req.user.location.coordinates // [lng, lat]
+          },
+          $maxDistance: 5000 // 5km in meters
+        }
+      };
+    }
+
+    // 🔹 2️⃣ Optional City Filter (if user types city manually)
     if (city.trim() !== "") {
       filter.pickup_city = { $regex: city, $options: "i" };
     }
 
-    if (type.trim() !== "") {
-      filter.food_type = type;
-    }
-
-    const donations = await food_donations.find(filter).populate("donor_id");
+    // 🔹 3️⃣ Fetch Donations
+    const donations = await food_donations
+      .find(filter)
+      .populate("donor_id");
 
     res.render("NGO_dashboard/available_donations.ejs", {
       donations,
-      city,
-      type
+      city
     });
 
   } catch (err) {
@@ -1066,39 +956,67 @@ app.get("/ngo/available-donations", isNGOLoggedIn, async (req, res) => {
   }
 });
 
+// 1. View Notifications
+app.get("/ngo/notifications", isNGOLoggedIn, async (req, res) => {
+  try {
+    const ngoId = req.user._id;
+    const notifications = await Notification.find({
+      user_type: "NGO",
+      user_id: ngoId
+    }).sort({ createdAt: -1 });
+    res.render("NGO_dashboard/notification.ejs", { notifications });
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+// 2. Mark as Read
+app.patch("/notifications/:id/read", async (req, res) => {
+    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    res.redirect("/ngo/notifications");
+});
+
+// 3. Delete Notification
+app.delete("/notifications/:id", async (req, res) => {
+    await Notification.findByIdAndDelete(req.params.id);
+    res.redirect("/ngo/notifications");
+});
+
 // POST: NGO claims a donation
 app.post("/ngo/claim/:id", isNGOLoggedIn, async (req, res) => {
   try {
-    const donation = await food_donations.findById(req.params.id);
+    // Atomic update to prevent race conditions
+    const donation = await food_donations.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        status: { $in: ["Pending", "Notified"] } // <-- allow both Pending & Notified
+      },
+      {
+        status: "Claimed",
+        claimedBy: req.user._id,
+        claimedAt: new Date()
+      },
+      { new: true }
+    );
 
     if (!donation) {
-      req.flash("error", "Donation not found.");
-      return res.redirect("/ngo/available-donations");
-    }
-
-    if (donation.status !== "Pending") {
       req.flash("error", "Donation already claimed.");
       return res.redirect("/ngo/available-donations");
     }
 
-    donation.status = "Claimed";
-    donation.claimedBy = req.user._id;
-    await donation.save();
-
     await NGO.findByIdAndUpdate(req.user._id, {
-      $inc: { claimed_count: 1 },
+      $inc: { claimed_count: 1 }
     });
 
     req.flash("success", "Donation claimed successfully!");
     res.redirect("/ngo/available-donations");
+
   } catch (err) {
-    console.log(err);
+    console.error(err);
     req.flash("error", "Could not claim donation.");
     res.redirect("/ngo/available-donations");
   }
 });
-
-
 
 // -----------------------------
 // GET: NGO - Claimed Donations
@@ -1313,31 +1231,142 @@ app.post("/donor/change-password", isDonorLoggedIn, async (req, res) => {
 
 // Donate food
 app.get("/donate-food", isDonorLoggedIn, (req, res) => res.render("donor_view/donate_food.ejs"));
-
+// POST: Donate Food
 app.post("/donate-food", isDonorLoggedIn, async (req, res) => {
   try {
-    const { food_title, quantity, pickup_address, pickup_city } = req.body;
-    const newDonation = new food_donations({ donor_id: req.user._id, food_title, quantity, pickup_address, pickup_city });
-    await newDonation.save();
+    const {
+      food_title,
+      quantity,
+      description,
+      pickup_address,
+      pickup_city,
+      expiryTime
+    } = req.body;
 
-    await donors.findByIdAndUpdate(req.user._id, { $inc: { total_donations: 1 }, $push: { foodDonations: newDonation._id } });
-
-    const approvedNGOs = await NGO.find({ status: "Approved" });
-    if (approvedNGOs.length > 0) {
-      const notifications = approvedNGOs.map(ngo => ({
-        user_type: "NGO",
-        user_id: ngo._id,
-        donation_id: newDonation._id,
-        message: `New food donation: ${newDonation.food_title}`
-      }));
-      await Notification.insertMany(notifications);
+    // 🔹 Basic validation
+    if (!food_title || !quantity || !pickup_address || !pickup_city || !expiryTime) {
+      req.flash("error", "Please fill all required donation details.");
+      return res.redirect("/donate-food");
     }
 
-    req.flash("success", `Donation added! ${approvedNGOs.length} NGOs notified.`);
+    // 1️⃣ Convert address → coordinates using LocationIQ
+    const fullAddress = `${pickup_address}, ${pickup_city}, Pakistan`;
+    let coords = await getCoordinates(fullAddress);
+
+    // Fallback Strategy: If LocationIQ hit the Karachi default or failed
+    if (coords.latitude === 24.8607 && coords.longitude === 67.0011) {
+      console.log(`⚠️ Specific lookup failed for: ${pickup_address}. Trying city level: ${pickup_city}`);
+      coords = await getCoordinates(`${pickup_city}, Pakistan`);
+    }
+
+    const { latitude, longitude } = coords;
+
+    // 2️⃣ Save donation
+    const newDonation = await food_donations.create({
+      donor_id: req.user._id,
+      food_title,
+      quantity,
+      description,
+      pickup_address,
+      pickup_city,
+      expiryTime,
+      pickup_location: {
+        type: "Point",
+        coordinates: [longitude, latitude] // [lng, lat] for MongoDB
+      },
+      status: "Pending"
+    });
+
+    // 3️⃣ Find nearby APPROVED NGOs within 5km
+    const nearbyNGOs = await NGO.find({
+      status: "Approved",
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [longitude, latitude]
+          },
+          $maxDistance: 5000
+        }
+      }
+    });
+
+    console.log(`✅ Found ${nearbyNGOs.length} nearby NGOs for donation: ${food_title}`);
+
+    // 4️⃣ Notification Rotation Function
+    const notifyNextNGO = async (index) => {
+      const donationCheck = await food_donations.findById(newDonation._id);
+
+      // Stop if donation claimed or no donation found
+      if (!donationCheck || donationCheck.status === "Claimed") {
+        console.log("Donation already claimed. Stopping notifications.");
+        return;
+      }
+
+      // Stop if no more NGOs left
+      if (index >= nearbyNGOs.length) {
+        console.log("No more NGOs available to notify.");
+        return;
+      }
+
+      const ngo = nearbyNGOs[index];
+
+      // Dashboard notification
+      await Notification.create({
+        user_type: "NGO",
+        user_id: ngo._id,
+        donation_id: donationCheck._id,
+        message: `New food donation available near you: ${food_title}`,
+        isRead: false
+      });
+
+      // Email notification
+      try {
+        await sendEmail(
+          ngo.email,
+          "New Food Donation Available - ShareMyFood",
+          `Hello ${ngo.ngo_name},
+
+A new food donation is available near your location.
+
+Food: ${food_title}
+Quantity: ${quantity}
+Pickup Location: ${pickup_address}, ${pickup_city}
+
+Login to your dashboard to claim it.
+
+- ShareMyFood Team`
+        );
+      } catch (emailErr) {
+        console.error(`📧 Email failed for NGO: ${ngo.email}`, emailErr.message);
+      }
+
+      console.log(`📢 NGO notified: ${ngo.ngo_name}`);
+
+      // Update donation status if not yet notified
+      if (!donationCheck.notificationSent) {
+        donationCheck.status = "Notified";
+        donationCheck.notificationSent = true;
+        await donationCheck.save();
+      }
+
+      // Schedule next NGO after 20 minutes
+      setTimeout(() => {
+        notifyNextNGO(index + 1);
+      }, 20 * 60 * 1000); // 20 minutes
+    };
+
+    // Start notifications with first NGO
+    if (nearbyNGOs.length > 0) {
+      notifyNextNGO(0);
+    }
+
+    req.flash("success", "Food donation submitted successfully! Nearby NGO(s) will be notified.");
     res.redirect("/donor/dashboard");
+
   } catch (err) {
-    console.log(err);
-    req.flash("error", "Failed to add donation.");
+    console.error("❌ Donation Route Error:", err);
+    req.flash("error", "An error occurred while processing your donation.");
     res.redirect("/donate-food");
   }
 });
@@ -1557,8 +1586,6 @@ app.post("/volunteer_login", (req, res, next) => {
 });
 
 
-
-
 // --- Volunteer Dashboard ---
 const isVolunteerAuthenticated = (req, res, next) => {
   if (!req.isAuthenticated() || req.user.role !== "Volunteer") {
@@ -1571,11 +1598,19 @@ const isVolunteerAuthenticated = (req, res, next) => {
 // --- Volunteer Dashboard ---
 app.get("/volunteer_dashboard", isVolunteerAuthenticated, async (req, res) => {
   try {
-    // Populate ngo_id to get NGO name
-    const volunteer = await volunteers.findById(req.user._id)
-      .populate("ngo_id", "ngo_name email"); // fetch only ngo_name and email
 
-    // Count stats
+    // 🔹 Fetch volunteer with NGO populated
+    const volunteer = await volunteers
+      .findById(req.user._id)
+      .populate("ngo_id", "ngo_name email");
+
+    // 🔹 If volunteer not found
+    if (!volunteer) {
+      req.flash("error", "Volunteer not found");
+      return res.redirect("/volunteer_login");
+    }
+
+    // 🔹 Count task statistics safely
     const assigned = await Task.countDocuments({
       assigned_to: volunteer._id,
       status: "Assigned"
@@ -1591,16 +1626,23 @@ app.get("/volunteer_dashboard", isVolunteerAuthenticated, async (req, res) => {
       status: "Completed"
     });
 
+    // 🔹 Render dashboard
     res.render("volunteer_view/dashboard.ejs", {
       volunteer,
-      stats: { assigned, inProgress, completed }
+      stats: {
+        assigned: assigned || 0,
+        inProgress: inProgress || 0,
+        completed: completed || 0
+      }
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("Volunteer Dashboard Error:", err);
     req.flash("error", "Something went wrong");
     res.redirect("/volunteer_login");
   }
 });
+
 
 // --- View Current Tasks ---
 app.get("/volunteer/tasks", isVolunteerAuthenticated, async (req, res) => {
@@ -1618,6 +1660,7 @@ app.get("/volunteer/tasks", isVolunteerAuthenticated, async (req, res) => {
     res.redirect("/volunteer_dashboard");
   }
 });
+
 
 // --- Start a Task ---
 app.post("/volunteer/task/:id/start", isVolunteerAuthenticated, async (req, res) => {
@@ -1744,8 +1787,6 @@ app.post("/volunteer/change-password", isVolunteerAuthenticated, async (req, res
 
 
 
-
-
 // --- Volunteer Logout ---
 app.post("/volunteer_logout", (req, res, next) => {
   req.logout((err) => {
@@ -1757,8 +1798,10 @@ app.post("/volunteer_logout", (req, res, next) => {
 });
 
 
-
 app.listen(port, () => {
   console.log(`App is listening on port ${port}`);
 });
+
+
+
 

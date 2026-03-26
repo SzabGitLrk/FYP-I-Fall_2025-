@@ -1,124 +1,94 @@
 <% layout("/layouts/boilerplate") %>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NGO Registration | ShareMyFood</title>
-</head>
+<div class="container mt-5 d-flex justify-content-center">
+  <div class="col-md-6" style="max-width: 620px;">
+    <div class="card shadow-lg border-0 rounded-4">
+      <div class="card-body p-4">
 
-<body class="bg-light">
+        <h3 class="text-center mb-4 text-success fw-bold">Register Your NGO</h3>
 
-  <div class="container mt-5 d-flex justify-content-center">
-    <div class="col-md-6" style="max-width: 620px;">
+        <% if (error) { %>
+          <div class="alert alert-danger"><%= error %></div>
+        <% } %>
 
-      <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-body p-4">
+        <% if (success) { %>
+          <div class="alert alert-success"><%= success %></div>
+        <% } %>
 
-          <h3 class="text-center mb-4 text-success fw-bold">
-            Register Your NGO
-          </h3>
+        <form action="/ngo_signup" method="POST" enctype="multipart/form-data">
 
-          <% if (error && error.length > 0) { %>
-            <div class="alert alert-danger"><%= error %></div>
-          <% } %>
+          <div class="mb-3">
+            <label class="form-label">NGO Name</label>
+            <input type="text" class="form-control" name="ngo_name" required>
+          </div>
 
-          <% if (success && success.length > 0) { %>
-            <div class="alert alert-success"><%= success %></div>
-          <% } %>
+          <div class="mb-3">
+            <label class="form-label">License Number</label>
+            <input type="text" class="form-control" name="licence_number" required>
+          </div>
 
-          <!-- IMPORTANT: multipart/form-data -->
-          <form action="/ngo_signup" method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label">Official Email</label>
+            <input type="email" class="form-control" name="email" required>
+          </div>
 
-            <!-- NGO NAME -->
-            <div class="mb-3">
-              <label class="form-label">NGO Name</label>
-              <input type="text" class="form-control" name="ngo_name" required>
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Contact Number</label>
+            <input type="text" class="form-control" name="contact_number" required>
+          </div>
 
-            <!-- LICENSE -->
-            <div class="mb-3">
-              <label class="form-label">NGO License Number</label>
-              <input type="text" class="form-control" name="licence_number" required>
-              <small class="text-muted">
-                Enter your official NGO registration/license number.
-              </small>
-            </div>
+        <div class="mb-3">
+  <label class="form-label">Complete Address</label>
+  <input type="text" class="form-control" name="address" 
+         placeholder="e.g. 123 Main St, Block 5" required>
+  <small class="text-muted">Do not use 'near' or 'opposite'. Use street names/landmarks.</small>
+</div>
 
-            <!-- EMAIL -->
-            <div class="mb-3">
-              <label class="form-label">Official Email Address</label>
-              <input type="email" class="form-control" name="email" required>
-            </div>
+<div class="mb-3">
+  <label class="form-label">City</label>
+  <input type="text" class="form-control" name="city" 
+         placeholder="e.g. Karachi" required>
+</div>
 
-            <!-- CONTACT -->
-            <div class="mb-3">
-              <label class="form-label">Contact Number</label>
-              <input type="text" class="form-control" name="contact_number" required>
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Head Person Name</label>
+            <input type="text" class="form-control" name="head_person_name" required>
+          </div>
 
-            <!-- ADDRESS -->
-            <div class="mb-3">
-              <label class="form-label">Complete Address</label>
-              <input type="text" class="form-control" name="address"
-                     placeholder="Enter full NGO address" required>
-             
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Head Person Contact</label>
+            <input type="text" class="form-control" name="head_person_contact" required>
+          </div>
 
-            <!-- HEAD NAME -->
-            <div class="mb-3">
-              <label class="form-label">Head Person Name</label>
-              <input type="text" class="form-control" name="head_person_name" required>
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Verification Documents</label>
+            <input
+              type="file"
+              class="form-control"
+              name="verification_documents"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png"
+              required
+            >
+            <small class="text-muted">Upload NGO registration certificate, license, or official proof (PDF, JPG, JPEG, PNG).</small>
+          </div>
 
-            <!-- HEAD CONTACT -->
-            <div class="mb-3">
-              <label class="form-label">Head Person Contact</label>
-              <input type="text" class="form-control" name="head_person_contact" required>
-            </div>
+          <div class="mb-3">
+            <label class="form-label">Create Password</label>
+            <input type="password" class="form-control" name="password" required>
+          </div>
 
-            <!-- VERIFICATION DOCUMENTS -->
-            <div class="mb-3">
-              <label class="form-label">
-                Upload Verification Documents
-              </label>
-              <input type="file"
-                     class="form-control"
-                     name="verification_documents"
-                     multiple
-                     accept=".pdf,.jpg,.jpeg,.png"
-                     required>
-              <small class="text-muted">
-                Upload NGO registration certificate, license, or any official proof (PDF / JPG / PNG).
-              </small>
-            </div>
+          <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-success btn-lg">Register NGO</button>
+          </div>
 
-            <!-- PASSWORD -->
-            <div class="mb-3">
-              <label class="form-label">Create Password</label>
-              <input type="password" class="form-control" name="password" required>
-            </div>
+          <p class="text-center mt-3 text-muted small">
+            After registration, your account will remain <strong>Pending</strong> until admin approval.
+          </p>
 
-            <!-- SUBMIT -->
-            <div class="d-grid mt-4">
-              <button type="submit" class="btn btn-success btn-lg rounded-3">
-                Register NGO
-              </button>
-            </div>
+        </form>
 
-            <p class="text-center mt-3 text-muted small">
-              After registration, your account will remain <strong>Pending</strong> until
-              documents are reviewed and approved by the Admin.
-            </p>
-
-          </form>
-
-        </div>
       </div>
-
     </div>
   </div>
-
-</body>
-</html>
+</div>

@@ -1,14 +1,16 @@
-//Food Donation Schema
 const mongoose = require("mongoose");
+
 const foodDonationSchema = new mongoose.Schema({
-  // Donor reference
+
+  // 🔹 Donor reference
   donor_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Donor",
-    required: true
+    required: true,
+    index: true
   },
 
-  // Basic food details
+  // 🔹 Basic food details
   food_title: {
     type: String,
     required: true,
@@ -20,7 +22,12 @@ const foodDonationSchema = new mongoose.Schema({
     required: true
   },
 
-  // Pickup details
+  description: {
+    type: String,
+    trim: true
+  },
+
+  // 🔹 Pickup details (Human readable)
   pickup_address: {
     type: String,
     required: true
@@ -28,33 +35,86 @@ const foodDonationSchema = new mongoose.Schema({
 
   pickup_city: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
 
-  // Status and tracking
+  // 🔥 GEO Location (for nearby NGO search)
+  pickup_location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point"
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
+  },
+
+  // 🔹 Current status
   status: {
     type: String,
-    enum: ["Pending", "Claimed", "Collected", "Distributed", "Rejected"],
+    enum: [
+      "Pending",       // waiting for NGO
+      "Notified",      // NGOs notified
+      "Claimed",       
+      "Collected",     
+      "Distributed",   
+      "Rejected"
+    ],
     default: "Pending"
   },
 
+  // 🔹 NGO who claimed it
   claimedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "NGO",
     default: null
   },
 
+  claimedAt: {
+    type: Date
+  },
+
+  // 🔹 Assigned volunteer
   assignedVolunteer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Volunteer",
     default: null
   },
 
+  // 🔹 Expiry (VERY IMPORTANT for food safety)
+  expiryTime: {
+    type: Date
+  },
+
+  // 🔹 Notification tracking (VERY IMPORTANT)
+  notifiedNGOs: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "NGO"
+    }
+  ],
+
+  notificationSent: {
+    type: Boolean,
+    default: false
+  },
+
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   }
+
 });
 
-// Export Model
+// 🔑 REQUIRED for geo queries
+foodDonationSchema.index({ pickup_location: "2dsphere" });
+
+// Compound index for faster filtering
+foodDonationSchema.index({ status: 1, createdAt: -1 });
+
 module.exports = mongoose.model("FoodDonation", foodDonationSchema);
+
