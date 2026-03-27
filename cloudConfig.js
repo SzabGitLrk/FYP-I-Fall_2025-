@@ -1,20 +1,22 @@
-// const { v2: cloudinary } = require('cloudinary');
-// const { CloudinaryStorage } = require('multer-storage-cloudinary');
+// cloudConfig.js
+const cloudinary = require("cloudinary"); // no .v2
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// cloudinary.config({
-// cloud_name:process.env.CLOUD_NAME,
-// api_key:process.env.API_KEY,
-// api_secret:process.env.API_SECRET,
-// });
+// Configure Multer storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "ShareMyFood/NGO_Verification_Documents",
+    allowed_formats: ["pdf", "jpg", "jpeg", "png"],
+    resource_type: "auto"
+  }
+});
 
-// const storage= new CloudinaryStorage({
-// cloudinary:cloudinary,
-// params:{
-// folder:'NGO-verification-documents',
-// allowed_formats: ['pdf', 'doc', 'docx']
-// },
-
-// });
-
-// module.exports={cloudinary, storage};
+module.exports = { cloudinary, storage };

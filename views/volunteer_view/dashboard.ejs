@@ -62,6 +62,12 @@
       margin-bottom: 10px;
     }
 
+    .stat-number {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #155d39;
+    }
+
     .btn-logout {
       border-radius: 10px;
       padding: 10px 25px;
@@ -81,9 +87,19 @@
       <h4 class="mb-3" style="color:#157347; font-weight:700;">
         Welcome, <%= volunteer.name %> 👋
       </h4>
-      <p class="mb-1"><strong>City:</strong> <%= volunteer.city %></p>
-      <p class="mb-1"><strong>Assigned NGO:</strong> <%= volunteer.ngo_id.ngo_name %></p>
-      <p class="mb-0"><strong>Email:</strong> <%= volunteer.email %></p>
+
+      <p class="mb-1">
+        <strong>City:</strong> <%= volunteer.city || "N/A" %>
+      </p>
+
+      <p class="mb-1">
+        <strong>Assigned NGO:</strong>
+        <%= volunteer.ngo_id?.ngo_name || "Not Assigned Yet" %>
+      </p>
+
+      <p class="mb-0">
+        <strong>Email:</strong> <%= volunteer.email || "N/A" %>
+      </p>
     </div>
 
     <!-- Stats Row -->
@@ -93,7 +109,7 @@
         <div class="card-action">
           <div class="stat-icon">📋</div>
           <h5>Assigned Tasks</h5>
-          <div class="stat-number"><%= stats.assigned %></div>
+          <div class="stat-number"><%= stats.assigned || 0 %></div>
         </div>
       </div>
 
@@ -101,7 +117,7 @@
         <div class="card-action">
           <div class="stat-icon">🔄</div>
           <h5>In Progress</h5>
-          <div class="stat-number"><%= stats.inProgress %></div>
+          <div class="stat-number"><%= stats.inProgress || 0 %></div>
         </div>
       </div>
 
@@ -109,7 +125,7 @@
         <div class="card-action">
           <div class="stat-icon">✅</div>
           <h5>Completed</h5>
-          <div class="stat-number"><%= stats.completed %></div>
+          <div class="stat-number"><%= stats.completed || 0 %></div>
         </div>
       </div>
 
@@ -139,8 +155,6 @@
         </div>
       </div>
 
-    
-
     </div>
 
     <!-- Logout -->
@@ -155,4 +169,3 @@
   </div>
 </body>
 </html>
-

@@ -1,0 +1,113 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5">
+
+  <!-- Page Title -->
+  <h2 class="text-center mb-4 fw-bold text-success">
+    📊 Volunteer Activity Monitoring
+  </h2>
+
+  <% if (!tasks || tasks.length === 0) { %>
+    <div class="alert alert-info text-center">
+      No volunteer activities found yet.
+    </div>
+  <% } else { %>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover shadow-sm align-middle text-center">
+        <thead class="table-success">
+          <tr>
+            <th>#</th>
+            <th>Volunteer Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Task Title</th>
+            <th>Donation</th>
+            <th>Assigned By (NGO)</th>
+            <th>Status</th>
+            <th>Assigned At</th>
+            <th>Completed At</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% tasks.forEach((task, index) => { %>
+            <tr>
+              <!-- Serial Number -->
+              <td><%= index + 1 %></td>
+
+              <!-- Volunteer Details -->
+              <td><%= task.assigned_to?.name || "—" %></td>
+              <td><%= task.assigned_to?.email || "—" %></td>
+              <td><%= task.assigned_to?.phone || "—" %></td>
+
+              <!-- Task Title -->
+              <td class="fw-semibold"><%= task.task_title || "—" %></td>
+
+              <!-- Donation Title -->
+              <td><%= task.donation_id?.food_title || "—" %></td>
+
+              <!-- Assigned NGO -->
+              <td><%= task.assigned_by?.ngo_name || "—" %></td>
+
+              <!-- Task Status -->
+              <td>
+                <% if (task.status === "Assigned") { %>
+                  <span class="badge bg-warning text-dark">Assigned</span>
+                <% } else if (task.status === "In Progress") { %>
+                  <span class="badge bg-primary">In Progress</span>
+                <% } else if (task.status === "Completed") { %>
+                  <span class="badge bg-success">Completed</span>
+                <% } else if (task.status === "Failed") { %>
+                  <span class="badge bg-danger">Failed</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">Unknown</span>
+                <% } %>
+              </td>
+
+              <!-- Assigned At -->
+              <td>
+                <%= task.assignedAt ? new Date(task.assignedAt).toLocaleString() : "—" %>
+              </td>
+
+              <!-- Completed At -->
+              <td>
+                <%= task.completedAt ? new Date(task.completedAt).toLocaleString() : "—" %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+  <% } %>
+
+  <!-- Back Button -->
+  <div class="text-center mt-4">
+    <a href="/admin/dashboard" class="btn btn-outline-success fw-semibold">
+      ← Back to Dashboard
+    </a>
+  </div>
+
+</div>
+
+<style>
+  body {
+    background: linear-gradient(145deg, #f0f9f0, #ffffff);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  table {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #f1fdf4;
+  }
+
+  .badge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.6em;
+  }
+</style>

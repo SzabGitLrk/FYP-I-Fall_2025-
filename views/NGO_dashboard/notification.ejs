@@ -1,0 +1,34 @@
+<% layout("/layouts/boilerplate") %>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="dashboard-title">🔔 Your Notifications</h2>
+        <a href="/ngo/dashboard" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+    </div>
+
+    <div class="notifications-list">
+        <% if (notifications.length === 0) { %>
+            <div class="alert alert-light text-center">No notifications yet.</div>
+        <% } else { %>
+            <% notifications.forEach(n => { %>
+                <div class="card mb-3 <%= n.isRead ? 'opacity-75' : 'border-success shadow-sm' %>">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="mb-1 <%= n.isRead ? '' : 'fw-bold' %>"><%= n.message %></p>
+                            <small class="text-muted"><%= n.createdAt.toLocaleString() %></small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <% if (!n.isRead) { %>
+                                <form action="/notifications/<%= n._id %>/read?_method=PATCH" method="POST">
+                                    <button class="btn btn-sm btn-outline-success">Mark as Read</button>
+                                </form>
+                            <% } %>
+                            <form action="/notifications/<%= n._id %>?_method=DELETE" method="POST">
+                                <button class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+</div>

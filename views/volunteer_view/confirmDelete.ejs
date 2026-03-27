@@ -1,0 +1,21 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container py-5">
+  <h3 class="text-danger fw-bold mb-4">⚠️ Confirm Deletion</h3>
+
+  <div class="alert alert-warning">
+    Are you sure you want to remove the volunteer: <strong><%= volunteer.name %></strong>?
+  </div>
+
+  <div class="mb-3">
+    <p>Email: <%= volunteer.email %></p>
+    <p>Phone: <%= volunteer.phone %></p>
+    <p>City: <%= volunteer.city %></p>
+    <p>Status: <%= volunteer.status %></p>
+  </div>
+
+  <form action="/admin/volunteer/<%= volunteer._id %>/delete" method="POST">
+    <button type="submit" class="btn btn-danger">Yes, Remove Volunteer</button>
+    <a href="/admin/volunteers" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>

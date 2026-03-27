@@ -9,6 +9,9 @@
         <th>Email</th>
         <th>Phone</th>
         <th>City</th>
+        <th>NGO</th>
+        <th>Status</th>
+        <th>Actions</th>
       </tr>
     </thead>
 
@@ -19,18 +22,37 @@
           <td><%= v.email %></td>
           <td><%= v.phone %></td>
           <td><%= v.city %></td>
+          <td><%= v.ngo_id?.ngo_name || "N/A" %></td>
+          <td><%= v.status %></td>
+          <td>
+            <!-- Suspend / Reactivate -->
+            <form action="/admin/volunteer/<%= v._id %>/status?_method=PATCH"
+                  method="POST" style="display:inline-block;">
+              <button class="btn btn-sm btn-warning mb-1">
+                <%= v.status === "Suspended" ? "Activate" : "Suspend" %>
+              </button>
+            </form>
+
+            <!-- View Activity -->
+            <a href="/admin/volunteer/<%= v._id %>/activity"
+               class="btn btn-sm btn-outline-primary mb-1">
+              Activity
+            </a>
+
+            <!-- Remove Volunteer -->
+            <a href="/admin/volunteer/<%= v._id %>/delete"
+               class="btn btn-sm btn-outline-danger mb-1">
+              Remove
+            </a>
+          </td>
         </tr>
       <% }) %>
     </tbody>
   </table>
 
-  <!-- Back button at bottom -->
   <div class="mt-4">
     <a href="/admin/dashboard" class="btn btn-outline-success">
       ⬅ Back to Dashboard
     </a>
   </div>
 </div>
-
-
-
