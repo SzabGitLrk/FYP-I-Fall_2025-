@@ -1,7 +1,8 @@
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import {
   Alert,
   Button,
+  DialogProps,
   Dialog,
   DialogActions,
   DialogContent,
@@ -27,7 +28,6 @@ import {
 import {
   SmartAssistActionRow,
   SmartAssistContent,
-  SmartAssistDescription,
   SmartAssistPrimaryButton,
   SmartAssistSecondaryButton,
 } from './SmartAssistModal.styles';
@@ -84,23 +84,31 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
   const reviewMessage =
     confirmationMessage ??
-    t('smartAssist.confirmationFallbackShort', {
+    t('smartAdd.confirmationFallbackShort', {
       defaultValue: 'Please review this action before saving.',
     });
 
-  const fallbackAlertSeverity = useMemo<'warning' | 'info'>(() => {
-    return processResult?.fallbackToLLM ? 'warning' : 'info';
-  }, [processResult]);
-
   const formatRequestError = (error: unknown): string => {
     const message =
-      error instanceof Error ? error.message : t('smartAssist.requestFailed');
+      error instanceof Error
+        ? error.message
+        : t('smartAdd.requestFailed', {
+            defaultValue: 'Unable to process the instruction right now.',
+          });
 
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
-      return t('smartAssist.serviceUnavailable');
+      return t('smartAdd.serviceUnavailable', {
+        defaultValue:
+          "Smart Add service isn't available right now. Please restart the backend and try again.",
+      });
     }
 
-    return message || t('smartAssist.requestFailed');
+    return (
+      message ||
+      t('smartAdd.requestFailed', {
+        defaultValue: 'Unable to process the instruction right now.',
+      })
+    );
   };
 
   const resetFeedback = () => {
@@ -145,7 +153,11 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
   const submitPrompt = async (nextPrompt: string) => {
     if (!nextPrompt.trim()) {
-      setRequestError(t('smartAssist.emptyPrompt'));
+      setRequestError(
+        t('smartAdd.emptyPrompt', {
+          defaultValue: 'Enter an instruction before saving it.',
+        }),
+      );
       return;
     }
 
@@ -180,25 +192,47 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
     await submitPrompt(option.prompt);
   };
 
+  const handleModalClose = () => {
+    if (requiresConfirmation) {
+      return;
+    }
+
+    onClose();
+  };
+
+  const handleConfirmationDialogClose: DialogProps['onClose'] = (
+    _event,
+    reason,
+  ) => {
+    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+      return;
+    }
+
+    setProcessResult(null);
+  };
+
   return (
     <>
-      <Modal open={open} onClose={onClose}>
+      <Modal open={open} onClose={handleModalClose}>
         <ModalContainer>
           <ModalBox>
-            <CancelButton onClick={onClose}>
+            <CancelButton onClick={handleModalClose}>
               <Close />
             </CancelButton>
 
             <SmartAssistContent>
-              <Typography variant="h4">{t('smartAssist.title')}</Typography>
-
-              <SmartAssistDescription variant="body1">
-                {t('smartAssist.description')}
-              </SmartAssistDescription>
+              <Typography variant="h4">
+                {t('smartAdd.textTitle', { defaultValue: 'Smart Text Add' })}
+              </Typography>
 
               <CustomTextField
-                label={t('smartAssist.instructionLabel')}
-                placeholder={t('smartAssist.placeholder')}
+                label={t('smartAdd.instructionLabel', {
+                  defaultValue: 'Instruction',
+                })}
+                placeholder={t('smartAdd.placeholder', {
+                  defaultValue:
+                    'Example: Create storage Garage with box Tools and 5 hammers',
+                })}
                 value={prompt}
                 multiline
                 minRows={4}
@@ -207,46 +241,37 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
               {requestError && <Alert severity="error">{requestError}</Alert>}
 
-              {processResult?.fallbackToLLM && (
+              {processResult?.fallbackToLLM && clarificationOptions.length > 0 && (
                 <Stack spacing={1}>
-                  <Alert severity={fallbackAlertSeverity}>
-                    {t('smartAssist.fallbackToLlm', {
-                      defaultValue:
-                        'This instruction needs manual review and will fall back to AI assistance.',
-                    })}
-                  </Alert>
+                  <Stack spacing={1}>
+                    <Typography variant="body2">
+                      {t('smartAdd.suggestions', {
+                        defaultValue: 'Suggestions',
+                      })}
+                    </Typography>
 
-                  {clarificationOptions.length > 0 && (
-                    <Stack spacing={1}>
-                      <Typography variant="body2">
-                        {t('smartAssist.suggestions', {
-                          defaultValue: 'Suggestions',
-                        })}
-                      </Typography>
-
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        useFlexGap
-                        flexWrap="wrap"
-                      >
-                        {clarificationOptions.map((option) => (
-                          <Button
-                            key={`${option.kind}:${option.label}`}
-                            variant="outlined"
-                            onClick={() => handleClarificationChoice(option)}
-                            disabled={isProcessing || isConfirming}
-                            sx={{
-                              borderRadius: '999px',
-                              textTransform: 'none',
-                            }}
-                          >
-                            {option.label}
-                          </Button>
-                        ))}
-                      </Stack>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      useFlexGap
+                      flexWrap="wrap"
+                    >
+                      {clarificationOptions.map((option) => (
+                        <Button
+                          key={`${option.kind}:${option.label}`}
+                          variant="outlined"
+                          onClick={() => handleClarificationChoice(option)}
+                          disabled={isProcessing || isConfirming}
+                          sx={{
+                            borderRadius: '999px',
+                            textTransform: 'none',
+                          }}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
                     </Stack>
-                  )}
+                  </Stack>
                 </Stack>
               )}
 
@@ -267,8 +292,8 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
                   disabled={isProcessing || isConfirming}
                 >
                   {isProcessing || isConfirming
-                    ? t('smartAssist.confirming')
-                    : t('smartAssist.submit')}
+                    ? t('smartAdd.confirming', { defaultValue: 'Saving...' })
+                    : t('smartAdd.submit', { defaultValue: 'Save' })}
                 </SmartAssistPrimaryButton>
               </SmartAssistActionRow>
             </SmartAssistContent>
@@ -278,18 +303,34 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
       <Dialog
         open={requiresConfirmation}
-        onClose={() => setProcessResult(null)}
+        onClose={handleConfirmationDialogClose}
         fullWidth
         maxWidth="sm"
       >
         <DialogTitle>
-          {t('smartAssist.confirmationTitle', {
+          {t('smartAdd.confirmationTitle', {
             defaultValue: 'Confirm Changes',
           })}
         </DialogTitle>
 
-        <DialogContent dividers>
-          <Alert severity="info" sx={{ borderRadius: 2 }}>
+        <DialogContent
+          dividers
+          sx={{
+            maxHeight: '55vh',
+            overflowY: 'auto',
+          }}
+        >
+          <Alert
+            severity="info"
+            sx={{
+              borderRadius: 2,
+              alignItems: 'flex-start',
+              '& .MuiAlert-message': {
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+              },
+            }}
+          >
             {reviewMessage}
           </Alert>
         </DialogContent>
@@ -302,7 +343,7 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
           >
             {isDeleteWarningConfirmation
               ? t('modal.cancel', { defaultValue: 'Cancel' })
-              : t('smartAssist.reject', { defaultValue: 'No' })}
+              : t('smartAdd.reject', { defaultValue: 'No' })}
           </SmartAssistSecondaryButton>
 
           <SmartAssistPrimaryButton
@@ -312,10 +353,10 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
             disabled={isConfirming}
           >
             {isConfirming
-              ? t('smartAssist.confirming')
+              ? t('smartAdd.confirming', { defaultValue: 'Saving...' })
               : isDeleteWarningConfirmation
-                ? t('smartAssist.ok', { defaultValue: 'OK' })
-                : t('smartAssist.approve', { defaultValue: 'Yes' })}
+                ? t('smartAdd.ok', { defaultValue: 'OK' })
+                : t('smartAdd.approve', { defaultValue: 'Yes' })}
           </SmartAssistPrimaryButton>
         </DialogActions>
       </Dialog>

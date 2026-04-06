@@ -11,11 +11,13 @@ import { EntityType } from '../../types/entityTypes';
 
 interface AddEntityButtonProps {
   entityType: EntityType;
+  layout?: 'default' | 'inline';
   onAdd?: () => void;
 }
 
 const AddEntityButton: FC<AddEntityButtonProps> = ({
   entityType = 'storage',
+  layout = 'default',
   onAdd,
 }) => {
   const { t } = useTranslation();
@@ -32,7 +34,7 @@ const AddEntityButton: FC<AddEntityButtonProps> = ({
   };
 
   return (
-    <AddEntityContainer>
+    <AddEntityContainer $layout={layout}>
       <Stack direction="row" textAlign="center" alignItems="center" spacing={2}>
         <Label variant="h6">{getLabel(entityType)}</Label>
         <FabContainer aria-label="add" onClick={onAdd}>

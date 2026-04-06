@@ -10,6 +10,8 @@ import { DICTIONARY_CONFIG } from '../config/nlp-dictionary.config';
 import { ProcessTextRequestDto } from '../dto/process-text-request.dto';
 import { ProcessTextResponseDto } from '../dto/process-text-response.dto';
 import { AiPersistenceService } from './ai-persistence.service';
+import { AiRateLimitService } from './ai-rate-limit.service';
+import { LlmFallbackService } from './llm-fallback.service';
 import { TextParsingService } from './text-parsing.service';
 import { ValidationService } from './validation.service';
 
@@ -69,6 +71,8 @@ export class TextProcessingService {
     private readonly textParsingService: TextParsingService,
     private readonly validationService: ValidationService,
     private readonly aiPersistenceService: AiPersistenceService,
+    private readonly aiRateLimitService: AiRateLimitService,
+    private readonly llmFallbackService: LlmFallbackService,
   ) {}
 
   lightNormalization(text: string): {
@@ -199,19 +203,20 @@ export class TextProcessingService {
   }
 
   generateConfirmationSummary(normalizedData: any): string {
-    const lines: string[] = ['Ready to save:'];
+    // Keep the review message short because the modal shows it directly.
+    const parts: string[] = [];
 
     if (normalizedData.storageName) {
-      lines.push(
-        `  Storage: ${normalizedData.storageName}${normalizedData.storageDescription ? ` (${normalizedData.storageDescription})` : ''}`,
-      );
+      parts.push(`storage '${normalizedData.storageName}'`);
     }
 
     if (normalizedData.boxes?.length > 0) {
-      const boxNames = normalizedData.boxes
-        .map((box: any) => box.name)
-        .join(', ');
-      lines.push(`  Boxes: ${boxNames}`);
+      const boxNames = normalizedData.boxes.map((box: any) => `'${box.name}'`);
+      parts.push(
+        normalizedData.boxes.length === 1
+          ? `box ${boxNames[0]}`
+          : `boxes ${this.joinHumanList(boxNames)}`,
+      );
     }
 
     if (normalizedData.items?.length > 0) {
@@ -221,15 +226,17 @@ export class TextProcessingService {
         const box = normalizedData.boxes?.find(
           (entry: any) => entry.clientRef === boxRef,
         );
-        const boxName = box ? box.name : 'Unknown';
-        return `${item.name} (x${qty}) -> ${boxName}`;
+        const boxName = box ? ` in '${box.name}'` : '';
+        return `'${item.name}' (x${qty})${boxName}`;
       });
-
-      lines.push(`  Items: ${itemDescriptions.join(', ')}`);
+      parts.push(`items ${this.joinHumanList(itemDescriptions)}`);
     }
 
-    lines.push('Confirm? [Yes / Cancel]');
-    return lines.join('\n');
+    if (parts.length === 0) {
+      return 'Please confirm these changes.';
+    }
+
+    return `Please confirm these changes: ${parts.join('; ')}.`;
   }
 
   async processTextRequest(
@@ -277,7 +284,41 @@ export class TextProcessingService {
         existingContext = undefined;
       }
 
-      const result = this.processInput(sanitizedText, existingContext);
+      const textRateLimitDecision =
+        this.aiRateLimitService.consumeTextRequest(userId);
+      if (!textRateLimitDecision.allowed) {
+        throw new BadRequestException(
+          `Too many Smart Add requests. Please wait ${textRateLimitDecision.retryAfterSeconds} seconds before trying again.`,
+        );
+      }
+
+      let result = this.processInput(sanitizedText, existingContext);
+      if (result.fallbackToLLM) {
+        // Re-enter the same downstream normalization/confirmation path after LLM extraction.
+        const llmResult = await this.llmFallbackService.resolveTextFallback({
+          rawInput: sanitizedText,
+          llmBackup: result.llmBackup ?? sanitizedText,
+          identityKey: userId,
+          existingContext,
+          classified: result.classified,
+        });
+
+        if (!llmResult.success || !llmResult.parsedData) {
+          throw new BadRequestException(
+            llmResult.message || 'LLM fallback could not process the request.',
+          );
+        }
+
+        result = this.finalizeResolvedData(llmResult.parsedData, existingContext, {
+          allowFallbackEscalation: false,
+          fallbackClassified: llmResult.classified,
+          fallbackConfidence: llmResult.confidence,
+          fallbackToLLM: true,
+          llmBackup: result.llmBackup ?? sanitizedText,
+          rawInput: sanitizedText,
+          requireReviewConfirmation: true,
+        });
+      }
       const duration = Date.now() - startTime;
 
       this.logger.log(
@@ -326,10 +367,34 @@ export class TextProcessingService {
       this.lightNormalization(rawInput);
 
     const parsed = this.parseExtraction(normalizedText);
-    const classified = this.intentClassification(
-      parsed,
-      existingContext,
+    return this.finalizeResolvedData(parsed, existingContext, {
+      fallbackToLLM: false,
+      llmBackup,
+      rawInput,
       typoCount,
+    });
+  }
+
+  // Shared downstream path so rule-based parsing and LLM extraction stay consistent after extraction.
+  private finalizeResolvedData(
+    parsedData: any,
+    existingContext: any,
+    options: {
+      allowFallbackEscalation?: boolean;
+      classified?: any;
+      fallbackClassified?: any;
+      fallbackConfidence?: number | null;
+      fallbackToLLM: boolean;
+      llmBackup: string;
+      rawInput: string;
+      requireReviewConfirmation?: boolean;
+      typoCount?: number;
+    },
+  ): any {
+    const classified = this.buildSharedClassification(
+      parsedData,
+      existingContext,
+      options,
     );
 
     if (!classified.isValid) {
@@ -343,27 +408,33 @@ export class TextProcessingService {
 
       return {
         success: false,
-        fallbackToLLM,
-        message: fallbackToLLM
-          ? 'This instruction will fall to LLM for manual review.'
-          : clarification,
+        fallbackToLLM:
+          fallbackToLLM && options.allowFallbackEscalation !== false,
+        message:
+          fallbackToLLM && options.allowFallbackEscalation !== false
+            ? 'This instruction will fall to LLM for manual review.'
+            : clarification,
         classified,
+        llmBackup: options.llmBackup,
+        rawInput: options.rawInput,
       };
     }
 
-    if (classified.shouldFallToLLM) {
+    if (classified.shouldFallToLLM && options.allowFallbackEscalation !== false) {
       return {
         success: false,
         fallbackToLLM: true,
         confidence: classified.confidence,
-        message: `This prompt needs manual review. Confidence: ${classified.confidence}`,
-        rawInput,
-        llmBackup,
+        message:
+          classified.clarification ||
+          `This prompt needs manual review. Confidence: ${classified.confidence}`,
         classified,
+        llmBackup: options.llmBackup,
+        rawInput: options.rawInput,
       };
     }
 
-    const parsedForPersistence = classified.resolvedParsedData || parsed;
+    const parsedForPersistence = classified.resolvedParsedData || parsedData;
     const normalized = this.heavyNormalization(parsedForPersistence);
     const prepared =
       this.aiPersistenceService.prepareNormalizedDataForPersistence(
@@ -372,20 +443,106 @@ export class TextProcessingService {
       );
 
     prepared.intent = classified.intent;
-    prepared.confirmation = classified.confirmation;
     prepared.expandedBoxes = classified.expandedBoxes;
     prepared.suggestions = classified.suggestions;
     prepared.confidence = classified.confidence;
-    prepared.meta = { ...prepared.meta, ...parsedForPersistence.meta };
+    prepared.meta = {
+      ...prepared.meta,
+      ...parsedForPersistence.meta,
+      workflowSource: options.fallbackToLLM ? 'llm-fallback' : 'rule-based',
+    };
+
+    // Run the persistence guard here too so users get a clear review message before save.
+    const persistenceBlockingMessage =
+      this.aiPersistenceService.validatePersistencePrerequisites(prepared);
+    if (persistenceBlockingMessage) {
+      return {
+        success: false,
+        fallbackToLLM: false,
+        message: persistenceBlockingMessage,
+        classified,
+        llmBackup: options.llmBackup,
+        rawInput: options.rawInput,
+      };
+    }
 
     const confirmationSummary = this.generateConfirmationSummary(prepared);
+    const modelReviewMessage = this.toOptionalString(parsedForPersistence.confirmation);
+
+    prepared.confirmation =
+      classified.confirmation ||
+      (options.requireReviewConfirmation ? confirmationSummary : null) ||
+      modelReviewMessage ||
+      confirmationSummary;
+
+    if (modelReviewMessage && modelReviewMessage !== prepared.confirmation) {
+      prepared.meta = {
+        ...prepared.meta,
+        llmReviewMessage: modelReviewMessage,
+      };
+    }
 
     return {
       success: true,
-      fallbackToLLM: false,
-      message: confirmationSummary,
+      fallbackToLLM: options.fallbackToLLM,
+      message: prepared.confirmation,
       data: prepared,
       classified,
+      confidence: prepared.confidence ?? classified.confidence ?? null,
+      llmBackup: options.llmBackup,
+      rawInput: options.rawInput,
+    };
+  }
+
+  private buildSharedClassification(
+    parsedData: any,
+    existingContext: any,
+    options: {
+      classified?: any;
+      fallbackClassified?: any;
+      fallbackConfidence?: number | null;
+      typoCount?: number;
+    },
+  ): any {
+    const classified =
+      options.classified ||
+      this.intentClassification(
+        parsedData,
+        existingContext,
+        options.typoCount ?? 0,
+      );
+
+    const fallbackClassified = options.fallbackClassified || {};
+    const mergedSuggestions = Array.from(
+      new Set([
+        ...(classified.suggestions || []),
+        ...(fallbackClassified.suggestions || []),
+      ]),
+    );
+
+    return {
+      ...classified,
+      clarification:
+        classified.clarification ?? fallbackClassified.clarification ?? null,
+      clarificationKind:
+        classified.clarificationKind ??
+        fallbackClassified.clarificationKind ??
+        null,
+      clarificationOptions:
+        classified.clarificationOptions ??
+        fallbackClassified.clarificationOptions ??
+        [],
+      confidence:
+        typeof options.fallbackConfidence === 'number'
+          ? Math.max(classified.confidence ?? 0, options.fallbackConfidence)
+          : classified.confidence,
+      expandedBoxes:
+        classified.expandedBoxes ??
+        fallbackClassified.expandedBoxes ??
+        parsedData.expandedBoxes ??
+        null,
+      intent: classified.intent ?? fallbackClassified.intent ?? parsedData.intent,
+      suggestions: mergedSuggestions,
     };
   }
 
@@ -707,5 +864,26 @@ export class TextProcessingService {
       .replace(/[\v\f]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  private toOptionalString(value: unknown): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const trimmed = value.trim().replace(/\s+/g, ' ');
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private joinHumanList(values: string[]): string {
+    if (values.length <= 1) {
+      return values[0] || '';
+    }
+
+    if (values.length === 2) {
+      return `${values[0]} and ${values[1]}`;
+    }
+
+    return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`;
   }
 }

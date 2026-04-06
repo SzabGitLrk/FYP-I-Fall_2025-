@@ -70,6 +70,11 @@ export interface ProcessTextRequest {
   text: string;
 }
 
+export interface ProcessVoiceResult {
+  rawTranscript: string;
+  transcript: string;
+}
+
 export interface ProcessTextResult {
   parsedData: ProcessTextParsedData | null;
   classified: ProcessTextClassification | null;

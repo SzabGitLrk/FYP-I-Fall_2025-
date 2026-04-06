@@ -44,6 +44,12 @@ export class AiPersistenceService {
         );
       }
 
+      const persistenceValidationMessage =
+        this.validatePersistencePrerequisites(parsedData);
+      if (persistenceValidationMessage) {
+        throw new BadRequestException(persistenceValidationMessage);
+      }
+
       const result = await this.persistToDatabase(parsedData, userId);
 
       if (!result.success) {
@@ -218,6 +224,12 @@ export class AiPersistenceService {
     // Fail fast when DB access is missing.
     if (!this.dataSource) {
       return { success: false, message: 'Database connection not available.' };
+    }
+
+    const persistenceValidationMessage =
+      this.validatePersistencePrerequisites(normalizedData);
+    if (persistenceValidationMessage) {
+      return { success: false, message: persistenceValidationMessage };
     }
 
     // Use a transaction to keep storage/box/item updates consistent.
@@ -633,6 +645,42 @@ export class AiPersistenceService {
     prepared.boxes = expandedBoxList;
     prepared.items = finalItems;
     return prepared;
+  }
+
+  // Keep save validation centralized so every caller gets the same readable persistence rules.
+  validatePersistencePrerequisites(normalizedData: any): string | null {
+    const boxes = Array.isArray(normalizedData?.boxes) ? normalizedData.boxes : [];
+    const items = Array.isArray(normalizedData?.items) ? normalizedData.items : [];
+
+    if ((boxes.length > 0 || items.length > 0) && !normalizedData?.storageName) {
+      return 'Please specify the storage before saving boxes or items.';
+    }
+
+    if (items.length > 0 && boxes.length === 0) {
+      return normalizedData?.storageName
+        ? `Please specify a box in storage '${this.toTitleCase(normalizedData.storageName)}' before saving items.`
+        : 'Please specify a box before saving items.';
+    }
+
+    const knownBoxRefs = new Set(
+      boxes
+        .map((box: any) => (typeof box?.clientRef === 'string' ? box.clientRef : null))
+        .filter((clientRef: string | null): clientRef is string => Boolean(clientRef)),
+    );
+
+    const itemMissingBox = items.find((item: any) => !item?.boxClientRef);
+    if (itemMissingBox?.name) {
+      return `Please specify a box for '${this.toTitleCase(itemMissingBox.name)}' before saving.`;
+    }
+
+    const unmappedItem = items.find(
+      (item: any) => item?.boxClientRef && !knownBoxRefs.has(item.boxClientRef),
+    );
+    if (unmappedItem?.name) {
+      return `Please review the generated box assignment for '${this.toTitleCase(unmappedItem.name)}' before saving.`;
+    }
+
+    return null;
   }
 
   generateSmartAcknowledgment(

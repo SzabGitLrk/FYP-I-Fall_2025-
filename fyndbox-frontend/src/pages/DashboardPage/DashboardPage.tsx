@@ -14,6 +14,9 @@ import { CustomIcon } from '../../styles/commonStyles';
 import {
   DashboardContainer,
   MainContainer,
+  PrimaryActionsContainer,
+  SmartAddEntryContainer,
+  SmartAddEntryLabel,
   SubContainer,
 } from './DashboardPage.styles';
 import { EntityType } from '../../types/entityTypes';
@@ -39,6 +42,8 @@ import SearchField from '../../components/SearchField/SearchField';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
 import SmartAssistModal from '../../components/SmartAssist/SmartAssistModal';
 import SmartAssistResultDialog from '../../components/SmartAssist/SmartAssistResultDialog';
+import SmartAssistActionDialog from '../../components/SmartAssist/SmartAssistActionDialog';
+import SmartAssistVoiceModal from '../../components/SmartAssist/SmartAssistVoiceModal';
 
 const DashboardPage: FC = () => {
   const { t } = useTranslation();
@@ -51,7 +56,10 @@ const DashboardPage: FC = () => {
   const [entityType, setEntityType] = useState<EntityType>('storage');
   const [editingData, setEditingData] = useState<any | null>(null);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
+  // This chooser lets Smart Add expose text, voice, and image entry points from one button.
+  const [isSmartAddChooserOpen, setSmartAddChooserOpen] = useState(false);
   const [isSmartAddOpen, setSmartAddOpen] = useState(false);
+  const [isSmartAddVoiceOpen, setSmartAddVoiceOpen] = useState(false);
   const [smartAddResult, setSmartAddResult] = useState<{
     open: boolean;
     message: string;
@@ -147,7 +155,17 @@ const DashboardPage: FC = () => {
   };
 
   const handleOpenSmartAssistModal = () => {
+    setSmartAddChooserOpen(false);
     setSmartAddOpen(true);
+  };
+
+  const handleOpenSmartAssistVoiceModal = () => {
+    setSmartAddChooserOpen(false);
+    setSmartAddVoiceOpen(true);
+  };
+
+  const handleOpenSmartAddChooser = () => {
+    setSmartAddChooserOpen(true);
   };
 
   const handleSmartAddSaved = (result: {
@@ -245,11 +263,22 @@ const DashboardPage: FC = () => {
             onCancel={handleCancelScan}
           />
         )}
-        <AddEntityButton
-          entityType="storage"
-          onAdd={() => handleAddEntity('storage')}
-        />
-        <SmartAssistButton onClick={handleOpenSmartAssistModal} />
+        <PrimaryActionsContainer>
+          <AddEntityButton
+            entityType="storage"
+            layout="inline"
+            onAdd={() => handleAddEntity('storage')}
+          />
+          <SmartAddEntryContainer>
+            <SmartAddEntryLabel variant="h6">
+              {t('smartAdd.entryTitle', { defaultValue: 'Smart Add' })}
+            </SmartAddEntryLabel>
+            <SmartAssistButton
+              placement="inline"
+              onClick={handleOpenSmartAddChooser}
+            />
+          </SmartAddEntryContainer>
+        </PrimaryActionsContainer>
       </MainContainer>
       <DashboardFooter
         onFavoriteClick={handleFavoriteClick}
@@ -266,9 +295,20 @@ const DashboardPage: FC = () => {
         onSave={handleSave}
         onDelete={handleDelete}
       />
+      <SmartAssistActionDialog
+        open={isSmartAddChooserOpen}
+        onClose={() => setSmartAddChooserOpen(false)}
+        onSelectTextAdd={handleOpenSmartAssistModal}
+        onSelectVoiceAdd={handleOpenSmartAssistVoiceModal}
+      />
       <SmartAssistModal
         open={isSmartAddOpen}
         onClose={() => setSmartAddOpen(false)}
+        onSaved={handleSmartAddSaved}
+      />
+      <SmartAssistVoiceModal
+        open={isSmartAddVoiceOpen}
+        onClose={() => setSmartAddVoiceOpen(false)}
         onSaved={handleSmartAddSaved}
       />
       <SmartAssistResultDialog

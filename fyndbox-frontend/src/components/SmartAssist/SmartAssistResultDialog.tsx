@@ -32,8 +32,8 @@ const SmartAssistResultDialog: FC<SmartAddResultDialogProps> = ({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
         {showWarningsOnly
-          ? t('smartAssist.warningsTitle', { defaultValue: 'Warnings' })
-          : savedSuccessfullyText}
+          ? t('smartAdd.warningsTitle', { defaultValue: 'Warnings' })
+          : t('smartAdd.resultTitle', { defaultValue: savedSuccessfullyText })}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
@@ -50,7 +50,7 @@ const SmartAssistResultDialog: FC<SmartAddResultDialogProps> = ({
             <Stack spacing={1}>
               {!showWarningsOnly && (
                 <Typography variant="subtitle2">
-                  {t('smartAssist.warningsTitle', { defaultValue: 'Warnings' })}
+                  {t('smartAdd.warningsTitle', { defaultValue: 'Warnings' })}
                 </Typography>
               )}
               {warnings.map((warning) => (
@@ -73,7 +73,7 @@ const SmartAssistResultDialog: FC<SmartAddResultDialogProps> = ({
             textTransform: 'none',
           }}
         >
-          {t('smartAssist.resultClose', { defaultValue: 'Close' })}
+          {t('smartAdd.resultClose', { defaultValue: 'Close' })}
         </Button>
       </DialogActions>
     </Dialog>

@@ -151,6 +151,29 @@ export class TextParsingService {
     return this.buildKeywordAlternationPattern(variants);
   }
 
+  // Escalate conversational repeated-box prompts before strict rule parsing misclassifies adjectives as entities.
+  private isLikelyConversationalRepeatedBoxPrompt(
+    text: string,
+    groupedBoxSectionPattern: string,
+  ): boolean {
+    const repeatedBoxPattern = new RegExp(
+      `\\b\\d+\\s+(?:[a-z0-9-]+\\s+){0,3}(?:${groupedBoxSectionPattern})\\b`,
+      'i',
+    );
+    const eachPattern = /\b(?:in\s+each|each)\b/i;
+    const setupVerbPattern =
+      /\b(?:register|set\s*up|setup|start|create|make|open)\b/i;
+    const distributionVerbPattern =
+      /\b(?:place|put|keep|store|add|with)\b/i;
+
+    return (
+      repeatedBoxPattern.test(text) &&
+      eachPattern.test(text) &&
+      setupVerbPattern.test(text) &&
+      distributionVerbPattern.test(text)
+    );
+  }
+
   private extractStructuredDescription(
     value: string,
     descriptionKeys: string[],
@@ -492,10 +515,14 @@ export class TextParsingService {
       }
     }
     if (
-      /\beach\b/i.test(normalizedText) &&
-      new RegExp(`\\b\\d+\\s+(?:${groupedBoxSectionPattern})\\b`, 'i').test(
+      this.isLikelyConversationalRepeatedBoxPrompt(
         normalizedText,
-      )
+        groupedBoxSectionPattern,
+      ) ||
+      (/\beach\b/i.test(normalizedText) &&
+        new RegExp(`\\b\\d+\\s+(?:${groupedBoxSectionPattern})\\b`, 'i').test(
+          normalizedText,
+        ))
     ) {
       return {
         intent: null,

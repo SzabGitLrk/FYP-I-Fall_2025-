@@ -54,7 +54,10 @@ apiClient.interceptors.response.use(
     }
 
     const status: number | undefined = error.response.status;
-    const data = error.response.data as { error?: string } | string | undefined;
+    const data = error.response.data as
+      | { error?: string; message?: string | string[] }
+      | string
+      | undefined;
 
     if (status && [500, 502, 503, 504].includes(status)) {
       return Promise.reject(
@@ -66,8 +69,12 @@ apiClient.interceptors.response.use(
 
     const errorMessage =
       typeof data === 'object' && data
-        ? data.error || 'An error occurred. Please try again.'
-        : 'An error occurred. Please try again.';
+        ? Array.isArray(data.message)
+          ? data.message.join(' ')
+          : data.message || data.error || 'An error occurred. Please try again.'
+        : typeof data === 'string' && data.trim().length > 0
+          ? data
+          : 'An error occurred. Please try again.';
 
     return Promise.reject(new Error(errorMessage));
   },

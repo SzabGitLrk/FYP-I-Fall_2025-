@@ -92,14 +92,14 @@
       "newPassword": "New password",
       "passwordMatchError": "New password must be different from the current password"
     },
-    "about" : {
+    "about": {
       "title": "About Fyndbox",
       "welcomeText": "Welcome to Fyndbox – your smart solution for organizing and tracking your belongings! \n Fyndbox is the app that helps you easily sort, catalog, and keep track of all your items, whether they’re in the attic, storage room, garage, or basement. With Fyndbox, you’ll save time searching and get a clear overview of where everything is with just a few taps.",
       "addUnitTitle": "Add a Location",
       "addUnitText": "Start by creating a location for your items, such as the attic, garage, or storage room. By organizing your locations, you’ll have a structured view of where each box is stored and better control over where your things are kept.",
       "createBoxTitle": "Create a Box",
       "createBoxText": "Set up boxes representing different categories, areas, or themes. Each box can be named according to its contents, making it easy to keep everything organized in a way that makes sense to you.",
-      "addItemTitle" : "Add Items to the Box",
+      "addItemTitle": "Add Items to the Box",
       "addItemText": "Add the items you want to store in each box. This gives you a clear overview of exactly what’s in each box, so nothing is forgotten or overlooked.",
       "printQRcodeTitle": "Print a QR Code for Your Box",
       "printQRcodeText": "Fyndbox allows you to save or print a QR code for each box. Attach the QR code to the box, and you can easily scan it to see the contents right in the app – perfect for quickly finding what you’re looking for.",
@@ -176,31 +176,60 @@
     "deactivateTitle": "Deactivate Account ?",
     "deactivateConfirmation": "Are you sure you want to deactivate the account? This action cannot be undone."
   },
-  "smartAssist": {
-    "title": "Smart Assist",
-    "description": "Describe a storage action in one sentence. Smart Assist will interpret it and save the result in one step.",
+  "smartAdd": {
+    "title": "Smart Add",
+    "description": "Describe a storage action in one sentence. Smart Add will interpret it and save the result in one step.",
+    "textTitle": "Smart Text Add",
+    "textDescription": "Describe a storage action in one sentence. Smart Text Add will interpret it and save the result in one step.",
     "instructionLabel": "Instruction",
     "placeholder": "Example: Create storage Garage with box Tools and 5 hammers",
     "process": "Preview",
     "processing": "Previewing...",
-    "submit": "Submit",
-    "submitting": "Submitting...",
+    "submit": "Save",
+    "submitting": "Saving...",
     "confirm": "Save",
     "approve": "OK",
     "confirming": "Saving...",
     "reset": "Reset",
     "preview": "Preview",
     "suggestions": "Suggestions",
-    "emptyPrompt": "Enter an instruction before submitting it.",
+    "emptyPrompt": "Enter an instruction before saving it.",
     "requestFailed": "Unable to process the instruction right now.",
-    "serviceUnavailable": "Smart Assist service isn't available right now. Please restart the backend and try again.",
+    "serviceUnavailable": "Smart Add service isn't available right now. Please restart the backend and try again.",
     "confirmationTitle": "Confirm Changes",
     "confirmationFallback": "This action may reuse existing storage, box, or item entries. Press OK to continue or Cancel to stop without saving.",
     "confirmationFallbackShort": "Please review this action before saving.",
     "confirmationExistingShort": "Matching items already exist. Reuse them and add what is missing?",
+    "fallbackToLlm": "This instruction needs manual review and will fall back to AI assistance.",
     "resultTitle": "Saved successfully",
     "resultClose": "Close",
-    "warningsTitle": "Warnings"
+    "warningsTitle": "Warnings",
+    "reject": "No",
+    "ok": "OK",
+    "entryTitle": "Smart Add",
+    "entryDescription": "Choose how you want to add data. Text Add is connected to the current AI text-processing flow.",
+    "openNow": "Open",
+    "comingSoon": "Soon",
+    "textAdd": "Smart Text Add",
+    "voiceAdd": "Voice Add",
+    "voiceTitle": "Voice Add",
+    "voiceDescription": "Record one storage instruction. Voice Add listens for up to 30 seconds, transcribes it, and saves it through the Smart Add flow.",
+    "voiceStart": "Start Recording",
+    "voiceStop": "Stop",
+    "voiceRetry": "Retry",
+    "voiceReady": "Tap Start Recording and speak for up to 30 seconds.",
+    "voiceListening": "Listening...",
+    "voiceCaptured": "Voice instruction captured.",
+    "voiceTranscript": "Transcript",
+    "voiceProcessing": "Transcribing and processing your instruction...",
+    "voiceProcessingShort": "Processing...",
+    "voiceUnsupported": "Voice recording is not supported in this browser. Please try a different one.",
+    "voicePermissionDenied": "Microphone access was blocked. Please allow microphone access and try again.",
+    "voiceStartFailed": "Unable to start voice recording right now. Please try again.",
+    "voiceEmpty": "We could not capture any audio. Please try recording again.",
+    "imageAdd": "Image Add",
+    "voicePending": "Voice Add is not implemented yet. We will work on it later.",
+    "imagePending": "Image Add is not implemented yet. We will work on it later."
   },
   "types": {
     "storage": "Storage",
@@ -230,7 +259,7 @@
     },
     "notifications": {
       "title": "Notifications",
-      "seeAll" : "See all",
+      "seeAll": "See all",
       "noBoxForStorage": "No Boxes found for this storage",
       "noNotifications": "No notifications"
     },
@@ -259,7 +288,7 @@
           "updateFailed": "Error updating password",
           "incorrectPassword": "Current password is incorrect"
         }
-      }, 
+      },
       "forgotPassword": {
         "success": "A reset password link has been sent to your email address. Please check your inbox.",
         "error": "We encountered an error while attempting to send the reset password email. Please try again later."
@@ -396,7 +425,7 @@
         "noKeyProvided": "No key provided for deletion"
       }
     },
-   "notifications": {
+    "notifications": {
       "getAll": {
         "success": "Notifications retrieved successfully",
         "error": "Failed to retrieve notifications"

@@ -374,6 +374,7 @@ export const DICTIONARY_CONFIG = {
    */
   CONNECTORS: [
     'named',
+    'name',
     'called',
     'label',
     'labeled',

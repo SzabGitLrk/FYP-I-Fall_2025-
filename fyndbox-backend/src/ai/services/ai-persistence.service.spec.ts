@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { AiPersistenceService } from './ai-persistence.service';
+import { AiRateLimitService } from './ai-rate-limit.service';
+import { LlmFallbackService } from './llm-fallback.service';
 import { TextParsingService } from './text-parsing.service';
 import { TextProcessingService } from './text-processing.service';
 import { ValidationService } from './validation.service';
@@ -47,6 +49,8 @@ describe('Phase 5: Database Persistence', () => {
         TextParsingService,
         ValidationService,
         AiPersistenceService,
+        AiRateLimitService,
+        LlmFallbackService,
         { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
@@ -652,6 +656,8 @@ describe('Phase 5: Database Persistence', () => {
           TextParsingService,
           ValidationService,
           AiPersistenceService,
+          AiRateLimitService,
+          LlmFallbackService,
         ],
       }).compile();
       const serviceNoDb =
@@ -660,6 +666,30 @@ describe('Phase 5: Database Persistence', () => {
       const result = await serviceNoDb.persistToDatabase({}, 'user-123');
       expect(result.success).toBe(false);
       expect(result.message).toContain('Database connection not available');
+    });
+  });
+
+  describe('validatePersistencePrerequisites', () => {
+    it('should reject boxes and items without a storage name', () => {
+      expect(
+        service.validatePersistencePrerequisites({
+          storageName: null,
+          boxes: [{ name: 'Archive Carton', clientRef: 'b1' }],
+          items: [{ name: 'Receipt', quantity: 20, boxClientRef: 'b1' }],
+        }),
+      ).toBe('Please specify the storage before saving boxes or items.');
+    });
+
+    it('should reject items that cannot be mapped to a known box ref', () => {
+      expect(
+        service.validatePersistencePrerequisites({
+          storageName: 'Records Room',
+          boxes: [{ name: 'Archive Carton', clientRef: 'b1' }],
+          items: [{ name: 'Receipt', quantity: 20, boxClientRef: 'missing-ref' }],
+        }),
+      ).toBe(
+        "Please review the generated box assignment for 'Receipt' before saving.",
+      );
     });
   });
 

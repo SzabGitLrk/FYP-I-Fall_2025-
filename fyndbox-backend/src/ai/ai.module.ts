@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { AiPersistenceService } from './services/ai-persistence.service';
+import { AiRateLimitService } from './services/ai-rate-limit.service';
 import { ImageProcessingService } from './services/image-processing.service';
 import { LlmFallbackService } from './services/llm-fallback.service';
 import { TextParsingService } from './services/text-parsing.service';
@@ -14,6 +15,7 @@ import { VoiceProcessingService } from './services/voice-processing.service';
   providers: [
     AiService,
     AiPersistenceService,
+    AiRateLimitService,
     ImageProcessingService,
     LlmFallbackService,
     TextParsingService,

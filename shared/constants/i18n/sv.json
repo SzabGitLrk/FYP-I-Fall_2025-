@@ -82,8 +82,8 @@
     }
   },
   "settings": {
-    "account" : {
-      "title": "Kontoinställningar" 
+    "account": {
+      "title": "Kontoinställningar"
     },
     "security": {
       "title": "Säkerhetsinställningar",
@@ -92,14 +92,14 @@
       "newPassword": "Nytt lösenord",
       "passwordMatchError": "Det nya lösenordet måste skilja sig från det nuvarande lösenordet"
     },
-    "about" : {
+    "about": {
       "title": "Om Fyndbox",
       "welcomeText": "Välkommen till Fyndbox – din smarta lösning för att skapa ordning och struktur bland dina saker! \n Fyndbox är appen som hjälper dig att enkelt organisera, katalogisera och hålla koll på alla dina tillhörigheter, oavsett om de finns på vinden, i förrådet, garaget eller i källaren. Med Fyndbox slipper du slösa tid på att leta, och du får en klar översikt över var allt finns med bara ett par tryck på skärmen.",
       "addUnitTitle": "Lägg till en enhet",
       "addUnitText": "Börja med att skapa en plats för dina saker exempelvis vinden, garaget eller förrådet. Genom att ange platser får du enkelt en struktur för var lådorna finns och kan hålla bättre koll på var dina saker förvaras.",
       "createBoxTitle": "Skapa en låda",
       "createBoxText": "Skapa lådor som representerar olika kategorier, områden eller teman. Varje låda kan namnges efter vad den innehåller, vilket gör att du kan hålla sakerna organiserade på ett smidigt sätt.",
-      "addItemTitle" : "Lägg till artiklar i lådan",
+      "addItemTitle": "Lägg till artiklar i lådan",
       "addItemText": "Lägg till de artiklar du vill förvara i varje låda. Det här ger dig en tydlig bild av exakt vad som finns i varje låda och minimerar risken att något faller i glömska.",
       "printQRcodeTitle": "Skriv ut en QR-kod för din låda",
       "printQRcodeText": "Fyndbox låter dig spara eller skriva ut en QR-kod för varje låda. Fäst QR-koden på lådan och du kan enkelt scanna den för att direkt se lådans innehåll i appen – perfekt när du snabbt vill få koll på vad som finns var.",
@@ -108,8 +108,8 @@
       "email": "info@fyndbox.com"
     }
   },
-  "qrCode":{
-    "title":"Skanna QR-koden",
+  "qrCode": {
+    "title": "Skanna QR-koden",
     "error": "Det gick inte att skanna QR-koden. Försök igen.",
     "attemptError": "Failed to scan QR code after several attempts.",
     "noQrCodeFound": "Det gick inte att skanna QR-koden efter flera försök.",
@@ -153,8 +153,8 @@
     "delete": "Ta bort",
     "deactivate": "Inaktivera",
     "cancel": "Ångra",
-    "save":"Spara",
-    "image":{
+    "save": "Spara",
+    "image": {
       "label": "Bild"
     },
     "name": {
@@ -176,29 +176,60 @@
     "deactivateTitle": "Inaktivera konto ?",
     "deactivateConfirmation": "Är du säker på att du vill inaktivera ditt konto? Denna åtgärd kan inte ångras."
   },
-  "smartAssist": {
-    "title": "Smart Assist",
-    "description": "Beskriv vad du vill göra i en mening. Smart Assist tolkar instruktionen och sparar resultatet i ett steg.",
+  "smartAdd": {
+    "title": "Smart Add",
+    "description": "Beskriv vad du vill göra i en mening. Smart Add tolkar instruktionen och sparar resultatet i ett steg.",
+    "textTitle": "Smart Text Add",
+    "textDescription": "Beskriv vad du vill göra i en mening. Smart Text Add tolkar instruktionen och sparar resultatet i ett steg.",
     "instructionLabel": "Instruktion",
     "placeholder": "Exempel: Skapa lagringen Garage med lådan Tools och 5 hammare",
     "process": "Förhandsgranska",
     "processing": "Bearbetar...",
-    "submit": "Skicka",
-    "submitting": "Skickar...",
+    "submit": "Spara",
+    "submitting": "Sparar...",
     "confirm": "Spara",
     "approve": "OK",
     "confirming": "Sparar...",
     "reset": "Återställ",
     "preview": "Förhandsgranskning",
     "suggestions": "Förslag",
-    "emptyPrompt": "Skriv en instruktion innan du skickar.",
+    "emptyPrompt": "Skriv en instruktion innan du sparar.",
     "requestFailed": "Det gick inte att behandla instruktionen just nu.",
-    "serviceUnavailable": "Smart Assist-tjänsten är inte tillgänglig just nu. Starta om backend och försök igen.",
+    "serviceUnavailable": "Smart Add-tjänsten är inte tillgänglig just nu. Starta om backend och försök igen.",
     "confirmationTitle": "Bekräfta ändringar",
     "confirmationFallback": "Den här åtgärden kan återanvända befintlig lagring, låda eller artikel. Tryck på OK för att fortsätta eller Avbryt för att stoppa utan att spara.",
+    "confirmationFallbackShort": "Granska ändringen innan du sparar.",
+    "confirmationExistingShort": "Matchande artiklar finns redan. Återanvänd dem och lägg till det som saknas?",
+    "fallbackToLlm": "Den här instruktionen behöver manuell granskning och använder AI-hjälp som reserv.",
     "resultTitle": "Sparades",
     "resultClose": "Stäng",
-    "warningsTitle": "Varningar"
+    "warningsTitle": "Varningar",
+    "reject": "Nej",
+    "ok": "OK",
+    "entryTitle": "Smart Add",
+    "entryDescription": "Välj hur du vill lägga till data. Text Add är kopplad till det nuvarande AI-flödet för textbearbetning.",
+    "openNow": "Ã–ppna",
+    "comingSoon": "Snart",
+    "textAdd": "Smart Text Add",
+    "voiceAdd": "Voice Add",
+    "voiceTitle": "Voice Add",
+    "voiceDescription": "Spela in en instruktion fÃ¶r din fÃ¶rvaring. Voice Add lyssnar i upp till 30 sekunder, transkriberar den och sparar via Smart Add-flÃ¶det.",
+    "voiceStart": "Starta inspelning",
+    "voiceStop": "Stopp",
+    "voiceRetry": "Försök",
+    "voiceReady": "Tryck pÃ¥ Starta inspelning och prata i upp till 30 sekunder.",
+    "voiceListening": "Lyssnar...",
+    "voiceCaptured": "RÃ¶stinspelningen har registrerats.",
+    "voiceTranscript": "Transkribering",
+    "voiceProcessing": "Transkriberar och behandlar din instruktion...",
+    "voiceProcessingShort": "Bearbetar...",
+    "voiceUnsupported": "RÃ¶stinspelning stÃ¶ds inte i den hÃ¤r webblÃ¤saren. Prova en annan.",
+    "voicePermissionDenied": "MikrofonÃ¥tkomst blockerades. TillÃ¥t mikrofonÃ¥tkomst och fÃ¶rsÃ¶k igen.",
+    "voiceStartFailed": "Det gick inte att starta rÃ¶stinspelningen just nu. FÃ¶rsÃ¶k igen.",
+    "voiceEmpty": "Det gick inte att fÃ¥nga nÃ¥got ljud. FÃ¶rsÃ¶k spela in igen.",
+    "imageAdd": "Image Add",
+    "voicePending": "Voice Add är inte implementerat ännu. Vi arbetar vidare med det senare.",
+    "imagePending": "Image Add är inte implementerat ännu. Vi arbetar vidare med det senare."
   },
   "types": {
     "storage": "Lagring",
@@ -265,7 +296,7 @@
       "resetPassword": {
         "success": "Lösenordet har återställts framgångsrikt",
         "error": "Ett fel inträffade vid återställning av lösenordet"
-      }, 
+      },
       "validate-reset-token": {
         "success": "Token is valid",
         "error": "Token is invalid"

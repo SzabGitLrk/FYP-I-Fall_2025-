@@ -1,10 +1,16 @@
 import { Box, Fab, styled, Typography } from '@mui/material';
 
-export const AddEntityContainer = styled(Box)(({ theme }) => ({
+interface AddEntityContainerProps {
+  $layout?: 'default' | 'inline';
+}
+
+export const AddEntityContainer = styled(Box, {
+  shouldForwardProp: (prop) => prop !== '$layout',
+})<AddEntityContainerProps>(({ theme, $layout = 'default' }) => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  margin: theme.spacing(6, 0),
+  margin: $layout === 'inline' ? 0 : theme.spacing(6, 0),
 }));
 
 export const FabContainer = styled(Fab)(({ theme }) => ({

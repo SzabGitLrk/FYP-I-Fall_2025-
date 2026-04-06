@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiPersistenceService } from './ai-persistence.service';
+import { AiRateLimitService } from './ai-rate-limit.service';
+import { LlmFallbackService } from './llm-fallback.service';
 import { TextParsingService } from './text-parsing.service';
 import { TextProcessingService } from './text-processing.service';
 import { ValidationService } from './validation.service';
@@ -14,6 +16,8 @@ describe('TextProcessingService', () => {
         TextParsingService,
         ValidationService,
         AiPersistenceService,
+        AiRateLimitService,
+        LlmFallbackService,
       ],
     }).compile();
 

@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ProcessTextRequestDto } from './dto/process-text-request.dto';
 import { ProcessTextResponseDto } from './dto/process-text-response.dto';
 import { AiPersistenceService } from './services/ai-persistence.service';
 import { TextProcessingService } from './services/text-processing.service';
 import { ConfirmAiResultRequestDto } from './dto/confirm-ai-result-request.dto';
 import { ConfirmAiResultResponseDto } from './dto/confirm-ai-result-response.dto';
+import { VoiceProcessingService } from './services/voice-processing.service';
+import { TranscribeVoiceResponseDto } from './dto/transcribe-voice-response.dto';
 
 @Injectable()
 export class AiService {
   constructor(
     private readonly textProcessingService: TextProcessingService,
     private readonly aiPersistenceService: AiPersistenceService,
+    private readonly voiceProcessingService: VoiceProcessingService,
   ) {}
 
   async processText(
@@ -21,6 +24,31 @@ export class AiService {
       userId,
       processTextRequestDto,
     );
+  }
+
+  async processVoice(
+    userId: string,
+    file?: Express.Multer.File,
+  ): Promise<ProcessTextResponseDto> {
+    return this.voiceProcessingService.processVoiceRequest(userId, file);
+  }
+
+  async transcribeVoice(
+    file?: Express.Multer.File,
+  ): Promise<TranscribeVoiceResponseDto> {
+    if (!file) {
+      throw new BadRequestException(
+        'Please record a voice instruction before saving.',
+      );
+    }
+
+    const transcriptResult =
+      await this.voiceProcessingService.transcribeVoiceCommand(file);
+
+    return {
+      transcript: transcriptResult.cleanedTranscript,
+      rawTranscript: transcriptResult.rawTranscript,
+    };
   }
 
   async confirmResult(

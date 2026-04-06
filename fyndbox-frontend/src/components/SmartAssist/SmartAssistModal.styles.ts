@@ -5,11 +5,6 @@ export const SmartAssistContent = styled(Stack)(({ theme }) => ({
   paddingTop: theme.spacing(5),
 }));
 
-export const SmartAssistDescription = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  textAlign: 'left',
-}));
-
 export const SmartAssistActionRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(1.5),

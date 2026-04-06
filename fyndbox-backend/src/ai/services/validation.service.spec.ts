@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiPersistenceService } from './ai-persistence.service';
+import { AiRateLimitService } from './ai-rate-limit.service';
+import { LlmFallbackService } from './llm-fallback.service';
 import { TextParsingService } from './text-parsing.service';
 import { TextProcessingService } from './text-processing.service';
 import { ValidationService } from './validation.service';
@@ -14,6 +16,8 @@ describe('TextProcessingService', () => {
         TextParsingService,
         ValidationService,
         AiPersistenceService,
+        AiRateLimitService,
+        LlmFallbackService,
       ],
     }).compile();
 
@@ -43,7 +47,7 @@ describe('TextProcessingService', () => {
     it('should reject short input (< 3 words)', () => {
       const result = service.validateInput('create box');
       expect(result.isValid).toBe(false);
-      expect(result.message).toContain('Please clarify your instruction');
+      expect(result.message).toContain('Please add more detail');
     });
 
     it('should treat stop-word-only input as too short after cleanup', () => {
@@ -51,7 +55,7 @@ describe('TextProcessingService', () => {
         'hi kindly please thanks thank you sorry hello',
       );
       expect(result.isValid).toBe(false);
-      expect(result.message).toContain('Please clarify your instruction');
+      expect(result.message).toContain('Please add more detail');
     });
 
     it('should accept valid input (>= 3 words)', () => {

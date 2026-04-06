@@ -37,11 +37,19 @@ export class ValidationService {
     const wordCount = cleanedForValidation
       ? cleanedForValidation.split(/\s+/).length
       : 0;
+    if (wordCount === 0) {
+      return {
+        isValid: false,
+        message:
+          "Please describe a storage action. Try something like 'Create storage Garage with box Tools'.",
+      };
+    }
+
     if (wordCount < 3) {
       return {
         isValid: false,
         message:
-          "Please clarify your instruction. Try something like 'Create storage Garage with box Tools'.",
+          "Please add more detail. Example: 'Create storage Garage with box Tools'.",
       };
     }
     return { isValid: true, message: null };
@@ -182,6 +190,18 @@ export class ValidationService {
           shouldFallToLLM: true,
         };
       }
+    }
+
+    if (hasEntities && hasConversationalNoise) {
+      return {
+        intent,
+        isValid: false,
+        scope,
+        clarification: null,
+        suggestions,
+        confidence: 0,
+        shouldFallToLLM: true,
+      };
     }
 
     if (intent === 'decrement') {
@@ -944,6 +964,15 @@ export class ValidationService {
       'help',
       'just',
       'so',
+      'this',
+      'that',
+      'these',
+      'those',
+      'it',
+      'which',
+      'there',
+      'here',
+      'each',
     ]);
 
     const entityTexts = [

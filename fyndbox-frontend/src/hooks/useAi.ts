@@ -1,10 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { confirmAiResult, processTextInput } from '../api/aiService';
+import {
+  confirmAiResult,
+  processTextInput,
+  processVoiceInput,
+} from '../api/aiService';
 import {
   ConfirmAiResult,
   ConfirmAiResultRequest,
   ProcessTextRequest,
   ProcessTextResult,
+  ProcessVoiceResult,
 } from '../types/ai';
 
 // Process AI text input
@@ -13,6 +18,16 @@ export const useProcessTextInput = () => {
     mutationFn: (payload) => processTextInput(payload),
     onError: (error: Error) => {
       console.error('Error processing text input', error);
+    },
+  });
+};
+
+// Process AI voice input
+export const useProcessVoiceInput = () => {
+  return useMutation<ProcessVoiceResult, Error, File>({
+    mutationFn: (file) => processVoiceInput(file),
+    onError: (error: Error) => {
+      console.error('Error processing voice input', error);
     },
   });
 };

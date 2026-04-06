@@ -6,6 +6,7 @@ import {
   ConfirmAiResultRequest,
   ProcessTextRequest,
   ProcessTextResult,
+  ProcessVoiceResult,
 } from '../types/ai';
 
 export const processTextInput = (
@@ -13,6 +14,25 @@ export const processTextInput = (
 ): Promise<ProcessTextResult> => {
   return handleApiCall(
     apiClient.post<ApiResponse<ProcessTextResult>>('/ai/process-text', payload),
+  );
+};
+
+export const processVoiceInput = (
+  file: File,
+): Promise<ProcessVoiceResult> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return handleApiCall(
+    apiClient.post<ApiResponse<ProcessVoiceResult>>(
+      '/ai/transcribe-voice',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    ),
   );
 };
 

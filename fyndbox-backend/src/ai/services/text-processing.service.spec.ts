@@ -1,12 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DICTIONARY_CONFIG } from '../config/nlp-dictionary.config';
 import { AiPersistenceService } from './ai-persistence.service';
+import { AiRateLimitService } from './ai-rate-limit.service';
+import { LlmFallbackService } from './llm-fallback.service';
 import { TextParsingService } from './text-parsing.service';
 import { TextProcessingService } from './text-processing.service';
 import { ValidationService } from './validation.service';
 
 describe('TextProcessingService', () => {
   let service: TextProcessingService;
+  let aiPersistenceService: AiPersistenceService;
+  let llmFallbackService: LlmFallbackService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -15,10 +19,14 @@ describe('TextProcessingService', () => {
         TextParsingService,
         ValidationService,
         AiPersistenceService,
+        AiRateLimitService,
+        LlmFallbackService,
       ],
     }).compile();
 
     service = module.get<TextProcessingService>(TextProcessingService);
+    aiPersistenceService = module.get<AiPersistenceService>(AiPersistenceService);
+    llmFallbackService = module.get<LlmFallbackService>(LlmFallbackService);
   });
 
   it('should be defined', () => {
@@ -276,9 +284,7 @@ describe('TextProcessingService', () => {
         items: [],
       };
       const summary = service.generateConfirmationSummary(data);
-      expect(summary).toContain('Storage: Garage');
-      expect(summary).toContain('Main Warehouse');
-      expect(summary).toContain('Confirm?');
+      expect(summary).toBe("Please confirm these changes: storage 'Garage'.");
     });
 
     it('should generate summary with boxes and items', () => {
@@ -295,17 +301,161 @@ describe('TextProcessingService', () => {
         ],
       };
       const summary = service.generateConfirmationSummary(data);
-      expect(summary).toContain('Storage: Garage');
-      expect(summary).toContain('Boxes: Tools, Winter');
-      expect(summary).toContain('Hammer (x2) -> Tools');
-      expect(summary).toContain('Scarf (x1) -> Winter');
+      expect(summary).toContain("storage 'Garage'");
+      expect(summary).toContain("boxes 'Tools' and 'Winter'");
+      expect(summary).toContain("'Hammer' (x2) in 'Tools'");
+      expect(summary).toContain("'Scarf' (x1) in 'Winter'");
     });
 
     it('should handle empty data gracefully', () => {
       const data = { storageName: null, boxes: [], items: [] };
       const summary = service.generateConfirmationSummary(data);
-      expect(summary).toContain('Ready to save:');
-      expect(summary).toContain('Confirm?');
+      expect(summary).toBe('Please confirm these changes.');
+    });
+  });
+
+  describe('fallback routing', () => {
+    it('should route conversational repeated-box prompts to LLM fallback', () => {
+      const result = service.processInput(
+        'In storage Pantry, start two dry-food boxes and place six pasta packs in each.',
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.fallbackToLLM).toBe(true);
+      expect(result.message).toContain('fall to LLM');
+    });
+
+    it('should route noisy voice transcripts with conversational entity leakage to LLM fallback', () => {
+      const result = service.processInput(
+        'can you please add a storage name the garage in which aid 5 pool box and in each of these tool please it two famous and one screw',
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.fallbackToLLM).toBe(true);
+      expect(result.message).toContain('fall to LLM');
+    });
+  });
+
+  describe('shared workflow finalization', () => {
+    it('should send low-confidence rule-based prompts through LLM and then reuse shared persistence validation', async () => {
+      jest
+        .spyOn(aiPersistenceService, 'getExistingContext')
+        .mockResolvedValue({ storages: [], boxes: [], items: [] });
+      jest.spyOn(service, 'processInput').mockReturnValue({
+        success: false,
+        fallbackToLLM: true,
+        llmBackup:
+          'Please register two archive cartons for invoices and place twenty receipts in each',
+        rawInput:
+          'Please register two archive cartons for invoices and place twenty receipts in each',
+        classified: {
+          shouldFallToLLM: true,
+          confidence: 0.22,
+        },
+      });
+      jest.spyOn(llmFallbackService, 'resolveTextFallback').mockResolvedValue({
+        success: true,
+        message: 'fallback ready',
+        confidence: 0.88,
+        classified: {
+          shouldFallToLLM: false,
+          confidence: 0.88,
+        },
+        parsedData: {
+          intent: 'create',
+          rawIntents: ['create'],
+          storageName: null,
+          boxes: [
+            { name: 'archive carton 1', clientRef: 'llm-box-1', quantity: null },
+            { name: 'archive carton 2', clientRef: 'llm-box-2', quantity: null },
+          ],
+          items: [
+            { name: 'receipt', quantity: 20, boxClientRef: 'llm-box-1' },
+            { name: 'receipt', quantity: 20, boxClientRef: 'llm-box-2' },
+          ],
+          totalWords: 1,
+          extractedWordCount: 1,
+          meta: { resolutionSource: 'llm-fallback' },
+        },
+      });
+
+      await expect(
+        service.processTextRequest('user-123', {
+          text: 'Please register two archive cartons for invoices and place twenty receipts in each',
+        }),
+      ).rejects.toThrow(
+        "Please specify the storage for 'archive carton 1', 'archive carton 2', 'receipt', and 'receipt'.",
+      );
+
+      expect(service.processInput).toHaveBeenCalled();
+      expect(llmFallbackService.resolveTextFallback).toHaveBeenCalled();
+    });
+
+    it('should reuse the same heavy-normalization and persistence-preparation path after LLM extraction', async () => {
+      jest
+        .spyOn(aiPersistenceService, 'getExistingContext')
+        .mockResolvedValue({ storages: [], boxes: [], items: [] });
+      jest.spyOn(service, 'processInput').mockReturnValue({
+        success: false,
+        fallbackToLLM: true,
+        llmBackup:
+          'In storage Records Room, please register two archive cartons for invoices and place twenty receipts in each',
+        rawInput:
+          'In storage Records Room, please register two archive cartons for invoices and place twenty receipts in each',
+        classified: {
+          shouldFallToLLM: true,
+          confidence: 0.22,
+        },
+      });
+      jest.spyOn(llmFallbackService, 'resolveTextFallback').mockResolvedValue({
+        success: true,
+        message: 'fallback ready',
+        confidence: 0.91,
+        classified: {
+          shouldFallToLLM: false,
+          confidence: 0.91,
+        },
+        parsedData: {
+          intent: 'create',
+          rawIntents: ['create'],
+          storageName: 'records room',
+          boxes: [
+            {
+              name: 'archive carton',
+              clientRef: 'llm-box-1',
+              quantity: 2,
+              description: null,
+            },
+          ],
+          items: [
+            {
+              name: 'receipt',
+              quantity: 20,
+              boxClientRef: 'llm-box-1',
+              replicatePerExpandedBox: true,
+            },
+          ],
+          totalWords: 1,
+          extractedWordCount: 1,
+          meta: { resolutionSource: 'llm-fallback' },
+        },
+      });
+
+      const result = await service.processTextRequest('user-123', {
+        text: 'In storage Records Room, please register two archive cartons for invoices and place twenty receipts in each',
+      });
+
+      expect(result.fallbackToLLM).toBe(true);
+      expect(result.parsedData.storageName).toBe('Record Room');
+      expect(result.parsedData.boxes.map((box: any) => box.name)).toEqual([
+        'Archive carton 1',
+        'Archive carton 2',
+      ]);
+      expect(result.parsedData.items).toHaveLength(2);
+      expect(result.parsedData.confirmation).toContain(
+        'You are about to create 2 boxes',
+      );
+      expect(result.parsedData.meta.workflowSource).toBe('llm-fallback');
     });
   });
 });
