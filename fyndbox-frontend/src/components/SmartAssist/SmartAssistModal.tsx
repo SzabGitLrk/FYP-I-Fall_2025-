@@ -99,7 +99,7 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
       return t('smartAdd.serviceUnavailable', {
         defaultValue:
-          "Smart Add service isn't available right now. Please restart the backend and try again.",
+          'Please check your internet connection and try again.',
       });
     }
 

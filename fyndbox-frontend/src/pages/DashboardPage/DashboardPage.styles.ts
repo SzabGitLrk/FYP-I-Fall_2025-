@@ -1,4 +1,4 @@
-import { Box, Container, Typography, styled } from '@mui/material';
+import { Box, Container, styled } from '@mui/material';
 
 export const DashboardContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(0, 0),
@@ -22,17 +22,7 @@ export const PrimaryActionsContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  gap: theme.spacing(4),
+  gap: theme.spacing(2),
   flexWrap: 'wrap',
   margin: theme.spacing(6, 0, 2),
-}));
-
-export const SmartAddEntryContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
-}));
-
-export const SmartAddEntryLabel = styled(Typography)(({ theme }) => ({
-  color: theme.palette.secondary.contrastText,
 }));

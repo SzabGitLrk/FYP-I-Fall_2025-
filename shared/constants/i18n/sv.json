@@ -195,7 +195,7 @@
     "suggestions": "Förslag",
     "emptyPrompt": "Skriv en instruktion innan du sparar.",
     "requestFailed": "Det gick inte att behandla instruktionen just nu.",
-    "serviceUnavailable": "Smart Add-tjänsten är inte tillgänglig just nu. Starta om backend och försök igen.",
+    "serviceUnavailable": "Kontrollera din internetanslutning och försök igen.",
     "confirmationTitle": "Bekräfta ändringar",
     "confirmationFallback": "Den här åtgärden kan återanvända befintlig lagring, låda eller artikel. Tryck på OK för att fortsätta eller Avbryt för att stoppa utan att spara.",
     "confirmationFallbackShort": "Granska ändringen innan du sparar.",

@@ -48,7 +48,7 @@ apiClient.interceptors.response.use(
     if (!error.response) {
       return Promise.reject(
         new Error(
-          'Unable to reach the server. Please make sure the backend is running and try again.',
+          'Please check your internet connection and try again.',
         ),
       );
     }
@@ -62,7 +62,7 @@ apiClient.interceptors.response.use(
     if (status && [500, 502, 503, 504].includes(status)) {
       return Promise.reject(
         new Error(
-          'Unable to reach the server. Please make sure the backend is running and try again.',
+          'Please check your internet connection and try again.',
         ),
       );
     }

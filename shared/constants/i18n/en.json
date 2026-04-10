@@ -195,7 +195,7 @@
     "suggestions": "Suggestions",
     "emptyPrompt": "Enter an instruction before saving it.",
     "requestFailed": "Unable to process the instruction right now.",
-    "serviceUnavailable": "Smart Add service isn't available right now. Please restart the backend and try again.",
+    "serviceUnavailable": "Please check your internet connection and try again.",
     "confirmationTitle": "Confirm Changes",
     "confirmationFallback": "This action may reuse existing storage, box, or item entries. Press OK to continue or Cancel to stop without saving.",
     "confirmationFallbackShort": "Please review this action before saving.",

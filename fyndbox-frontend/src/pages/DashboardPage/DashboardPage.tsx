@@ -15,8 +15,6 @@ import {
   DashboardContainer,
   MainContainer,
   PrimaryActionsContainer,
-  SmartAddEntryContainer,
-  SmartAddEntryLabel,
   SubContainer,
 } from './DashboardPage.styles';
 import { EntityType } from '../../types/entityTypes';
@@ -269,17 +267,9 @@ const DashboardPage: FC = () => {
             layout="inline"
             onAdd={() => handleAddEntity('storage')}
           />
-          <SmartAddEntryContainer>
-            <SmartAddEntryLabel variant="h6">
-              {t('smartAdd.entryTitle', { defaultValue: 'Smart Add' })}
-            </SmartAddEntryLabel>
-            <SmartAssistButton
-              placement="inline"
-              onClick={handleOpenSmartAddChooser}
-            />
-          </SmartAddEntryContainer>
         </PrimaryActionsContainer>
       </MainContainer>
+      <SmartAssistButton onClick={handleOpenSmartAddChooser} />
       <DashboardFooter
         onFavoriteClick={handleFavoriteClick}
         onScanClick={handleScanClick}

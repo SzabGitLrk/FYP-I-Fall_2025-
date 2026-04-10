@@ -337,21 +337,21 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
       return t('smartAdd.serviceUnavailable', {
         defaultValue:
-          "Smart Add service isn't available right now. Please restart the backend and try again.",
+          'Please check your internet connection and try again.',
       });
     }
 
     if (/Cannot\s+POST\s+\/ai\/transcribe-voice/i.test(message)) {
       return t('smartAdd.voiceServiceUnavailable', {
         defaultValue:
-          "Voice transcription isn't available right now. Please restart the backend and try again.",
+          'Please check your internet connection and try again.',
       });
     }
 
     if (/^Not Found$/i.test(message.trim())) {
       return t('smartAdd.voiceServiceUnavailable', {
         defaultValue:
-          "Voice transcription isn't available right now. Please restart the backend and try again.",
+          'Please check your internet connection and try again.',
       });
     }
 

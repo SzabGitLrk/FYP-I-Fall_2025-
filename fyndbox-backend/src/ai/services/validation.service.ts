@@ -23,7 +23,7 @@ export class ValidationService {
     if (!rawText || rawText.trim().length === 0) {
       return {
         isValid: false,
-        message: 'Please enter an instruction to get started.',
+        message: 'Please enter a storage instruction to continue.',
       };
     }
 
@@ -41,11 +41,19 @@ export class ValidationService {
       return {
         isValid: false,
         message:
-          "Please describe a storage action. Try something like 'Create storage Garage with box Tools'.",
+          "Please describe what you want to do. Example: 'Create storage Garage with box Tools'.",
       };
     }
 
     if (wordCount < 3) {
+      const hasStorageHint = /\bstorage\b/i.test(cleanedForValidation);
+      if (hasStorageHint) {
+        return {
+          isValid: false,
+          message:
+            "Please specify the action (create, update, or add) for storage.",
+        };
+      }
       return {
         isValid: false,
         message:
@@ -154,7 +162,7 @@ export class ValidationService {
         isValid: false,
         scope,
         clarification:
-          'Could not understand the instruction. Please try again.',
+          "Please clarify the action (create, add, update, or remove) and storage.",
         suggestions,
         confidence: 0,
         shouldFallToLLM: true,
@@ -1018,7 +1026,10 @@ export class ValidationService {
     const missingLabel = this.joinHumanList(missingParts);
     const targetLabel =
       targets.length > 0 ? ` for ${this.joinHumanList(targets)}` : '';
-    return `Please specify the ${missingLabel}${targetLabel}.`;
+    const storageLabel = parsedData.storageName
+      ? ` for storage '${this.toTitleCase(parsedData.storageName)}'`
+      : '';
+    return `Please specify the action (create, update, or add)${storageLabel}${targetLabel}.`;
   }
 
   private buildMissingBoxClarification(parsedData: any): string {
@@ -1032,7 +1043,7 @@ export class ValidationService {
       ? ` in storage '${this.toTitleCase(parsedData.storageName)}'`
       : '';
 
-    return `Please specify a box${storageLabel}${itemLabel}.`;
+    return `Please specify which box the item should go in${storageLabel}${itemLabel}.`;
   }
 
   private buildMissingBoxAndStorageClarification(parsedData: any): string {
@@ -1043,7 +1054,7 @@ export class ValidationService {
     const itemLabel =
       visibleItems.length > 0 ? ` for ${this.joinHumanList(visibleItems)}` : '';
 
-    return `Please specify a box and storage${itemLabel}.`;
+    return `Please specify which storage and box this item should go in${itemLabel ? ` for ${this.joinHumanList(visibleItems)}` : ''}.`;
   }
 
   private buildMissingStorageClarification(parsedData: any): string {
@@ -1057,7 +1068,7 @@ export class ValidationService {
     const targetLabel =
       targets.length > 0 ? ` for ${this.joinHumanList(targets)}` : '';
 
-    return `Please specify the storage${targetLabel}.`;
+    return `Please specify which storage this should go in${targetLabel}.`;
   }
 
   private resolveNumberedBoxReference(
