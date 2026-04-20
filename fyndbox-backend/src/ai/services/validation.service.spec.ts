@@ -77,8 +77,20 @@ describe('TextProcessingService', () => {
       expect(result.isValid).toBe(false);
       expect(result.intent).toBeNull();
       expect(result.clarification).toBe(
-        'Please provide one instruction at a time.',
+        'Your instruction mixes create with delete. Please choose one action.',
       );
+    });
+
+    it('should not treat box nouns like bin as delete intents', () => {
+      const result = classify(
+        "Hey, I've got a bunch of loose hardware, so shove about a dozen screws into my metal bin that's sitting in the Work-Shop.",
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.intent).toBe('increment');
+      expect(result.clarification).toBeNull();
+      expect(result.scope.affectsBoxes).toBe(true);
+      expect(result.scope.affectsItems).toBe(true);
     });
 
     it('should ask for intent when entities found but no intent', () => {
@@ -89,6 +101,31 @@ describe('TextProcessingService', () => {
         "Please specify the intent and storage for box 'tools'.",
       );
       expect(result.shouldFallToLLM).toBe(false);
+    });
+
+    it('should offer action-selection options when intent is missing but targets are clear', () => {
+      const result = service.intentClassification({
+        intent: null,
+        rawIntents: [],
+        storageName: 'stylo mall',
+        boxes: [{ name: 'shoes', clientRef: 'b1' }],
+        items: [{ name: 'pumpy', quantity: 2, boxClientRef: 'b1' }],
+        totalWords: 7,
+        extractedWordCount: 7,
+        meta: {
+          storageKeywordSeen: true,
+          boxKeywordSeen: true,
+          itemKeywordSeen: true,
+        },
+      });
+
+      expect(result.isValid).toBe(false);
+      expect(result.clarificationKind).toBe('action-selection');
+      expect(result.clarificationOptions).toEqual([
+        expect.objectContaining({ label: 'Add', kind: 'action' }),
+        expect.objectContaining({ label: 'Delete', kind: 'action' }),
+        expect.objectContaining({ label: 'Update', kind: 'action' }),
+      ]);
     });
 
     it('should fall to LLM for missing intent or storage when some words remain unrecognized', () => {
@@ -329,6 +366,23 @@ describe('TextProcessingService', () => {
       expect(result.isValid).toBe(true);
       expect(result.confirmation).toBe(
         "Storage 'Garage' already exists. Update description to 'Main Warehouse'?",
+      );
+    });
+
+    it('should preserve trailing storage-description words that overlap with intent keywords', () => {
+      const result = classify(
+        'Create storage Garage with details main ware house',
+        {
+          storages: [
+            { id: 'storage-1', name: 'Garage', description: 'Old warehouse' },
+          ] as any,
+          boxes: [],
+          items: [],
+        },
+      );
+      expect(result.isValid).toBe(true);
+      expect(result.confirmation).toBe(
+        "Storage 'Garage' already exists. Update description to 'Main Ware House'?",
       );
     });
 
@@ -706,13 +760,16 @@ describe('TextProcessingService', () => {
       expect(result.message).toBe("Please specify the storage for 'winter'.");
     });
 
-    it('should fall to LLM for conversational prompts that get absorbed into fake entity names', () => {
+    it('should parse conversational storage-only create prompts without inventing a description', () => {
       const result = service.processInput(
         'can you please create a storage for my cars I want them to organize so I can easily find',
       );
-      expect(result.success).toBe(false);
-      expect(result.fallbackToLLM).toBe(true);
-      expect(result.message).toContain('fall to LLM');
+      expect(result.success).toBe(true);
+      expect(result.fallbackToLLM).toBe(false);
+      expect(result.data.intent).toBe('create');
+      expect(result.data.storageName).toBe('Car');
+      expect(result.data.storageDescription).toBeNull();
+      expect(result.data.items).toEqual([]);
     });
 
     it('should return the max-box clarification instead of LLM fallback', () => {
@@ -895,6 +952,51 @@ describe('TextProcessingService', () => {
         { name: 'Pumpy', quantity: 1, boxClientRef: 'b1' },
       ]);
       expect(result.data.confirmation).toBeNull();
+    });
+
+    it('should increment the existing item when the user says add 5 more hammers', () => {
+      const result = service.processInput(
+        'add 5 more hammers to box tools in storage garage',
+        {
+          storages: [{ id: 'storage-1', name: 'Garage' }],
+          boxes: [{ id: 'box-1', name: 'Tools', storageId: 'storage-1' }],
+          items: [
+            { id: 'item-1', name: 'Hammer', quantity: 2, boxId: 'box-1' },
+          ],
+        },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.fallbackToLLM).toBe(false);
+      expect(result.data.items).toMatchObject([
+        { name: 'Hammer', quantity: 5, boxClientRef: 'b1' },
+      ]);
+      expect(result.data.confirmation).toBe(
+        'Hammer exists in Garage/Tools (Qty: 2). Add 5 more? (New Total: 7)',
+      );
+    });
+
+    it('should still ask for the item name when the user says add 5 more without naming the item', () => {
+      const result = service.processInput(
+        'add 5 more to box shoes 2 in storage stylo mall',
+        {
+          storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+          boxes: [
+            { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+            { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+            { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+          ],
+          items: [
+            { id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-2' },
+          ],
+        },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.fallbackToLLM).toBe(false);
+      expect(result.message).toBe(
+        "Please specify which item to add to box 'Shoes 2' in storage 'Stylo Mall'.",
+      );
     });
 
     it('should process update prompts with add-item wording without falling to LLM', () => {

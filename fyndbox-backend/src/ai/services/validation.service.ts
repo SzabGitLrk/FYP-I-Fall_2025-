@@ -19,6 +19,7 @@ export class ValidationService {
   validateInput(rawText: string | null | undefined): {
     isValid: boolean;
     message: string | null;
+    clarificationOptions?: any[];
   } {
     if (!rawText || rawText.trim().length === 0) {
       return {
@@ -48,10 +49,27 @@ export class ValidationService {
     if (wordCount < 3) {
       const hasStorageHint = /\bstorage\b/i.test(cleanedForValidation);
       if (hasStorageHint) {
+        const trimmedInput = rawText.trim();
         return {
           isValid: false,
-          message:
-            "Please specify the action (create, update, or add) for storage.",
+          message: 'Please specify the action for storage.',
+          clarificationOptions: [
+            {
+              label: 'Create',
+              prompt: `Create ${trimmedInput}`,
+              kind: 'action',
+            },
+            {
+              label: 'Update',
+              prompt: `Update ${trimmedInput}`,
+              kind: 'action',
+            },
+            {
+              label: 'Add',
+              prompt: `Add ${trimmedInput}`,
+              kind: 'action',
+            },
+          ],
         };
       }
       return {

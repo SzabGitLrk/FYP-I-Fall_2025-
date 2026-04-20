@@ -2,6 +2,10 @@ import axios from 'axios';
 
 const getToken = () => localStorage.getItem('token');
 const getLanguage = () => localStorage.getItem('appLanguage');
+const OFFLINE_ERROR_MESSAGE =
+  'You appear to be offline. Please check your internet connection and try again.';
+const SERVER_UNAVAILABLE_ERROR_MESSAGE =
+  'We could not reach the server right now. Please try again in a moment.';
 
 const publicRoutes = [
   '/auth/login',
@@ -48,7 +52,9 @@ apiClient.interceptors.response.use(
     if (!error.response) {
       return Promise.reject(
         new Error(
-          'Please check your internet connection and try again.',
+          typeof navigator !== 'undefined' && navigator.onLine === false
+            ? OFFLINE_ERROR_MESSAGE
+            : SERVER_UNAVAILABLE_ERROR_MESSAGE,
         ),
       );
     }
@@ -62,7 +68,7 @@ apiClient.interceptors.response.use(
     if (status && [500, 502, 503, 504].includes(status)) {
       return Promise.reject(
         new Error(
-          'Please check your internet connection and try again.',
+          SERVER_UNAVAILABLE_ERROR_MESSAGE,
         ),
       );
     }

@@ -46,6 +46,40 @@ describe('AiController', () => {
     expect(response.error).toBe(response.message);
   });
 
+  it('should return interactive clarification payloads from process-text as a successful response', async () => {
+    aiService.processText.mockResolvedValue({
+      parsedData: null,
+      classified: {
+        clarification:
+          "Multiple boxes match 'Shoes' in storage 'Stylo Mall'.",
+        clarificationKind: 'box-family-selection',
+        clarificationOptions: [
+          { label: 'Shoes 1', prompt: 'remove 2 Pumpy from box Shoes 1', kind: 'box' },
+        ],
+      },
+      fallbackToLLM: false,
+      confidence: 0,
+      rawInput: 'remove 2 pumpy from box shoes in storage stylo mall',
+      llmBackup: 'remove 2 pumpy from box shoes in storage stylo mall',
+      meta: {
+        processedAt: new Date().toISOString(),
+        processingTimeMs: 10,
+        inputLength: 53,
+      },
+    } as any);
+
+    const response = await controller.processText(
+      { user: { userId: 'user-1' } },
+      { text: 'remove 2 pumpy from box shoes in storage stylo mall' } as any,
+    );
+
+    expect(response.success).toBe(true);
+    expect(response.data?.parsedData).toBeNull();
+    expect(response.data?.classified?.clarificationKind).toBe(
+      'box-family-selection',
+    );
+  });
+
   it('should preserve the validation acknowledgement for process-voice failures', async () => {
     aiService.processVoice.mockRejectedValue(
       new BadRequestException(

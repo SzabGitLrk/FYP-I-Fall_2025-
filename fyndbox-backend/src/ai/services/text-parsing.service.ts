@@ -99,8 +99,13 @@ export class TextParsingService {
       /^(?<qty>\d+)\s+(?<name>.+)$/i,
     );
     if (leadingQuantityMatch?.groups?.qty && leadingQuantityMatch.groups.name) {
+      const normalizedName = leadingQuantityMatch.groups.name
+        .trim()
+        .replace(/^(?:more|extra|additional|another)(?:\s+|$)/i, '')
+        .trim();
+
       return {
-        name: leadingQuantityMatch.groups.name.trim(),
+        name: normalizedName,
         quantity: parseInt(leadingQuantityMatch.groups.qty, 10),
         explicitQuantity: true,
       };
@@ -113,8 +118,15 @@ export class TextParsingService {
       trailingQuantityMatch?.groups?.qty &&
       trailingQuantityMatch.groups.name
     ) {
+      const normalizedName = trailingQuantityMatch.groups.name
+        .trim()
+        .replace(/^(?:more|extra|additional|another)(?:\s+|$)/i, '')
+        .trim()
+        .replace(/(?:\s+|^)(?:more|extra|additional|another)$/i, '')
+        .trim();
+
       return {
-        name: trailingQuantityMatch.groups.name.trim(),
+        name: normalizedName,
         quantity: parseInt(trailingQuantityMatch.groups.qty, 10),
         explicitQuantity: true,
       };
@@ -203,6 +215,39 @@ export class TextParsingService {
     return {
       name: match.groups.name.trim(),
       description: match.groups.description.trim(),
+    };
+  }
+
+  private extractConversationalStorageCreate(
+    normalizedText: string,
+    createIntentPattern: string,
+    groupedStorageSectionPattern: string,
+  ): { storageName: string } | null {
+    if (
+      !/\b(?:i\s+want(?:\s+them)?|so\s+i\s+can|so\s+that)\b/i.test(
+        normalizedText,
+      )
+    ) {
+      return null;
+    }
+
+    const match = normalizedText.match(
+      new RegExp(
+        `(?<intent>${createIntentPattern})\\s+(?:a\\s+)?(?:${groupedStorageSectionPattern})\\s+for\\s+(?<storage>.+?)(?=\\s+(?:i\\s+want(?:\\s+them)?|so\\s+i\\s+can|so\\s+that)\\b|[.!?]?$)`,
+        'i',
+      ),
+    );
+    const rawStorageName = match?.groups?.storage?.trim();
+    if (!rawStorageName) {
+      return null;
+    }
+
+    const sanitizedStorageName = rawStorageName
+      .replace(/^(?:my|our|the|these|those)\s+/i, '')
+      .trim();
+
+    return {
+      storageName: sanitizedStorageName || rawStorageName,
     };
   }
 
@@ -362,6 +407,9 @@ export class TextParsingService {
     );
     const groupedStorageDescriptionPattern =
       this.buildKeywordAlternationPattern(structuredDescriptionKeys);
+    const createIntentPattern = this.buildKeywordAlternationPattern(
+      dict.INTENTS.CREATE,
+    );
     const incrementIntentPattern = this.buildKeywordAlternationPattern(
       dict.INTENTS.INCREMENT,
     );
@@ -439,6 +487,34 @@ export class TextParsingService {
         extractedWordCount: allWords.length,
         meta: {
           mappingStrategy: 'sequential',
+          preIntentLocationOverflow: false,
+          ...keywordFlags,
+        },
+      };
+    }
+    const conversationalStorageCreate = this.extractConversationalStorageCreate(
+      normalizedText,
+      createIntentPattern,
+      groupedStorageSectionPattern,
+    );
+    if (conversationalStorageCreate) {
+      const allWords = normalizedText.split(/\s+/).filter((w) => w.length > 0);
+
+      return {
+        intent: 'create',
+        storageName: conversationalStorageCreate.storageName,
+        storageDescription: null,
+        boxes: [],
+        items: [],
+        boxName: null,
+        boxQuantity: null,
+        boxDescription: null,
+        ambiguous: false,
+        rawIntents: ['create'],
+        totalWords: allWords.length,
+        extractedWordCount: allWords.length,
+        meta: {
+          mappingStrategy: 'direct',
           preIntentLocationOverflow: false,
           ...keywordFlags,
         },
@@ -1075,6 +1151,8 @@ export class TextParsingService {
       const resolvedKeyword = resolveKeywordMode(lower);
       const targetMode: 'STORAGE' | 'BOX' | 'ITEM' | 'NONE' =
         resolvedKeyword.targetMode;
+      const shouldTreatIntentAsDescriptionText =
+        isParsingDescription && accumulator.trim().length > 0;
       if (resolvedKeyword.forceDescription) {
         if (
           lower === 'with' &&
@@ -1086,7 +1164,10 @@ export class TextParsingService {
           isParsingDescription = true;
           continue;
         }
-      } else if (intentSyns.includes(lower)) {
+      } else if (
+        intentSyns.includes(lower) &&
+        !shouldTreatIntentAsDescriptionText
+      ) {
         finalize();
         seenIntentVerb = true;
         const ctx = detectContextInLookahead(i + 1);

@@ -156,7 +156,6 @@ export const DICTIONARY_CONFIG = {
       'withdraw',
       'dispose',
       'trash',
-      'bin',
       'sell',
       'donate',
       'eject',

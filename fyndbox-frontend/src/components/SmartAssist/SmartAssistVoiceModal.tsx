@@ -233,6 +233,10 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
   const clarificationOptions: SmartAssistClarificationOption[] =
     processResult?.classified?.clarificationOptions ?? [];
+  const clarificationMessage = processResult?.classified?.clarification;
+  const hasClarificationState = Boolean(
+    clarificationMessage && !processResult?.parsedData,
+  );
 
   const confirmationMessage = processResult?.parsedData?.confirmation;
   const requiresConfirmation = Boolean(
@@ -336,22 +340,21 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
       return t('smartAdd.serviceUnavailable', {
-        defaultValue:
-          'Please check your internet connection and try again.',
+        defaultValue: 'Smart Assist is temporarily unavailable. Please try again.',
       });
     }
 
     if (/Cannot\s+POST\s+\/ai\/transcribe-voice/i.test(message)) {
       return t('smartAdd.voiceServiceUnavailable', {
         defaultValue:
-          'Please check your internet connection and try again.',
+          'Voice transcription is temporarily unavailable. You can review the transcript and continue, or retry.',
       });
     }
 
     if (/^Not Found$/i.test(message.trim())) {
       return t('smartAdd.voiceServiceUnavailable', {
         defaultValue:
-          'Please check your internet connection and try again.',
+          'Voice transcription is temporarily unavailable. You can review the transcript and continue, or retry.',
       });
     }
 
@@ -379,7 +382,14 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
       error instanceof Error ? error.message.trim() : String(error || '').trim();
 
     return (
+      /Voice transcription failed/i.test(message) ||
       /Voice transcription is not configured/i.test(message) ||
+      /Voice transcription is temporarily unavailable/i.test(message) ||
+      /Voice preprocessing is not configured/i.test(message) ||
+      /We could not reach the server right now/i.test(message) ||
+      /You appear to be offline/i.test(message) ||
+      /Network Error/i.test(message) ||
+      /Failed to fetch/i.test(message) ||
       /Voice transcription isn't available/i.test(message) ||
       /Cannot\s+POST\s+\/ai\/transcribe-voice/i.test(message) ||
       /^Not Found$/i.test(message)
@@ -555,24 +565,34 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
     try {
       const result = await processVoice(recordedFile);
+      const browserFallbackTranscript = getBrowserFallbackTranscript();
       const nextTranscript = sanitizeVoiceTranscriptPreview(result.transcript);
+      const transcriptToUse = nextTranscript || browserFallbackTranscript;
 
       lastTranscribedChunkCountRef.current = audioChunksRef.current.length;
 
       if (sessionId === captureSessionIdRef.current) {
-        latestTranscriptRef.current = nextTranscript;
-        setTranscript(nextTranscript);
+        latestTranscriptRef.current = transcriptToUse;
+        setTranscript(transcriptToUse);
       }
 
-      return nextTranscript;
+      return transcriptToUse;
     } catch (error) {
+      const browserFallbackTranscript = getBrowserFallbackTranscript();
+
       if (
-        isBackendTranscriptionUnavailableError(error) &&
-        supportsBrowserRecognition
+        browserFallbackTranscript &&
+        isBackendTranscriptionUnavailableError(error)
       ) {
         backendTranscriptionUnavailableRef.current = true;
-        setRequestError(null);
-        return getBrowserFallbackTranscript();
+
+        if (sessionId === captureSessionIdRef.current) {
+          latestTranscriptRef.current = browserFallbackTranscript;
+          setTranscript(browserFallbackTranscript);
+          setRequestError(null);
+        }
+
+        return browserFallbackTranscript;
       }
 
       throw error;
@@ -1269,6 +1289,22 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
               {requestError && <Alert severity="error">{requestError}</Alert>}
 
+              {hasClarificationState && (
+                <Alert
+                  severity="info"
+                  sx={{
+                    borderRadius: 2,
+                    alignItems: 'flex-start',
+                    '& .MuiAlert-message': {
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                    },
+                  }}
+                >
+                  {clarificationMessage}
+                </Alert>
+              )}
+
               {showTranscriptEditor && (
                 <Box
                   sx={(theme) => ({
@@ -1356,7 +1392,7 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                 </Box>
               )}
 
-              {processResult?.fallbackToLLM && clarificationOptions.length > 0 && (
+              {clarificationOptions.length > 0 && (
                 <Stack spacing={1}>
                   <Stack spacing={1}>
                     <Typography variant="body2">
@@ -1447,7 +1483,7 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                   variant="contained"
                   startIcon={<Check />}
                   onClick={handleProcessTranscript}
-                  disabled={!canProcessTranscript}
+                  disabled={!canProcessTranscript || hasClarificationState}
                   sx={{ width: '100%', minWidth: 0 }}
                 >
                   {isProcessing

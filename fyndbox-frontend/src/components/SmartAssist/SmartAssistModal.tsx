@@ -72,6 +72,10 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
   const clarificationOptions: SmartAssistClarificationOption[] =
     processResult?.classified?.clarificationOptions ?? [];
+  const clarificationMessage = processResult?.classified?.clarification;
+  const hasClarificationState = Boolean(
+    clarificationMessage && !processResult?.parsedData,
+  );
 
   const confirmationMessage = processResult?.parsedData?.confirmation;
   const requiresConfirmation = Boolean(
@@ -98,8 +102,7 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
       return t('smartAdd.serviceUnavailable', {
-        defaultValue:
-          'Please check your internet connection and try again.',
+        defaultValue: 'Smart Assist is temporarily unavailable. Please try again.',
       });
     }
 
@@ -241,7 +244,23 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
               {requestError && <Alert severity="error">{requestError}</Alert>}
 
-              {processResult?.fallbackToLLM && clarificationOptions.length > 0 && (
+              {hasClarificationState && (
+                <Alert
+                  severity="info"
+                  sx={{
+                    borderRadius: 2,
+                    alignItems: 'flex-start',
+                    '& .MuiAlert-message': {
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                    },
+                  }}
+                >
+                  {clarificationMessage}
+                </Alert>
+              )}
+
+              {clarificationOptions.length > 0 && (
                 <Stack spacing={1}>
                   <Stack spacing={1}>
                     <Typography variant="body2">
@@ -289,7 +308,9 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
                 <SmartAssistPrimaryButton
                   variant="contained"
                   onClick={handleSave}
-                  disabled={isProcessing || isConfirming}
+                  disabled={
+                    isProcessing || isConfirming || hasClarificationState
+                  }
                 >
                   {isProcessing || isConfirming
                     ? t('smartAdd.confirming', { defaultValue: 'Saving...' })

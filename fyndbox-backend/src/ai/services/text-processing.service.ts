@@ -178,6 +178,7 @@ export class TextProcessingService {
   validateInput(rawText: string | null | undefined): {
     isValid: boolean;
     message: string | null;
+    clarificationOptions?: any[];
   } {
     return this.validationService.validateInput(rawText);
   }
@@ -269,6 +270,35 @@ export class TextProcessingService {
 
       const validation = this.validateInput(sanitizedText);
       if (!validation.isValid) {
+        if (validation.clarificationOptions?.length) {
+          const duration = Date.now() - startTime;
+          return {
+            parsedData: null,
+            classified: {
+              intent: null,
+              isValid: false,
+              scope: {
+                affectsStorage: sanitizedText.toLowerCase().includes('storage'),
+                affectsBoxes: false,
+                affectsItems: false,
+              },
+              clarification: validation.message,
+              clarificationOptions: validation.clarificationOptions,
+              suggestions: [],
+              confidence: 0,
+              shouldFallToLLM: false,
+            },
+            fallbackToLLM: false,
+            confidence: 0,
+            rawInput: sanitizedText,
+            llmBackup: sanitizedText,
+            meta: {
+              processedAt: new Date().toISOString(),
+              processingTimeMs: duration,
+              inputLength: sanitizedText.length,
+            },
+          };
+        }
         this.logger.debug(`Validation failed: ${validation.message}`);
         throw new BadRequestException(validation.message || 'Invalid input.');
       }

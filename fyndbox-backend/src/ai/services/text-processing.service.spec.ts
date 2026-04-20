@@ -337,6 +337,31 @@ describe('TextProcessingService', () => {
   });
 
   describe('shared workflow finalization', () => {
+    it('should return interactive clarification payloads instead of throwing for ambiguous box matches', async () => {
+      jest.spyOn(aiPersistenceService, 'getExistingContext').mockResolvedValue({
+        storages: [{ id: 'storage-1', name: 'Stylo Mall' }],
+        boxes: [
+          { id: 'box-1', name: 'Shoes 1', storageId: 'storage-1' },
+          { id: 'box-2', name: 'Shoes 2', storageId: 'storage-1' },
+          { id: 'box-3', name: 'Shoes 3', storageId: 'storage-1' },
+        ],
+        items: [
+          { id: 'item-1', name: 'Pumpy', quantity: 10, boxId: 'box-1' },
+          { id: 'item-2', name: 'Pumpy', quantity: 10, boxId: 'box-2' },
+          { id: 'item-3', name: 'Pumpy', quantity: 10, boxId: 'box-3' },
+        ],
+      } as any);
+
+      const result = await service.processTextRequest('user-123', {
+        text: 'remove 2 pumpy from box shoes in storage stylo mall',
+      });
+
+      expect(result.parsedData).toBeNull();
+      expect(result.fallbackToLLM).toBe(false);
+      expect(result.classified?.clarificationKind).toBe('box-family-selection');
+      expect(result.classified?.clarificationOptions).toHaveLength(4);
+    });
+
     it('should send low-confidence rule-based prompts through LLM and then reuse shared persistence validation', async () => {
       jest
         .spyOn(aiPersistenceService, 'getExistingContext')

@@ -6,7 +6,7 @@ export interface SmartAssistBox {
 }
 
 export interface SmartAssistClarificationOption {
-  kind: 'box' | 'bulk-all';
+  kind: 'box' | 'bulk-all' | 'action';
   label: string;
   prompt: string;
 }

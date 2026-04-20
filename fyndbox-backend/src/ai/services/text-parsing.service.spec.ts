@@ -69,6 +69,20 @@ describe('TextProcessingService', () => {
         },
       },
       {
+        input: 'Create storage Garage with details Main Ware House',
+        expected: {
+          intent: 'create',
+          storageName: 'garage',
+          storageDescription: 'main ware house',
+          boxes: [],
+          items: [],
+          boxName: null,
+          boxQuantity: null,
+          boxDescription: null,
+          ambiguous: false,
+        },
+      },
+      {
         input: 'Box 1: Tools (Heavy)',
         expected: {
           intent: null,
@@ -575,6 +589,21 @@ describe('TextProcessingService', () => {
           ambiguous: false,
         },
       },
+      {
+        input:
+          'can you please create a storage for my cars I want them to organize so I can easily find',
+        expected: {
+          intent: 'create',
+          storageName: 'cars',
+          storageDescription: null,
+          boxes: [],
+          items: [],
+          boxName: null,
+          boxQuantity: null,
+          boxDescription: null,
+          ambiguous: false,
+        },
+      },
     ];
 
     testCases.forEach(({ input, expected }) => {
@@ -671,6 +700,36 @@ describe('TextProcessingService', () => {
       expect(result.items).toMatchObject([
         { name: 'pumpy', quantity: 1, boxClientRef: 'b1' },
       ]);
+    });
+
+    it('should parse quantified add-more prompts using the real item name', () => {
+      const { normalizedText } = service.lightNormalization(
+        'add 5 more hammers to box tools in storage garage',
+      );
+      const result = service.parseExtraction(normalizedText);
+
+      expect(result.intent).toBe('increment');
+      expect(result.storageName).toBe('garage');
+      expect(result.boxes).toMatchObject([
+        { name: 'tools', clientRef: 'b1' },
+      ]);
+      expect(result.items).toMatchObject([
+        { name: 'hammers', quantity: 5, boxClientRef: 'b1' },
+      ]);
+    });
+
+    it('should treat quantified add-more prompts without an item as missing-item targets', () => {
+      const { normalizedText } = service.lightNormalization(
+        'add 5 more to box shoes 2 in storage stylo mall',
+      );
+      const result = service.parseExtraction(normalizedText);
+
+      expect(result.intent).toBe('increment');
+      expect(result.storageName).toBe('stylo mall');
+      expect(result.boxes).toMatchObject([
+        { name: 'shoes 2', clientRef: 'b1' },
+      ]);
+      expect(result.items).toEqual([]);
     });
   });
 });
