@@ -9,6 +9,7 @@ import { useFishDetector } from './hooks/useFishDetector';
 import { useDetectionHistory } from './hooks/useDetectionHistory';
 import { getSpeciesByModelLabel, SPECIES_DATA } from './utils/speciesData';
 import { downloadShareCard } from './utils/shareCard';
+import { assessImageQuality } from './utils/imagePreprocessing';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Design tokens — one place to change colours
@@ -355,6 +356,7 @@ function DetectionTool() {
   const [dragging, setDragging]         = useState(false);
   const [stage, setStage]               = useState(0);
   const [showResult, setShowResult]     = useState(false);
+  const [qualityWarnings, setQualityWarnings] = useState([]);
   const imgRef   = useRef(null);
   const timerRef = useRef(null);
 
@@ -374,16 +376,26 @@ function DetectionTool() {
 
   const load = (file) => {
     if (!file?.type.startsWith('image/')) return;
-    reset(); setSaved(false); setShowResult(false);
+    reset(); setSaved(false); setShowResult(false); setQualityWarnings([]);
     const r = new FileReader(); r.onloadend = () => setPreview(r.result); r.readAsDataURL(file);
   };
   const onDrop = useCallback((e) => { e.preventDefault(); setDragging(false); load(e.dataTransfer.files[0]); }, []);
+
+  // Run quality assessment once the img element has loaded
+  const onImageLoad = useCallback(() => {
+    if (!imgRef.current) return;
+    try {
+      const { warnings } = assessImageQuality(imgRef.current);
+      setQualityWarnings(warnings);
+    } catch (_) { /* non-critical */ }
+  }, []);
+
   const detect = async () => {
     if (!imgRef.current || !isModelReady) return;
     const res = await detectFish(imgRef.current);
     if (res && imgRef.current) { addDetection(res, imgRef.current); setSaved(true); }
   };
-  const resetAll = () => { setPreview(null); reset(); setSaved(false); setShowResult(false); setStage(0); };
+  const resetAll = () => { setPreview(null); reset(); setSaved(false); setShowResult(false); setStage(0); setQualityWarnings([]); };
 
   return (
     <div id="detection-tool" className="mb-10">
@@ -449,7 +461,7 @@ function DetectionTool() {
           {preview && (
             <div className="space-y-3">
               <div className="relative rounded-xl overflow-hidden bg-slate-900 border border-slate-700">
-                <img ref={imgRef} src={preview} alt="Preview" className="w-full h-60 object-contain" crossOrigin="anonymous" />
+                <img ref={imgRef} src={preview} alt="Preview" className="w-full h-60 object-contain" crossOrigin="anonymous" onLoad={onImageLoad} />
                 {isProcessing && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/55">
                     <div className="w-44 h-44 border-2 border-teal-400 rounded-lg relative">
@@ -469,9 +481,20 @@ function DetectionTool() {
                   </div>
                 )}
               </div>
+              {/* Quality warnings */}
+              {qualityWarnings.length > 0 && (
+                <div className="space-y-1.5">
+                  {qualityWarnings.map((w, i) => (
+                    <div key={i} className="flex items-start gap-2 bg-amber-400/8 border border-amber-400/20 rounded-lg px-3 py-2">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-amber-200 text-xs leading-relaxed">{w}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="flex gap-2">
-                <button onClick={detect} disabled={isProcessing || !isModelReady}
-                  className="flex-1 bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+                <button onClick={detect} disabled={isProcessing || !isModelReady}                  className="flex-1 bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
                   {isProcessing ? <><Loader className="w-4 h-4 animate-spin" />Detecting…</> : <><Zap className="w-4 h-4" />Detect Species</>}
                 </button>
                 <button onClick={resetAll} className="px-4 py-2.5 bg-slate-700/80 hover:bg-slate-600/80 text-slate-200 rounded-xl transition-all text-sm flex items-center gap-1.5">

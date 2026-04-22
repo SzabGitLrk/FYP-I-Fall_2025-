@@ -156,6 +156,117 @@ export const SPECIES_DATA = [
   },
 ];
 
+/**
+ * Explicit mapping from ImageNet class labels → our species IDs.
+ * MobileNet returns multi-word ImageNet labels like "great white shark, white shark, man-eater".
+ * String.includes() matching alone misses many valid detections.
+ * This map covers every relevant ImageNet class for our 10 species.
+ */
+export const IMAGENET_TO_SPECIES_MAP = {
+  // ── Sharks ──────────────────────────────────────────────────────────────
+  'great white shark':  'sharks',
+  'white shark':        'sharks',
+  'man-eater':          'sharks',
+  'tiger shark':        'sharks',
+  'hammerhead':         'sharks',
+  'hammerhead shark':   'sharks',
+  'whale shark':        'sharks',
+  'nurse shark':        'sharks',
+  'bull shark':         'sharks',
+  'basking shark':      'sharks',
+  'lemon shark':        'sharks',
+  'reef shark':         'sharks',
+  'carpet shark':       'sharks',
+  'wobbegong':          'sharks',
+
+  // ── Sea Rays ─────────────────────────────────────────────────────────────
+  'electric ray':       'sea-rays',
+  'crampfish':          'sea-rays',
+  'numbfish':           'sea-rays',
+  'torpedo':            'sea-rays',
+  'stingray':           'sea-rays',
+  'manta ray':          'sea-rays',
+  'eagle ray':          'sea-rays',
+  'bat ray':            'sea-rays',
+  'skate':              'sea-rays',
+  'guitarfish':         'sea-rays',
+
+  // ── Crabs ────────────────────────────────────────────────────────────────
+  'dungeness crab':     'crabs',
+  'rock crab':          'crabs',
+  'fiddler crab':       'crabs',
+  'king crab':          'crabs',
+  'hermit crab':        'crabs',
+  'isopod':             'crabs',
+  'horseshoe crab':     'crabs',
+  'blue crab':          'crabs',
+  'mud crab':           'crabs',
+  'spider crab':        'crabs',
+  'snow crab':          'crabs',
+  'shore crab':         'crabs',
+
+  // ── Jellyfish ────────────────────────────────────────────────────────────
+  'jellyfish':          'jelly-fish',
+  'moon jellyfish':     'jelly-fish',
+  'box jellyfish':      'jelly-fish',
+  'lion\'s mane':       'jelly-fish',
+  'sea nettle':         'jelly-fish',
+  'portuguese man':     'jelly-fish',
+
+  // ── Octopus ──────────────────────────────────────────────────────────────
+  'octopus':            'octopus',
+  'squid':              'octopus',
+  'cuttlefish':         'octopus',
+  'nautilus':           'octopus',
+  'chambered nautilus': 'octopus',
+
+  // ── Seahorse ─────────────────────────────────────────────────────────────
+  'seahorse':           'seahorse',
+  'sea horse':          'seahorse',
+  'pipefish':           'seahorse',
+
+  // ── Starfish ─────────────────────────────────────────────────────────────
+  'starfish':           'starfish',
+  'sea star':           'starfish',
+  'brittle star':       'starfish',
+  'sea anemone':        'starfish',
+  'sea urchin':         'starfish',
+  'sea cucumber':       'starfish',
+
+  // ── Sea Turtle ───────────────────────────────────────────────────────────
+  'sea turtle':         'turtle-tortoise',
+  'leatherback turtle': 'turtle-tortoise',
+  'green turtle':       'turtle-tortoise',
+  'hawksbill turtle':   'turtle-tortoise',
+  'loggerhead turtle':  'turtle-tortoise',
+  'flatback turtle':    'turtle-tortoise',
+  'loggerhead':         'turtle-tortoise',
+  'hawksbill':          'turtle-tortoise',
+
+  // ── Whale ────────────────────────────────────────────────────────────────
+  'grey whale':         'whale',
+  'gray whale':         'whale',
+  'killer whale':       'whale',
+  'orca':               'whale',
+  'humpback whale':     'whale',
+  'blue whale':         'whale',
+  'sperm whale':        'whale',
+  'minke whale':        'whale',
+  'right whale':        'whale',
+  'bowhead whale':      'whale',
+  'beluga':             'whale',
+  'narwhal':            'whale',
+
+  // ── Dolphin ──────────────────────────────────────────────────────────────
+  'dolphin':            'dolphin',
+  'bottlenose dolphin': 'dolphin',
+  'spinner dolphin':    'dolphin',
+  'common dolphin':     'dolphin',
+  'porpoise':           'dolphin',
+  'dugong':             'dolphin',
+  'manatee':            'dolphin',
+};
+
 export function getSpeciesById(id) {
   return SPECIES_DATA.find(s => s.id === id);
 }
@@ -163,12 +274,21 @@ export function getSpeciesById(id) {
 export function getSpeciesByModelLabel(label) {
   if (!label) return null;
   const l = label.toLowerCase();
+
+  // 1. Explicit map — most reliable, covers all known ImageNet labels
+  for (const [key, speciesId] of Object.entries(IMAGENET_TO_SPECIES_MAP)) {
+    if (l.includes(key.toLowerCase())) {
+      return SPECIES_DATA.find(s => s.id === speciesId) || null;
+    }
+  }
+
+  // 2. Fallback: match against modelLabel and commonName
   return SPECIES_DATA.find(s =>
     s.modelLabel.toLowerCase() === l ||
     s.commonName.toLowerCase() === l ||
     s.commonName.toLowerCase().includes(l) ||
     l.includes(s.commonName.toLowerCase())
-  );
+  ) || null;
 }
 
 export function getSpeciesByName(name) {
