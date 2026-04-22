@@ -1,0 +1,609 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"  // Using SQLite for reliable local development
+  // provider  = "postgresql"  // Switch to PostgreSQL for production
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Enums
+enum CourseType {
+  THEORY
+  LAB
+}
+
+enum RoomType {
+  CLASSROOM
+  LAB
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum PreferenceLevel {
+  STRONGLY_PREFER
+  PREFER
+  NEUTRAL
+  AVOID
+  STRONGLY_AVOID
+}
+
+enum FlexibilityLevel {
+  STRICT
+  MODERATE
+  FLEXIBLE
+}
+
+enum PriorityLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ConflictType {
+  SCHEDULING_CONFLICT
+  RESOURCE_CONFLICT
+  PREFERENCE_CONFLICT
+  CAPACITY_CONFLICT
+  EQUIPMENT_CONFLICT
+}
+
+enum ConflictSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ResolutionStatus {
+  PENDING
+  RESOLVED
+  IGNORED
+  ESCALATED
+}
+
+// Models
+model Department {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  code        String?   @unique // e.g., "CS", "EE", "ME"
+  description String?
+  headOfDept  String?   // Head of Department name
+  email       String?   // Department contact email
+  phone       String?   // Department contact phone
+  location    String?   // Department location/building
+  programs    Program[]
+  faculty     Faculty[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("departments")
+}
+
+model Program {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  code         String?    @unique // e.g., "BSCS", "BBA", "MBA"
+  description  String?
+  duration     Int?       // Duration in years
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  departmentId Int
+  semesters    Semester[]
+  students     Student[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("programs")
+}
+
+model Semester {
+  id        Int       @id @default(autoincrement())
+  number    Int       // 1-8
+  program   Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+  programId Int
+  courses   Course[]
+  students  Student[]
+  schedules StudentSchedule[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@unique([programId, number])
+  @@map("semesters")
+}
+
+model Course {
+  id          Int                @id @default(autoincrement())
+  name        String
+  code        String?            @unique
+  type        CourseType
+  semester    Semester           @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  semesterId  Int
+  faculty     Faculty?           @relation(fields: [facultyId], references: [id])
+  facultyId   Int?
+  timetable   Timetable[]
+  enhancement CourseEnhancement?
+  enrollments Enrollment[]
+  schedules   StudentSchedule[]
+  validations EnrollmentValidation[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@map("courses")
+}
+
+model Student {
+  id          Int          @id @default(autoincrement())
+  regId       String       @unique // Registration ID (e.g., "2024-CS-001")
+  regName     String       // Registration Name (Full Name)
+  email       String?      @unique
+  phone       String?
+  dateOfBirth DateTime?
+  address     String?
+  program     Program?     @relation(fields: [programId], references: [id])
+  programId   Int?
+  semester    Semester?    @relation(fields: [semesterId], references: [id])
+  semesterId  Int?
+  enrollments Enrollment[]
+  schedules   StudentSchedule[]
+  conflicts   StudentConflict[]
+  validations EnrollmentValidation[]
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("students")
+}
+
+model Enrollment {
+  id         Int      @id @default(autoincrement())
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId  Int
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId   Int
+  enrolledAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+  grade      String?  // Final grade (A, B, C, etc.)
+  attendance Float?   // Attendance percentage
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([studentId, courseId])
+  @@map("enrollments")
+}
+
+model Faculty {
+  id             Int                 @id @default(autoincrement())
+  name           String
+  email          String              @unique
+  phone          String?
+  designation    String?             // Professor, Associate Professor, etc.
+  employmentType String              @default("PERMANENT") // PERMANENT or CONTRACT
+  department     Department?         @relation(fields: [departmentId], references: [id])
+  departmentId   Int?
+  courses        Course[]
+  timetable      Timetable[]
+  preferences    FacultyPreference?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@map("faculty")
+}
+
+model Room {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  type        RoomType
+  minCapacity Int?             // Minimum capacity
+  maxCapacity Int?             // Maximum capacity
+  timetable   Timetable[]
+  enhancement RoomEnhancement?
+  schedules   StudentSchedule[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("rooms")
+}
+
+model TimeSlot {
+  id        Int         @id @default(autoincrement())
+  start     String      // "09:00"
+  end       String      // "12:00"
+  timetable Timetable[]
+  schedules StudentSchedule[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  @@unique([start, end])
+  @@map("time_slots")
+}
+
+model Timetable {
+  id         Int      @id @default(autoincrement())
+  day        Day
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId   Int
+  room       Room     @relation(fields: [roomId], references: [id])
+  roomId     Int
+  faculty    Faculty  @relation(fields: [facultyId], references: [id])
+  facultyId  Int
+  timeslot   TimeSlot @relation(fields: [timeSlotId], references: [id])
+  timeSlotId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@unique([day, roomId, timeSlotId])
+  @@unique([day, facultyId, timeSlotId])
+  @@unique([day, courseId, timeSlotId])
+  @@map("timetables")
+}
+
+// Enhanced Models for Advanced Features
+
+model FacultyPreference {
+  id          Int             @id @default(autoincrement())
+  facultyId   Int             @unique
+  faculty     Faculty         @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  
+  // Time preferences (JSON arrays)
+  preferredTimeSlots    Json? // Array of {timeSlotId, dayOfWeek, preference}
+  unavailableTimeSlots  Json? // Array of {timeSlotId, dayOfWeek, reason}
+  
+  // Day preferences
+  preferredDays         Json? // Array of preferred days
+  unavailableDays       Json? // Array of unavailable days
+  
+  // Workload preferences
+  maxDailyHours         Int     @default(8)
+  maxConsecutiveHours   Int     @default(4)
+  preferredBreakDuration Int    @default(30) // minutes
+  
+  // Pattern preferences
+  preferredTeachingPatterns Json? // Array of teaching patterns
+  avoidBackToBackClasses    Boolean @default(false)
+  
+  // Room and course preferences
+  preferredRoomTypes    Json? // Array of preferred room types
+  preferredBuildings    Json? // Array of preferred buildings
+  preferredCourseTypes  Json? // Array of preferred course types
+  maxCoursesPerDay      Int   @default(4)
+  
+  // Flexibility settings
+  flexibilityLevel      FlexibilityLevel @default(MODERATE)
+  priorityLevel         PriorityLevel    @default(MEDIUM)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("faculty_preferences")
+}
+
+model RoomEnhancement {
+  id          Int      @id @default(autoincrement())
+  roomId      Int      @unique
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  // Capacity information
+  capacity            Int
+  optimalCapacity     Int // 80% of max capacity for comfort
+  
+  // Equipment (JSON array)
+  equipment           Json? // Array of equipment objects
+  
+  // Room characteristics
+  roomCharacteristics Json? // Lighting, acoustics, accessibility, etc.
+  
+  // Suitability
+  suitableForCourseTypes Json? // Array of course types this room is suitable for
+  departmentPreferences  Json? // Array of departments that prefer this room
+  
+  // Location and accessibility
+  building            String?
+  floor               String?
+  accessibilityFeatures Json? // Array of accessibility features
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("room_enhancements")
+}
+
+model CourseEnhancement {
+  id          Int      @id @default(autoincrement())
+  courseId    Int      @unique
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  // Enrollment information
+  expectedEnrollment  Int @default(30)
+  maxEnrollment      Int @default(50)
+  minEnrollment      Int @default(10)
+  
+  // Equipment requirements
+  requiredEquipment   Json? // Array of required equipment
+  preferredEquipment  Json? // Array of preferred equipment
+  
+  // Room requirements
+  requiredRoomType    String?
+  preferredRoomFeatures Json? // Array of preferred room features
+  
+  // Scheduling preferences
+  preferredTimeSlots  Json? // Array of preferred time slots
+  avoidTimeSlots     Json? // Array of time slots to avoid
+  
+  // Course dependencies
+  prerequisiteCourses Json? // Courses that should be scheduled before this
+  corequisiteCourses Json? // Courses that should be scheduled together
+  
+  // Special requirements
+  requiresSpecialSetup Boolean @default(false)
+  setupTimeMinutes    Int     @default(0)
+  cleanupTimeMinutes  Int     @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("course_enhancements")
+}
+
+model ConflictLog {
+  id          Int      @id @default(autoincrement())
+  
+  // Conflict information
+  conflictType        ConflictType
+  severity           ConflictSeverity
+  title              String
+  description        String
+  affectedEntities   Json // Array of affected entity references
+  
+  // Detection information
+  detectedAt         DateTime @default(now())
+  detectedBy         String? // System or user ID
+  detectionMethod    String? // How the conflict was detected
+  
+  // Resolution information
+  resolutionApplied  Json? // Resolution that was applied
+  resolutionStatus   ResolutionStatus @default(PENDING)
+  resolvedAt         DateTime?
+  resolvedBy         String?
+  
+  // Impact and metrics
+  impactScore        Float? // 0-1 scale
+  resolutionSuccess  Boolean?
+  userFeedback       String?
+  
+  // Context and snapshots
+  timetableSnapshot  Json? // Relevant timetable data at time of conflict
+  contextData        Json? // Additional context information
+  
+  // Relationships
+  relatedConflicts   Json? // Array of related conflict IDs
+  cascadingEffects   Json? // Array of cascading effects
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("conflict_logs")
+}
+
+model OptimizationMetrics {
+  id          Int      @id @default(autoincrement())
+  
+  // Generation information
+  generationId       String   @unique
+  algorithmVersion   String
+  generatedAt        DateTime @default(now())
+  
+  // Quality scores (0-1 scale)
+  overallQualityScore     Float
+  constraintSatisfaction  Float
+  preferenceSatisfaction  Float
+  loadBalanceScore       Float
+  resourceUtilization    Float
+  
+  // Detailed metrics
+  hardConstraintViolations Int @default(0)
+  softConstraintViolations Int @default(0)
+  facultyPreferenceScore   Float
+  roomUtilizationScore     Float
+  timeDistributionScore    Float
+  
+  // Performance metrics
+  generationTimeMs       Int
+  iterationsRequired     Int
+  convergenceAchieved    Boolean @default(false)
+  
+  // Configuration used
+  algorithmParameters    Json // Parameters used for generation
+  constraintWeights      Json // Weights assigned to different constraints
+  
+  // Comparison data
+  previousGenerationId   String?
+  improvementScore       Float? // Improvement over previous generation
+  
+  createdAt   DateTime @default(now())
+
+  @@map("optimization_metrics")
+}
+
+model Scenario {
+  id          Int      @id @default(autoincrement())
+  
+  // Scenario information
+  name               String
+  description        String?
+  createdBy          String? // User ID when auth is added
+  
+  // Timetable data
+  timetableData      Json // Complete timetable snapshot
+  
+  // Metrics and analysis
+  qualityMetrics     Json // Quality scores for this scenario
+  comparisonMetrics  Json? // Comparison with baseline or other scenarios
+  
+  // Status and flags
+  isActive           Boolean @default(false)
+  isBaseline         Boolean @default(false)
+  isFavorite         Boolean @default(false)
+  
+  // Versioning and relationships
+  parentScenarioId   Int?
+  parentScenario     Scenario? @relation("ScenarioVersions", fields: [parentScenarioId], references: [id])
+  childScenarios     Scenario[] @relation("ScenarioVersions")
+  
+  // Tags and categorization
+  tags               Json? // Array of tags for organization
+  category           String? // Category for grouping scenarios
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("scenarios")
+}
+
+model Equipment {
+  id          Int      @id @default(autoincrement())
+  
+  // Basic information
+  name               String
+  type               String // Projector, Computer, Lab Equipment, etc.
+  model              String?
+  manufacturer       String?
+  
+  // Specifications
+  specifications     Json? // Technical specifications
+  
+  // Availability and status
+  isAvailable        Boolean @default(true)
+  isOperational      Boolean @default(true)
+  lastMaintenanceDate DateTime?
+  nextMaintenanceDate DateTime?
+  
+  // Requirements and compatibility
+  requiredForCourseTypes Json? // Array of course types that require this equipment
+  compatibleRoomTypes    Json? // Array of room types this equipment can be used in
+  
+  // Usage tracking
+  usageCount         Int @default(0)
+  lastUsedDate       DateTime?
+  
+  // Cost and procurement
+  purchaseDate       DateTime?
+  purchaseCost       Float?
+  warrantyExpiration DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("equipment")
+}
+
+// New Models for Cross-Registration and Student Schedule Management
+
+model StudentSchedule {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  courseId    Int
+  day         Day
+  timeSlotId  Int
+  roomId      Int
+  semesterId  Int
+  isActive    Boolean  @default(true)
+  isConflict  Boolean  @default(false) // Flag for detected conflicts
+  conflictReason String? // Description of conflict if any
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  timeSlot    TimeSlot @relation(fields: [timeSlotId], references: [id])
+  room        Room     @relation(fields: [roomId], references: [id])
+  semester    Semester @relation(fields: [semesterId], references: [id])
+  
+  // Constraints
+  @@unique([studentId, day, timeSlotId], name: "unique_student_time_slot")
+  @@index([studentId, isActive])
+  @@index([courseId, day, timeSlotId])
+  @@map("student_schedules")
+}
+
+model StudentConflict {
+  id              Int      @id @default(autoincrement())
+  studentId       Int
+  conflictType    ConflictType
+  severity        ConflictSeverity
+  title           String
+  description     String
+  affectedCourses Json     // Array of course IDs and names
+  timeSlotInfo    Json     // Day, time slot, and room information
+  resolutionSuggestions Json? // Array of suggested resolutions
+  resolutionStatus ResolutionStatus @default(PENDING)
+  detectedAt      DateTime @default(now())
+  resolvedAt      DateTime?
+  resolvedBy      String?  // Admin user who resolved it
+  resolutionNotes String?  // Notes about how it was resolved
+  
+  // Relations
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([studentId, resolutionStatus])
+  @@index([conflictType, severity])
+  @@map("student_conflicts")
+}
+
+model CrossRegistrationRule {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String
+  ruleType        String   // 'PREREQUISITE', 'COREQUISITE', 'RESTRICTION', 'RECOMMENDATION'
+  sourceProgram   String?  // Program code (e.g., 'BSCS')
+  targetProgram   String?  // Program code (e.g., 'BSSE')
+  sourceSemester  Int?     // Semester number
+  targetSemester  Int?     // Semester number
+  coursePattern   String?  // Course code pattern (e.g., 'CS-*', 'MATH-*')
+  isActive        Boolean  @default(true)
+  priority        Int      @default(1) // Higher number = higher priority
+  
+  // Rule conditions and actions
+  conditions      Json     // Conditions that must be met
+  actions         Json     // Actions to take when rule is triggered
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([ruleType, isActive])
+  @@map("cross_registration_rules")
+}
+
+model EnrollmentValidation {
+  id              Int      @id @default(autoincrement())
+  studentId       Int
+  courseId        Int
+  validationType  String   // 'SCHEDULE_CONFLICT', 'PREREQUISITE', 'CAPACITY', 'CROSS_REGISTRATION'
+  validationStatus String  // 'PASSED', 'FAILED', 'WARNING'
+  message         String
+  details         Json?    // Additional validation details
+  validatedAt     DateTime @default(now())
+  validatedBy     String?  // System or admin user
+  
+  // Relations
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@index([studentId, validationType])
+  @@index([courseId, validationStatus])
+  @@map("enrollment_validations")
+}
