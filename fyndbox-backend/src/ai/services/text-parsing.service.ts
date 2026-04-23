@@ -251,6 +251,113 @@ export class TextParsingService {
     };
   }
 
+  private extractConversationalStoreSectionCreate(
+    normalizedText: string,
+    createIntentPattern: string,
+    groupedStorageSectionPattern: string,
+    itemKeywords: string[],
+  ):
+    | {
+        storageName: string;
+        boxes: Array<{
+          name: string;
+          quantity: null;
+          description: null;
+          clientRef: string;
+        }>;
+        items: Array<{
+          name: string;
+          quantity: number;
+          explicitQuantity: boolean;
+          description: string | null;
+          boxClientRef: string;
+          orphaned: false;
+        }>;
+      }
+    | null {
+    const storageMatch = normalizedText.match(
+      new RegExp(
+        `(?<intent>${createIntentPattern})\\s+(?:a\\s+)?(?:(?:book\\s+)?(?:${groupedStorageSectionPattern}))\\s+(?:named|called)\\s+(?<storage>.+?)(?=\\s+(?:for\\s+(?:my\\s+)?[a-z0-9' ]+\\s+section\\b|where\\s+(?:i|you)\\s+can\\s+put\\b)|[.!?]?$)`,
+        'i',
+      ),
+    );
+    const rawStorageName = storageMatch?.groups?.storage?.trim();
+    if (!rawStorageName) {
+      return null;
+    }
+
+    const boxSectionMatch = normalizedText.match(
+      /\bfor\s+(?:my\s+)?(?<boxName>[a-zA-Z0-9' ]+?\s+section)\b/i,
+    );
+    const whereBoxMatch = normalizedText.match(
+      /\bwhere\s+(?:i|you)\s+can\s+put\s+(?:my\s+)?(?<boxName>[a-zA-Z0-9' ]+?)(?=\s+and\s+(?:there|their)\s+(?:are|is)\b|[.!?]|$)/i,
+    );
+    const rawBoxName =
+      boxSectionMatch?.groups?.boxName?.trim() ||
+      whereBoxMatch?.groups?.boxName?.trim() ||
+      '';
+    const boxName = rawBoxName
+      .replace(/^(?:my|our|the|these|those)\s+/i, '')
+      .trim();
+
+    const itemDescriptionMatch = normalizedText.match(
+      /\bwith\s+(?:description|details?)(?:\s+of|\s+is)?\s+(?<description>.+?)(?=\s+(?:thank|thanks|so\s+much|have\b)|[.!?]|$)/i,
+    );
+    const itemDescription = itemDescriptionMatch?.groups?.description?.trim() || null;
+
+    const thereAreItemMatch = normalizedText.match(
+      /\b(?:and\s+)?(?:there|their)\s+(?:are|is)\s+(?<itemPhrase>.+?)(?=\s+with\s+(?:description|details?)\b|[.!?]|$)/i,
+    );
+    const directItemMatch =
+      boxSectionMatch &&
+      normalizedText.match(
+        /\bwhere\s+(?:i|you)\s+can\s+put\s+(?<itemPhrase>.+?)(?=\s+with\s+(?:description|details?)\b|[.!?]|$)/i,
+      );
+    const itemPhrase =
+      thereAreItemMatch?.groups?.itemPhrase?.trim() ||
+      directItemMatch?.groups?.itemPhrase?.trim() ||
+      '';
+    const parsedItem = itemPhrase
+      ? this.parseDirectionalItemPhrase(itemPhrase, itemKeywords)
+      : { name: '', quantity: 1, explicitQuantity: false };
+    const itemName = parsedItem.name
+      .replace(/^(?:my|our|the|these|those)\s+/i, '')
+      .trim();
+
+    if (!boxName && !itemName) {
+      return null;
+    }
+
+    const clientRef = 'b1';
+
+    return {
+      storageName: rawStorageName,
+      boxes: boxName
+        ? [
+            {
+              name: boxName,
+              quantity: null,
+              description: null,
+              clientRef,
+            },
+          ]
+        : [],
+      items:
+        boxName && itemName
+          ? [
+              {
+                name: itemName,
+                quantity: parsedItem.quantity,
+                explicitQuantity: parsedItem.explicitQuantity,
+                description: itemDescription,
+                boxClientRef: clientRef,
+                orphaned: false,
+              },
+            ]
+          : [],
+    };
+  }
+
   parseExtraction(normalizedText: string): any {
     if (!normalizedText)
       return {
@@ -497,6 +604,36 @@ export class TextParsingService {
       createIntentPattern,
       groupedStorageSectionPattern,
     );
+    const conversationalStoreSectionCreate =
+      this.extractConversationalStoreSectionCreate(
+        normalizedText,
+        createIntentPattern,
+        groupedStorageSectionPattern,
+        itemSyns,
+      );
+    if (conversationalStoreSectionCreate) {
+      const allWords = normalizedText.split(/\s+/).filter((w) => w.length > 0);
+
+      return {
+        intent: 'create',
+        storageName: conversationalStoreSectionCreate.storageName,
+        storageDescription: null,
+        boxes: conversationalStoreSectionCreate.boxes,
+        items: conversationalStoreSectionCreate.items,
+        boxName: conversationalStoreSectionCreate.boxes[0]?.name || null,
+        boxQuantity: null,
+        boxDescription: null,
+        ambiguous: false,
+        rawIntents: ['create'],
+        totalWords: allWords.length,
+        extractedWordCount: allWords.length,
+        meta: {
+          mappingStrategy: 'direct',
+          preIntentLocationOverflow: false,
+          ...keywordFlags,
+        },
+      };
+    }
     if (conversationalStorageCreate) {
       const allWords = normalizedText.split(/\s+/).filter((w) => w.length > 0);
 

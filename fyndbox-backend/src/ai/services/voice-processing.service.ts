@@ -164,57 +164,8 @@ export class VoiceProcessingService {
     normalizedPath: string,
     tempDirectory: string,
   ): Promise<string[]> {
-    this.ensureFfmpegIsAvailable();
-
-    const totalDurationSeconds = await this.getWavDurationSeconds(normalizedPath);
-    if (totalDurationSeconds <= this.voiceProviderConfig.chunkDurationSeconds) {
-      return [normalizedPath];
-    }
-
-    const chunkDurationSeconds = this.voiceProviderConfig.chunkDurationSeconds;
-    const overlapSeconds = Math.min(
-      this.voiceProviderConfig.chunkOverlapMs / 1000,
-      Math.max(0, chunkDurationSeconds - 0.25),
-    );
-    const chunkPaths: string[] = [];
-
-    for (
-      let startSeconds = 0, chunkIndex = 0;
-      startSeconds < totalDurationSeconds;
-      startSeconds += chunkDurationSeconds, chunkIndex += 1
-    ) {
-      const hasFollowingChunk =
-        startSeconds + chunkDurationSeconds < totalDurationSeconds;
-      const outputPath = join(
-        tempDirectory,
-        `voice-chunk-${String(chunkIndex + 1).padStart(3, '0')}.wav`,
-      );
-      const chunkLengthSeconds = Math.min(
-        totalDurationSeconds - startSeconds,
-        chunkDurationSeconds + (hasFollowingChunk ? overlapSeconds : 0),
-      );
-
-      await this.runFfmpegCommand([
-        '-y',
-        '-ss',
-        startSeconds.toFixed(3),
-        '-i',
-        normalizedPath,
-        '-t',
-        chunkLengthSeconds.toFixed(3),
-        '-ac',
-        '1',
-        '-ar',
-        '16000',
-        '-acodec',
-        'pcm_s16le',
-        outputPath,
-      ]);
-
-      chunkPaths.push(outputPath);
-    }
-
-    return chunkPaths.length > 0 ? chunkPaths : [normalizedPath];
+    void tempDirectory;
+    return [normalizedPath];
   }
 
   private async transcribeChunkFile(chunkPath: string): Promise<string> {
@@ -431,13 +382,13 @@ export class VoiceProcessingService {
   }
 
   private resolveChunkOverlapMs(input: string | undefined): number {
-    const value = Number(input || 500);
+    const value = Number(input || 900);
 
     if (Number.isNaN(value)) {
-      return 500;
+      return 900;
     }
 
-    return Math.min(1000, Math.max(0, Math.round(value)));
+    return Math.min(1500, Math.max(250, Math.round(value)));
   }
 
   private async getWavDurationSeconds(filePath: string): Promise<number> {

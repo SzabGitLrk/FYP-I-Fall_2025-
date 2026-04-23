@@ -20,7 +20,7 @@ import { CreateBoxDto } from './dto/create-box.dto';
 import { UpdateBoxDto } from './dto/update-box.dto';
 import { BoxResponseDto } from './dto/box-response.dto';
 import { ApiResponse } from '@fyndbox/shared/types/api-response';
-import { TranslationService } from 'src/translation/translation.service';
+import { TranslationService } from '../translation/translation.service';
 
 @Controller('boxes')
 @UseGuards(AuthGuard('jwt'))

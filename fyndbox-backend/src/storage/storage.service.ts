@@ -5,8 +5,8 @@ import { Storage } from './storage.entity';
 import { User } from '../user/user.entity';
 import { CreateStorageDto } from './dto/create-storage.dto';
 import { UpdateStorageDto } from './dto/update-storage.dto';
-import { TranslationService } from 'src/translation/translation.service';
-import { BaseService } from 'src/common/base.service';
+import { TranslationService } from '../translation/translation.service';
+import { BaseService } from '../common/base.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class StorageService extends BaseService {

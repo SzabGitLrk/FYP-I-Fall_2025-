@@ -561,4 +561,15 @@ ${JSON.stringify({
         expect(result.success).toBe(false);
         expect(result.message).toContain('temporarily unavailable');
     });
+
+    it('should guide the model to map bookstore sections to boxes', () => {
+        const prompt = (service as any).buildStructuredFallbackPrompt({
+            rawInput: 'create book store named Alibaba for comic section with 5 Harry Potter books',
+            llmBackup: 'create book store named Alibaba for comic section with 5 Harry Potter books',
+            classified: { intent: 'create' },
+        });
+
+        expect(prompt).toContain('comic section');
+        expect(prompt).toContain('treated as boxes inside the storage/store');
+    });
 });

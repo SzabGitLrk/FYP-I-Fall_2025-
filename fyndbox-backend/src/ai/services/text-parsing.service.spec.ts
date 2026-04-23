@@ -604,6 +604,66 @@ describe('TextProcessingService', () => {
           ambiguous: false,
         },
       },
+      {
+        input:
+          "hello there can you please help me create a book store named Alibaba for my comic section where I can put 5 Harry Potter books with description of Chamber of Secrets thank you",
+        expected: {
+          intent: 'create',
+          storageName: 'alibaba',
+          storageDescription: null,
+          boxes: [
+            {
+              name: 'comic section',
+              quantity: null,
+              description: null,
+              clientRef: 'b1',
+            },
+          ],
+          items: [
+            {
+              name: 'harry potter books',
+              quantity: 5,
+              description: 'chamber of secrets',
+              boxClientRef: 'b1',
+              orphaned: false,
+            },
+          ],
+          boxName: 'comic section',
+          boxQuantity: null,
+          boxDescription: null,
+          ambiguous: false,
+        },
+      },
+      {
+        input:
+          "hello there can you please help me create book store named Alibaba where I can put my comics and their are five Harry Potter books with description of Chamber of Secrets thank you so much have a lovely day",
+        expected: {
+          intent: 'create',
+          storageName: 'alibaba',
+          storageDescription: null,
+          boxes: [
+            {
+              name: 'comics',
+              quantity: null,
+              description: null,
+              clientRef: 'b1',
+            },
+          ],
+          items: [
+            {
+              name: 'harry potter books',
+              quantity: 5,
+              description: 'chamber of secrets',
+              boxClientRef: 'b1',
+              orphaned: false,
+            },
+          ],
+          boxName: 'comics',
+          boxQuantity: null,
+          boxDescription: null,
+          ambiguous: false,
+        },
+      },
     ];
 
     testCases.forEach(({ input, expected }) => {

@@ -14,7 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { ImageService } from './image.service';
 import { ApiResponse } from '@fyndbox/shared/types/api-response';
-import { TranslationService } from 'src/translation/translation.service';
+import { TranslationService } from '../translation/translation.service';
 
 @Controller('images')
 @UseGuards(AuthGuard('jwt'))

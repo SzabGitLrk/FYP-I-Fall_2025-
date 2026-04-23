@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import {
   ExpandLessRounded,
@@ -31,6 +31,7 @@ import {
   useUpdateBox,
   useFavoriteBoxes,
 } from '../../hooks/useBox';
+import { useCreateItem } from '../../hooks/useItem';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import QRScanner from '../../components/QRScanner/QRScanner';
@@ -42,6 +43,12 @@ import SmartAssistModal from '../../components/SmartAssist/SmartAssistModal';
 import SmartAssistResultDialog from '../../components/SmartAssist/SmartAssistResultDialog';
 import SmartAssistActionDialog from '../../components/SmartAssist/SmartAssistActionDialog';
 import SmartAssistVoiceModal from '../../components/SmartAssist/SmartAssistVoiceModal';
+import TemplateHierarchySidebar from '../../components/TemplateHierarchy/TemplateHierarchySidebar';
+import { TEMPLATE_HIERARCHIES } from '../../constants/templateHierarchies';
+import { getItems } from '../../api/itemService';
+import { TemplateSelectionStorage } from '../../types/templateHierarchy';
+import { Item } from '../../types/item';
+import { Storage } from '../../types/storage';
 
 const DashboardPage: FC = () => {
   const { t } = useTranslation();
@@ -58,18 +65,28 @@ const DashboardPage: FC = () => {
   const [isSmartAddChooserOpen, setSmartAddChooserOpen] = useState(false);
   const [isSmartAddOpen, setSmartAddOpen] = useState(false);
   const [isSmartAddVoiceOpen, setSmartAddVoiceOpen] = useState(false);
+  const [isTemplateSidebarOpen, setTemplateSidebarOpen] = useState(false);
+  const [isTemplateCreating, setTemplateCreating] = useState(false);
+  const [templateSuccessMessage, setTemplateSuccessMessage] = useState<
+    string | null
+  >(null);
+  const [templateErrorMessage, setTemplateErrorMessage] = useState<
+    string | null
+  >(null);
   const [smartAddResult, setSmartAddResult] = useState<{
     open: boolean;
     message: string;
     warnings: string[];
   }>({ open: false, message: '', warnings: [] });
   const { data: storages, isLoading, error } = useStorages(searchKeyword);
-  const { mutate: createStorage } = useCreateStorage();
+  const { mutate: createStorage, mutateAsync: createStorageAsync } =
+    useCreateStorage();
   const { mutate: updateStorage } = useUpdateStorage();
   const { mutate: deleteStorage } = useDeleteStorage();
-  const { mutate: createBox } = useCreateBox();
+  const { mutate: createBox, mutateAsync: createBoxAsync } = useCreateBox();
   const { mutate: updateBox } = useUpdateBox();
   const { mutate: deleteBox } = useDeleteBox();
+  const { mutateAsync: createItemAsync } = useCreateItem();
   const { data: favoriteBoxes } = useFavoriteBoxes();
   const {
     handleFavoriteClick,
@@ -83,6 +100,122 @@ const DashboardPage: FC = () => {
     showFavorites,
     isSidebarOpen,
   } = useFooterActions();
+
+  const normalizeName = (value: string) => value.trim().toLocaleLowerCase();
+
+  const storageLookup = useMemo(() => {
+    const map = new Map<string, Storage>();
+
+    storages?.forEach((storage) => {
+      map.set(normalizeName(storage.name), storage);
+    });
+
+    return map;
+  }, [storages]);
+
+  const resetTemplateFeedback = () => {
+    setTemplateErrorMessage(null);
+    setTemplateSuccessMessage(null);
+  };
+
+  const getStorageMatch = (storageName: string) =>
+    storageLookup.get(normalizeName(storageName));
+
+  const getBoxMatch = (storage: Storage | undefined, boxName: string) =>
+    storage?.boxes?.find(
+      (box) => normalizeName(box.name) === normalizeName(boxName),
+    );
+
+  const getItemsByBoxId = async (boxId: string) => {
+    const items = await getItems(boxId);
+    const itemMap = new Map<string, Item>();
+
+    items.forEach((item) => {
+      itemMap.set(normalizeName(item.name), item);
+    });
+
+    return itemMap;
+  };
+
+  const ensureStorage = async (storageName: string) => {
+    const existingStorage = getStorageMatch(storageName);
+    if (existingStorage) {
+      return existingStorage;
+    }
+
+    return createStorageAsync({ name: storageName });
+  };
+
+  const ensureBox = async (storage: Storage, boxName: string) => {
+    const existingBox = getBoxMatch(storage, boxName);
+    if (existingBox) {
+      return existingBox;
+    }
+
+    return createBoxAsync({
+      storageId: storage.id,
+      boxData: { name: boxName },
+    });
+  };
+
+  const ensureItems = async (
+    storageId: string,
+    boxId: string,
+    itemNames: string[],
+  ) => {
+    const existingItems = await getItemsByBoxId(boxId);
+
+    for (const itemName of itemNames) {
+      if (existingItems.has(normalizeName(itemName))) {
+        continue;
+      }
+
+      const createdItem = await createItemAsync({
+        storageId,
+        boxId,
+        itemData: { name: itemName, quantity: 0 },
+      });
+
+      existingItems.set(normalizeName(createdItem.name), createdItem);
+    }
+  };
+
+  const applyTemplateSelection = async (
+    selectedTemplates: TemplateSelectionStorage[],
+  ) => {
+    try {
+      resetTemplateFeedback();
+      setTemplateCreating(true);
+
+      for (const selectedStorage of selectedTemplates) {
+        const targetStorage = await ensureStorage(selectedStorage.storageName);
+
+        for (const selectedBox of selectedStorage.boxes) {
+          const targetBox = await ensureBox(targetStorage, selectedBox.name);
+          const itemNames = selectedBox.items.map((item) => item.name);
+
+          await ensureItems(targetStorage.id, targetBox.id, itemNames);
+        }
+      }
+
+      setTemplateSuccessMessage(
+        t('templatesSidebar.success', {
+          defaultValue: 'Template applied. Only missing entries were created.',
+        }),
+      );
+    } catch (requestError) {
+      setTemplateErrorMessage(
+        requestError instanceof Error
+          ? requestError.message
+          : t('templatesSidebar.error', {
+              defaultValue:
+                'Unable to apply this template right now. Please try again.',
+            }),
+      );
+    } finally {
+      setTemplateCreating(false);
+    }
+  };
 
   const handleToggleExpand = (index: number) => {
     setExpandedStorageIndex(expandedStorageIndex === index ? null : index);
@@ -164,6 +297,17 @@ const DashboardPage: FC = () => {
 
   const handleOpenSmartAddChooser = () => {
     setSmartAddChooserOpen(true);
+  };
+
+  const handleOpenTemplateSidebar = () => {
+    resetTemplateFeedback();
+    setTemplateSidebarOpen(true);
+  };
+
+  const handleConfirmTemplateSelection = async (
+    selectedTemplates: TemplateSelectionStorage[],
+  ) => {
+    await applyTemplateSelection(selectedTemplates);
   };
 
   const handleSmartAddSaved = (result: {
@@ -273,6 +417,7 @@ const DashboardPage: FC = () => {
       <DashboardFooter
         onFavoriteClick={handleFavoriteClick}
         onScanClick={handleScanClick}
+        onTemplateClick={handleOpenTemplateSidebar}
         onSettingsClick={handleSettingsClick}
       />
       <EntityActionModal
@@ -300,6 +445,15 @@ const DashboardPage: FC = () => {
         open={isSmartAddVoiceOpen}
         onClose={() => setSmartAddVoiceOpen(false)}
         onSaved={handleSmartAddSaved}
+      />
+      <TemplateHierarchySidebar
+        open={isTemplateSidebarOpen}
+        onClose={() => setTemplateSidebarOpen(false)}
+        onConfirmSelection={handleConfirmTemplateSelection}
+        isProcessing={isTemplateCreating}
+        successMessage={templateSuccessMessage}
+        errorMessage={templateErrorMessage}
+        templates={TEMPLATE_HIERARCHIES}
       />
       <SmartAssistResultDialog
         open={smartAddResult.open}

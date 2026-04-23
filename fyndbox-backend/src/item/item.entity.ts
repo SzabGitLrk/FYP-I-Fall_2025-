@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from 'typeorm';
-import { Box } from 'src/box/box.entity';
+import { Box } from '../box/box.entity';
 
 @Entity()
 export class Item {

@@ -20,7 +20,7 @@ import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { ItemResponseDto } from './dto/item-response.dto';
 import { ApiResponse } from '@fyndbox/shared/types/api-response';
-import { TranslationService } from 'src/translation/translation.service';
+import { TranslationService } from '../translation/translation.service';
 
 @Controller('items')
 @UseGuards(AuthGuard('jwt'))

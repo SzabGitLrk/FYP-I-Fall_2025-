@@ -20,7 +20,7 @@ import { CreateStorageDto } from './dto/create-storage.dto';
 import { UpdateStorageDto } from './dto/update-storage.dto';
 import { StorageResponseDto } from './dto/storage-response.dto';
 import { ApiResponse } from '@fyndbox/shared/types/api-response';
-import { TranslationService } from 'src/translation/translation.service';
+import { TranslationService } from '../translation/translation.service';
 
 @Controller('storages')
 @UseGuards(AuthGuard('jwt'))

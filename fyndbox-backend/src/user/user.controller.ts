@@ -18,7 +18,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ApiResponse } from '@fyndbox/shared/types/api-response';
 import { AuthGuard } from '@nestjs/passport';
-import { TranslationService } from 'src/translation/translation.service';
+import { TranslationService } from '../translation/translation.service';
 
 @Controller('users')
 export class UserController {

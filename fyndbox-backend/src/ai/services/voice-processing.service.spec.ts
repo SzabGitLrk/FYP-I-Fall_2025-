@@ -118,9 +118,9 @@ describe('VoiceProcessingService', () => {
   });
 
   it('clamps chunk overlap to a safe lightweight range', () => {
-    expect((service as any).resolveChunkOverlapMs('-1')).toBe(0);
+    expect((service as any).resolveChunkOverlapMs('-1')).toBe(250);
     expect((service as any).resolveChunkOverlapMs('500')).toBe(500);
-    expect((service as any).resolveChunkOverlapMs('5000')).toBe(1000);
+    expect((service as any).resolveChunkOverlapMs('5000')).toBe(1500);
   });
 
   it('builds raw and cleaned transcript output from chunked transcription', async () => {
@@ -153,5 +153,14 @@ describe('VoiceProcessingService', () => {
     ]);
 
     expect(merged).toBe('please create storage garage with box tools and item hammer');
+  });
+
+  it('keeps normalized audio as a single transcription chunk for verification', async () => {
+    const chunkPaths = await (service as any).createChunkFiles(
+      'normalized.wav',
+      'temp-dir',
+    );
+
+    expect(chunkPaths).toEqual(['normalized.wav']);
   });
 });

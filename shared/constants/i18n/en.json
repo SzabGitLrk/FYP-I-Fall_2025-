@@ -231,6 +231,22 @@
     "voicePending": "Voice Add is not implemented yet. We will work on it later.",
     "imagePending": "Image Add is not implemented yet. We will work on it later."
   },
+  "templatesSidebar": {
+    "title": "Template Library",
+    "subtitle": "Expand folders, tick what you want to create, and confirm before anything is saved.",
+    "storageAction": "Create missing boxes and items",
+    "boxAction": "Create this box and its missing items",
+    "itemAction": "Create this item if it is missing",
+    "footerHint": "Existing descriptions and quantities are preserved automatically.",
+    "reviewSelection": "Review Selection",
+    "confirmTitle": "Confirm Creation",
+    "confirmMessage": "The checked storage, boxes, and items below will be created if they are missing.",
+    "confirmSummary": "{{storages}} storages, {{boxes}} boxes, and {{items}} items selected.",
+    "confirmCreate": "Create Selected",
+    "creating": "Creating...",
+    "success": "Template applied. Only missing entries were created.",
+    "error": "Unable to apply this template right now. Please try again."
+  },
   "types": {
     "storage": "Storage",
     "box": "Box",

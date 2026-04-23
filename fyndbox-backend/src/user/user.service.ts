@@ -5,8 +5,8 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { TranslationService } from 'src/translation/translation.service';
-import { BaseService } from 'src/common/base.service';
+import { TranslationService } from '../translation/translation.service';
+import { BaseService } from '../common/base.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService extends BaseService {

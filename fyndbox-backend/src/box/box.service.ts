@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { Box } from './box.entity';
 import { CreateBoxDto } from './dto/create-box.dto';
 import { UpdateBoxDto } from './dto/update-box.dto';
-import { TranslationService } from 'src/translation/translation.service';
-import { BaseService } from 'src/common/base.service';
-import { StorageService } from 'src/storage/storage.service';
+import { TranslationService } from '../translation/translation.service';
+import { BaseService } from '../common/base.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BoxService extends BaseService {

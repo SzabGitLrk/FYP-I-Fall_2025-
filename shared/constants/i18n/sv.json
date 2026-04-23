@@ -231,6 +231,22 @@
     "voicePending": "Voice Add är inte implementerat ännu. Vi arbetar vidare med det senare.",
     "imagePending": "Image Add är inte implementerat ännu. Vi arbetar vidare med det senare."
   },
+  "templatesSidebar": {
+    "title": "Mallbibliotek",
+    "subtitle": "Expandera mappar, markera det du vill skapa och bekräfta innan något sparas.",
+    "storageAction": "Skapa saknade lådor och artiklar",
+    "boxAction": "Skapa den här lådan och dess saknade artiklar",
+    "itemAction": "Skapa den här artikeln om den saknas",
+    "footerHint": "Befintliga beskrivningar och antal bevaras automatiskt.",
+    "reviewSelection": "Granska val",
+    "confirmTitle": "Bekräfta skapande",
+    "confirmMessage": "Den markerade lagringen, lådorna och artiklarna nedan skapas om de saknas.",
+    "confirmSummary": "{{storages}} lagringar, {{boxes}} lådor och {{items}} artiklar valda.",
+    "confirmCreate": "Skapa markerade",
+    "creating": "Skapar...",
+    "success": "Mallen har tillämpats. Endast saknade poster skapades.",
+    "error": "Det gick inte att tillämpa mallen just nu. Försök igen."
+  },
   "types": {
     "storage": "Lagring",
     "box": "Låda",

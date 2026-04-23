@@ -9,7 +9,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Storage } from '../storage/storage.entity';
-import { Item } from 'src/item/item.entity';
+import { Item } from '../item/item.entity';
 
 @Entity()
 export class Box {
