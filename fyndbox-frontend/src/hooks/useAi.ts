@@ -3,6 +3,7 @@ import {
   confirmAiResult,
   processTextInput,
   processVoiceInput,
+  processImageInput,
 } from '../api/aiService';
 import {
   ConfirmAiResult,
@@ -28,6 +29,16 @@ export const useProcessVoiceInput = () => {
     mutationFn: (file) => processVoiceInput(file),
     onError: (error: Error) => {
       console.error('Error processing voice input', error);
+    },
+  });
+};
+
+// Process AI image input
+export const useProcessImageInput = () => {
+  return useMutation<ProcessTextResult, Error, File>({
+    mutationFn: (file) => processImageInput(file),
+    onError: (error: Error) => {
+      console.error('Error processing image input', error);
     },
   });
 };

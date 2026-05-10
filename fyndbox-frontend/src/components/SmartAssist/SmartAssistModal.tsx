@@ -218,29 +218,54 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
     <>
       <Modal open={open} onClose={handleModalClose}>
         <ModalContainer>
-          <ModalBox>
+          <ModalBox
+            sx={(theme) => ({
+              width: {
+                xs: 'calc(100vw - 16px)',
+                sm: 'min(92vw, 860px)',
+                lg: 'min(86vw, 920px)',
+              },
+              maxHeight: {
+                xs: 'calc(100vh - 16px)',
+                sm: '88vh',
+              },
+              px: { xs: 1.5, sm: 2.25 },
+              py: { xs: 1.25, sm: 1.75 },
+              backgroundColor: theme.palette.background.paper,
+            })}
+          >
             <CancelButton onClick={handleModalClose}>
               <Close />
             </CancelButton>
 
-            <SmartAssistContent>
-              <Typography variant="h4">
+            <SmartAssistContent sx={{ gap: 1.25, paddingTop: 2.25 }}>
+              <Typography variant="h4" sx={{ mb: 0 }}>
                 {t('smartAdd.textTitle', { defaultValue: 'Smart Text Add' })}
               </Typography>
 
-              <CustomTextField
-                label={t('smartAdd.instructionLabel', {
-                  defaultValue: 'Instruction',
+              <Stack
+                sx={(theme) => ({
+                  borderRadius: 4,
+                  px: { xs: 1.5, sm: 2 },
+                  py: { xs: 1.5, sm: 1.75 },
+                  backgroundColor: theme.palette.background.default,
+                  border: `1px solid ${theme.palette.divider}`,
                 })}
-                placeholder={t('smartAdd.placeholder', {
-                  defaultValue:
-                    'Example: Create storage Garage with box Tools and 5 hammers',
-                })}
-                value={prompt}
-                multiline
-                minRows={4}
-                onChange={(event) => handlePromptChange(event.target.value)}
-              />
+              >
+                <CustomTextField
+                  label={t('smartAdd.instructionLabel', {
+                    defaultValue: 'Instruction',
+                  })}
+                  placeholder={t('smartAdd.placeholder', {
+                    defaultValue:
+                      'Example: Create storage Garage with box Tools and 5 hammers',
+                  })}
+                  value={prompt}
+                  multiline
+                  minRows={3}
+                  onChange={(event) => handlePromptChange(event.target.value)}
+                />
+              </Stack>
 
               {requestError && <Alert severity="error">{requestError}</Alert>}
 
@@ -296,7 +321,7 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
 
               {persistError && <Alert severity="error">{persistError}</Alert>}
 
-              <SmartAssistActionRow>
+              <SmartAssistActionRow sx={{ mt: 0.5 }}>
                 <SmartAssistSecondaryButton
                   variant="outlined"
                   onClick={onClose}

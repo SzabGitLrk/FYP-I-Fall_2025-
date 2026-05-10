@@ -43,6 +43,7 @@ import SmartAssistModal from '../../components/SmartAssist/SmartAssistModal';
 import SmartAssistResultDialog from '../../components/SmartAssist/SmartAssistResultDialog';
 import SmartAssistActionDialog from '../../components/SmartAssist/SmartAssistActionDialog';
 import SmartAssistVoiceModal from '../../components/SmartAssist/SmartAssistVoiceModal';
+import SmartAssistImageModal from '../../components/SmartAssist/SmartAssistImageModal';
 import TemplateHierarchySidebar from '../../components/TemplateHierarchy/TemplateHierarchySidebar';
 import { TEMPLATE_HIERARCHIES } from '../../constants/templateHierarchies';
 import { getItems } from '../../api/itemService';
@@ -61,10 +62,10 @@ const DashboardPage: FC = () => {
   const [entityType, setEntityType] = useState<EntityType>('storage');
   const [editingData, setEditingData] = useState<any | null>(null);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
-  // This chooser lets Smart Add expose text, voice, and image entry points from one button.
   const [isSmartAddChooserOpen, setSmartAddChooserOpen] = useState(false);
   const [isSmartAddOpen, setSmartAddOpen] = useState(false);
   const [isSmartAddVoiceOpen, setSmartAddVoiceOpen] = useState(false);
+  const [isSmartAddImageOpen, setSmartAddImageOpen] = useState(false);
   const [isTemplateSidebarOpen, setTemplateSidebarOpen] = useState(false);
   const [isTemplateCreating, setTemplateCreating] = useState(false);
   const [templateSuccessMessage, setTemplateSuccessMessage] = useState<
@@ -295,6 +296,11 @@ const DashboardPage: FC = () => {
     setSmartAddVoiceOpen(true);
   };
 
+  const handleOpenSmartAssistImageModal = () => {
+    setSmartAddChooserOpen(false);
+    setSmartAddImageOpen(true);
+  };
+
   const handleOpenSmartAddChooser = () => {
     setSmartAddChooserOpen(true);
   };
@@ -435,6 +441,7 @@ const DashboardPage: FC = () => {
         onClose={() => setSmartAddChooserOpen(false)}
         onSelectTextAdd={handleOpenSmartAssistModal}
         onSelectVoiceAdd={handleOpenSmartAssistVoiceModal}
+        onSelectImageAdd={handleOpenSmartAssistImageModal}
       />
       <SmartAssistModal
         open={isSmartAddOpen}
@@ -446,6 +453,11 @@ const DashboardPage: FC = () => {
         onClose={() => setSmartAddVoiceOpen(false)}
         onSaved={handleSmartAddSaved}
       />
+      <SmartAssistImageModal
+        open={isSmartAddImageOpen}
+        onClose={() => setSmartAddImageOpen(false)}
+        onSaved={handleSmartAddSaved}
+      />
       <TemplateHierarchySidebar
         open={isTemplateSidebarOpen}
         onClose={() => setTemplateSidebarOpen(false)}
@@ -454,6 +466,7 @@ const DashboardPage: FC = () => {
         successMessage={templateSuccessMessage}
         errorMessage={templateErrorMessage}
         templates={TEMPLATE_HIERARCHIES}
+        existingStorages={storages || []}
       />
       <SmartAssistResultDialog
         open={smartAddResult.open}

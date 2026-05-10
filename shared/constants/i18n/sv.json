@@ -78,6 +78,7 @@
     "footer": {
       "favorite": "Favoriter",
       "scan": "Scan",
+      "template": "Mall",
       "settings": "Inställningar"
     }
   },
@@ -239,11 +240,11 @@
     "itemAction": "Skapa den här artikeln om den saknas",
     "footerHint": "Befintliga beskrivningar och antal bevaras automatiskt.",
     "reviewSelection": "Granska val",
-    "confirmTitle": "Bekräfta skapande",
-    "confirmMessage": "Den markerade lagringen, lådorna och artiklarna nedan skapas om de saknas.",
+    "confirmTitle": "Uppdatera",
+    "confirmMessage": "Markerade objekt skapas. Omarkerade objekt tas bort. Befintliga matchande objekt förblir intakta.",
     "confirmSummary": "{{storages}} lagringar, {{boxes}} lådor och {{items}} artiklar valda.",
-    "confirmCreate": "Skapa markerade",
-    "creating": "Skapar...",
+    "confirmCreate": "Uppdatera markerade",
+    "creating": "Uppdaterar...",
     "success": "Mallen har tillämpats. Endast saknade poster skapades.",
     "error": "Det gick inte att tillämpa mallen just nu. Försök igen."
   },

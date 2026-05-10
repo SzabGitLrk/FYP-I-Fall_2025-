@@ -14,9 +14,9 @@ import { BaseService } from '../common/base.service';
 import { LoginDto } from './dto/login.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { TranslationService } from 'src/translation/translation.service';
-import { StorageService } from 'src/storage/storage.service';
-import { BoxService } from 'src/box/box.service';
+import { TranslationService } from '../translation/translation.service';
+import { StorageService } from '../storage/storage.service';
+import { BoxService } from '../box/box.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable({ scope: Scope.REQUEST })

@@ -14,7 +14,7 @@ import { instanceToPlain } from 'class-transformer';
 import { NotificationService } from './notification.service';
 import { ApiResponse } from '@fyndbox/shared/types/api-response';
 import { AuthGuard } from '@nestjs/passport';
-import { TranslationService } from 'src/translation/translation.service';
+import { TranslationService } from '../translation/translation.service';
 import { NotificationResponseDto } from './dto/notification-response.dto';
 
 @Controller('notifications')

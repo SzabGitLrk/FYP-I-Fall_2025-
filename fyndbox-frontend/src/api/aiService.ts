@@ -36,6 +36,25 @@ export const processVoiceInput = (
   );
 };
 
+export const processImageInput = (
+  file: File,
+): Promise<ProcessTextResult> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return handleApiCall(
+    apiClient.post<ApiResponse<ProcessTextResult>>(
+      '/ai/process-image',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    ),
+  );
+};
+
 export const confirmAiResult = (
   payload: ConfirmAiResultRequest,
 ): Promise<ConfirmAiResult> => {

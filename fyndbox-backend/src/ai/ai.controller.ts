@@ -183,6 +183,70 @@ export class AiController {
     }
   }
 
+  @Post('process-image')
+  @UseInterceptors(FileInterceptor('file'))
+  async processImage(
+    @Request() req: any,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<ApiResponse<ProcessTextResponseDto>> {
+    try {
+      const result = await this.aiService.processImage(req.user.userId, file);
+
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        message: 'Image processed successfully',
+        data: result,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        const errorMessage = this.getExceptionMessage(
+          error,
+          'Unable to process this image.',
+        );
+
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: errorMessage,
+          error: errorMessage,
+        };
+      }
+
+      if (error instanceof InternalServerErrorException) {
+        const errorMessage = this.getExceptionMessage(
+          error,
+          'Something went wrong while processing your image. Please try again.',
+        );
+
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            success: false,
+            message: errorMessage,
+            error: errorMessage,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong while processing your image. Please try again.';
+
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          success: false,
+          message: errorMessage,
+          error: errorMessage,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Post('transcribe-voice')
   @UseInterceptors(FileInterceptor('file'))
   async transcribeVoice(

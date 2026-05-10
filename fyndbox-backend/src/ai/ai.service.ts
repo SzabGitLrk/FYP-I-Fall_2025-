@@ -7,6 +7,7 @@ import { ConfirmAiResultRequestDto } from './dto/confirm-ai-result-request.dto';
 import { ConfirmAiResultResponseDto } from './dto/confirm-ai-result-response.dto';
 import { VoiceProcessingService } from './services/voice-processing.service';
 import { TranscribeVoiceResponseDto } from './dto/transcribe-voice-response.dto';
+import { ImageProcessingService } from './services/image-processing.service';
 
 @Injectable()
 export class AiService {
@@ -14,6 +15,7 @@ export class AiService {
     private readonly textProcessingService: TextProcessingService,
     private readonly aiPersistenceService: AiPersistenceService,
     private readonly voiceProcessingService: VoiceProcessingService,
+    private readonly imageProcessingService: ImageProcessingService,
   ) {}
 
   async processText(
@@ -31,6 +33,13 @@ export class AiService {
     file?: Express.Multer.File,
   ): Promise<ProcessTextResponseDto> {
     return this.voiceProcessingService.processVoiceRequest(userId, file);
+  }
+
+  async processImage(
+    userId: string,
+    file?: Express.Multer.File,
+  ): Promise<ProcessTextResponseDto> {
+    return this.imageProcessingService.processImageRequest(userId, file);
   }
 
   async transcribeVoice(

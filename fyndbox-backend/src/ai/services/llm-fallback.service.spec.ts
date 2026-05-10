@@ -15,20 +15,20 @@ describe('LlmFallbackService', () => {
     let service: LlmFallbackServiceSpecContract;
     let aiRateLimitService: AiRateLimitService;
     const originalFetch = global.fetch;
-    const originalApiKey = process.env.LLM_FALLBACK_API_KEY;
-    const originalBaseUrl = process.env.LLM_FALLBACK_BASE_URL;
-    const originalModel = process.env.LLM_FALLBACK_MODEL;
-    const originalProvider = process.env.LLM_FALLBACK_PROVIDER;
-    const originalThinkingBudget = process.env.LLM_FALLBACK_THINKING_BUDGET;
+    const originalApiKey = process.env.GEMINI_API_KEY;
+    const originalBaseUrl = process.env.GEMINI_BASE_URL;
+    const originalModel = process.env.GEMINI_MODEL;
+    const originalProvider = process.env.GEMINI_PROVIDER;
+    const originalThinkingBudget = process.env.GEMINI_THINKING_BUDGET;
     const originalMaxTokensPerRequest = process.env.AI_LLM_MAX_TOKENS_PER_REQUEST;
     const originalMaxTokensPerMinute = process.env.AI_LLM_MAX_TOKENS_PER_MINUTE;
 
     beforeEach(async () => {
-        process.env.LLM_FALLBACK_API_KEY = 'test-llm-fallback-api-key';
-        process.env.LLM_FALLBACK_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-        process.env.LLM_FALLBACK_MODEL = 'gemini-2.5-flash';
-        process.env.LLM_FALLBACK_PROVIDER = 'google';
-        process.env.LLM_FALLBACK_THINKING_BUDGET = '0';
+        process.env.GEMINI_API_KEY = 'test-gemini-api-key';
+        process.env.GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+        process.env.GEMINI_MODEL = 'gemini-2.5-flash';
+        process.env.GEMINI_PROVIDER = 'google';
+        process.env.GEMINI_THINKING_BUDGET = '0';
         process.env.AI_LLM_MAX_TOKENS_PER_REQUEST = '500';
         process.env.AI_LLM_MAX_TOKENS_PER_MINUTE = '5000';
 
@@ -46,11 +46,11 @@ describe('LlmFallbackService', () => {
 
     afterEach(() => {
         global.fetch = originalFetch;
-        process.env.LLM_FALLBACK_API_KEY = originalApiKey;
-        process.env.LLM_FALLBACK_BASE_URL = originalBaseUrl;
-        process.env.LLM_FALLBACK_MODEL = originalModel;
-        process.env.LLM_FALLBACK_PROVIDER = originalProvider;
-        process.env.LLM_FALLBACK_THINKING_BUDGET = originalThinkingBudget;
+        process.env.GEMINI_API_KEY = originalApiKey;
+        process.env.GEMINI_BASE_URL = originalBaseUrl;
+        process.env.GEMINI_MODEL = originalModel;
+        process.env.GEMINI_PROVIDER = originalProvider;
+        process.env.GEMINI_THINKING_BUDGET = originalThinkingBudget;
         process.env.AI_LLM_MAX_TOKENS_PER_REQUEST = originalMaxTokensPerRequest;
         process.env.AI_LLM_MAX_TOKENS_PER_MINUTE = originalMaxTokensPerMinute;
         jest.restoreAllMocks();

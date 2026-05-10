@@ -5,7 +5,7 @@ import {
   Settings,
   Favorite,
   QrCodeScanner,
-  MenuBookRounded,
+  AutoAwesomeMosaicRounded,
 } from '@mui/icons-material';
 
 interface DashboardFooterProps {
@@ -36,10 +36,10 @@ const DashboardFooter: FC<DashboardFooterProps> = ({
       />
       {onTemplateClick && (
         <FooterActionButton
-          label={t('templatesSidebar.title', {
-            defaultValue: 'Template Library',
+          label={t('dashboard.footer.template', {
+            defaultValue: 'Template',
           })}
-          icon={<MenuBookRounded />}
+          icon={<AutoAwesomeMosaicRounded />}
           onClick={onTemplateClick}
         />
       )}

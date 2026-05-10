@@ -78,6 +78,7 @@
     "footer": {
       "favorite": "Favorites",
       "scan": "Scan",
+      "template": "Template",
       "settings": "Settings"
     }
   },
@@ -239,11 +240,11 @@
     "itemAction": "Create this item if it is missing",
     "footerHint": "Existing descriptions and quantities are preserved automatically.",
     "reviewSelection": "Review Selection",
-    "confirmTitle": "Confirm Creation",
-    "confirmMessage": "The checked storage, boxes, and items below will be created if they are missing.",
+    "confirmTitle": "Update",
+    "confirmMessage": "Checked items will be created. Unchecked items will be removed. Existing matched items will remain intact.",
     "confirmSummary": "{{storages}} storages, {{boxes}} boxes, and {{items}} items selected.",
-    "confirmCreate": "Create Selected",
-    "creating": "Creating...",
+    "confirmCreate": "Update Selected",
+    "creating": "Updating...",
     "success": "Template applied. Only missing entries were created.",
     "error": "Unable to apply this template right now. Please try again."
   },

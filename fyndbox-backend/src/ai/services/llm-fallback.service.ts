@@ -74,19 +74,17 @@ export class LlmFallbackService {
     private readonly logger = new Logger(LlmFallbackService.name);
     // Keep provider settings centralized so model swaps do not require flow changes.
     private readonly llmProviderConfig: LlmProviderConfig = {
-        apiKey: process.env.LLM_FALLBACK_API_KEY
-            || process.env.GEMINI_API_KEY
+        apiKey: process.env.GEMINI_API_KEY
             || '',
-        baseUrl: process.env.LLM_FALLBACK_BASE_URL
+        baseUrl: process.env.GEMINI_BASE_URL
             || 'https://generativelanguage.googleapis.com/v1beta/models',
-        modelName: process.env.LLM_FALLBACK_MODEL
-            || process.env.GEMINI_MODEL
+        modelName: process.env.GEMINI_MODEL
             || 'gemini-2.5-flash',
-        providerName: process.env.LLM_FALLBACK_PROVIDER || 'google',
+        providerName: process.env.GEMINI_PROVIDER || 'google',
         responseMimeType: 'application/json',
         temperature: 0.1,
         // Gemini 2.5 Flash spends tokens on hidden thinking by default, which can truncate JSON output.
-        thinkingBudget: Number(process.env.LLM_FALLBACK_THINKING_BUDGET || '0'),
+        thinkingBudget: Number(process.env.GEMINI_THINKING_BUDGET || '0'),
     };
     private readonly fallbackConfirmationMessage =
         'LLM fallback resolved this request. Please review the generated details before saving.';

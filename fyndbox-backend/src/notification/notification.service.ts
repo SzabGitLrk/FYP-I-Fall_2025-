@@ -2,11 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import { Repository } from 'typeorm';
-import { TranslationService } from 'src/translation/translation.service';
+import { TranslationService } from '../translation/translation.service';
 import { CustomNotification } from './custom-notification.entity';
-import { BaseService } from 'src/common/base.service';
-import { BoxService } from 'src/box/box.service';
-import { Box } from 'src/box/box.entity';
+import { BaseService } from '../common/base.service';
+import { BoxService } from '../box/box.service';
+import { Box } from '../box/box.entity';
 
 @Injectable()
 export class NotificationService extends BaseService {

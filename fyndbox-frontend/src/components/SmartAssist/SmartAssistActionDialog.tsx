@@ -25,6 +25,7 @@ interface SmartAssistActionDialogProps {
   onClose: () => void;
   onSelectTextAdd: () => void;
   onSelectVoiceAdd: () => void;
+  onSelectImageAdd: () => void;
   open: boolean;
 }
 
@@ -32,6 +33,7 @@ const SmartAssistActionDialog: FC<SmartAssistActionDialogProps> = ({
   onClose,
   onSelectTextAdd,
   onSelectVoiceAdd,
+  onSelectImageAdd,
   open,
 }) => {
   const { t } = useTranslation();
@@ -60,7 +62,7 @@ const SmartAssistActionDialog: FC<SmartAssistActionDialogProps> = ({
       action: 'image',
       icon: ImageSearchRounded,
       label: t('smartAdd.imageAdd', { defaultValue: 'Image Add' }),
-      status: t('smartAdd.comingSoon', { defaultValue: 'Soon' }),
+      status: t('smartAdd.openNow', { defaultValue: 'Open' }),
     },
   ];
 
@@ -79,13 +81,6 @@ const SmartAssistActionDialog: FC<SmartAssistActionDialogProps> = ({
       });
     }
 
-    if (selectedAction === 'image') {
-      return t('smartAdd.imagePending', {
-        defaultValue:
-          'Image Add is not implemented yet. We will work on it later.',
-      });
-    }
-
     return null;
   }, [selectedAction, t]);
 
@@ -97,6 +92,11 @@ const SmartAssistActionDialog: FC<SmartAssistActionDialogProps> = ({
 
     if (action === 'voice') {
       onSelectVoiceAdd();
+      return;
+    }
+
+    if (action === 'image') {
+      onSelectImageAdd();
       return;
     }
 

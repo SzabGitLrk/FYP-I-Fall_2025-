@@ -4,7 +4,7 @@ import {
   Box,
   Button,
   Checkbox,
-  CircularProgress,
+  CircularProgress, Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -28,6 +28,7 @@ import {
   TemplateHierarchyStorage,
   TemplateSelectionStorage,
 } from '../../types/templateHierarchy';
+import { Storage } from '../../types/storage';
 
 interface TemplateHierarchySidebarProps {
   errorMessage: string | null;
@@ -37,6 +38,7 @@ interface TemplateHierarchySidebarProps {
   open: boolean;
   successMessage: string | null;
   templates: TemplateHierarchyStorage[];
+  existingStorages: Storage[];
 }
 
 const createItemKey = (
@@ -53,6 +55,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
   open,
   successMessage,
   templates,
+  existingStorages,
 }) => {
   const { t } = useTranslation();
   const [expandedStorages, setExpandedStorages] = useState<Set<string>>(
@@ -228,6 +231,16 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
         (storage): storage is NonNullable<typeof storage> => Boolean(storage),
       );
   }, [selectedItems, templates]);
+
+  const isUpdating = useMemo(() => {
+    return selectedStructure.some((selected) =>
+      existingStorages.some(
+        (existing) =>
+          existing.name.trim().toLowerCase() ===
+          selected.storageName.trim().toLowerCase()
+      )
+    );
+  }, [selectedStructure, existingStorages]);
 
   const selectedSummary = useMemo(() => {
     return selectedStructure.reduce(
@@ -457,17 +470,26 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
         maxWidth="sm"
       >
         <DialogTitle>
-          {t('templatesSidebar.confirmTitle', {
-            defaultValue: 'Confirm Creation',
-          })}
+          {isUpdating
+            ? t('templatesSidebar.confirmUpdateTitle', {
+                defaultValue: 'Update',
+              })
+            : t('templatesSidebar.confirmCreateTitle', {
+                defaultValue: 'Confirm Creation',
+              })}
         </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1.5}>
             <Typography variant="body2" color="text.secondary">
-              {t('templatesSidebar.confirmMessage', {
-                defaultValue:
-                  'The checked storage, boxes, and items below will be created if they are missing.',
-              })}
+              {isUpdating
+                ? t('templatesSidebar.confirmUpdateMessage', {
+                    defaultValue:
+                      'Checked items will be created. Unchecked items will be removed. Existing matched items will remain intact.',
+                  })
+                : t('templatesSidebar.confirmCreateMessage', {
+                    defaultValue:
+                      'The checked storage, boxes, and items below will be created.',
+                  })}
             </Typography>
 
             <Alert severity="info">
@@ -480,33 +502,88 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
               })}
             </Alert>
 
-            {selectedStructure.map((storage) => (
-              <Box key={storage.storageName}>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  {storage.storageName}
-                </Typography>
-                {storage.boxes.map((box) => (
-                  <Box key={box.name} sx={{ pl: 2, pt: 0.5 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {box.name}
+            {templates.map((storage) => {
+              const selectedStorageCount = getSelectedCountForStorage(storage);
+              const isStorageSelected = selectedStorageCount > 0;
+              
+              // Only process storages that the user is actively working on (has selections)
+              if (!isStorageSelected) return null;
+
+              const existingStorage = existingStorages.find(
+                (s) => s.name.toLowerCase() === storage.storageName.toLowerCase()
+              );
+
+              return (
+                <Box key={storage.storageName} sx={{ mb: 1 }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {storage.storageName}
                     </Typography>
-                    {box.items.map((item) => (
-                      <Typography
-                        key={item.name}
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ pl: 2, pt: 0.25 }}
-                      >
-                        {item.name}
-                      </Typography>
-                    ))}
-                  </Box>
-                ))}
-              </Box>
-            ))}
+                    <Chip
+                      size="small"
+                      label={existingStorage ? 'Remain Same' : 'Create'}
+                      color={existingStorage ? 'default' : 'success'}
+                      sx={{ height: 20, fontSize: '0.7rem' }}
+                    />
+                  </Stack>
+                  {storage.boxes.map((box) => {
+                    const selectedBoxCount = getSelectedCountForBox(storage.storageName, box);
+                    const isBoxSelected = selectedBoxCount > 0;
+                    const existingBox = existingStorage?.boxes?.find(
+                      (b) => b.name.toLowerCase() === box.name.toLowerCase()
+                    );
+
+                    // Show if selected OR if it exists but is unselected (to be removed)
+                    if (!isBoxSelected && !existingBox) return null;
+
+                    return (
+                      <Box key={box.name} sx={{ pl: 2, pt: 0.5 }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2" fontWeight={600} sx={{ textDecoration: !isBoxSelected ? 'line-through' : 'none' }}>
+                            {box.name}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label={isBoxSelected ? (existingBox ? 'Remain Same' : 'Create') : 'Remove'}
+                            color={isBoxSelected ? (existingBox ? 'default' : 'success') : 'error'}
+                            sx={{ height: 18, fontSize: '0.65rem' }}
+                          />
+                        </Stack>
+                        {box.items.map((item) => {
+                          const isSelected = isItemSelected(storage.storageName, box.name, item.name);
+                          
+                          // Show if selected OR if its parent box exists but it is unselected (to be removed)
+                          if (!isSelected && !existingBox) return null;
+
+                          return (
+                            <Stack
+                              key={item.name}
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              sx={{ pl: 2, pt: 0.25 }}
+                            >
+                              <Typography variant="body2" color="text.secondary" sx={{ textDecoration: !isSelected ? 'line-through' : 'none' }}>
+                                {item.name}
+                              </Typography>
+                              <Chip
+                                size="small"
+                                label={isSelected ? (existingBox ? 'Remain Same' : 'Create') : 'Remove'}
+                                color={isSelected ? (existingBox ? 'default' : 'success') : 'error'}
+                                sx={{ height: 16, fontSize: '0.6rem' }}
+                              />
+                            </Stack>
+                          );
+                        })}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              );
+            })}
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions sx={{ p: 2, pb: 3 }}>
           <Button
             onClick={() => setConfirmOpen(false)}
             disabled={isProcessing}
@@ -519,11 +596,17 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
             disabled={isProcessing || selectedStructure.length === 0}
             variant="contained"
           >
-            {isProcessing
-              ? t('templatesSidebar.creating', { defaultValue: 'Creating...' })
-              : t('templatesSidebar.confirmCreate', {
-                  defaultValue: 'Create Selected',
-                })}
+            {isUpdating
+              ? isProcessing
+                ? t('templatesSidebar.updating', { defaultValue: 'Updating...' })
+                : t('templatesSidebar.confirmUpdate', {
+                    defaultValue: 'Update Selected',
+                  })
+              : isProcessing
+                ? t('templatesSidebar.creating', { defaultValue: 'Creating...' })
+                : t('templatesSidebar.confirmCreate', {
+                    defaultValue: 'Create Selected',
+                  })}
           </Button>
         </DialogActions>
       </Dialog>
