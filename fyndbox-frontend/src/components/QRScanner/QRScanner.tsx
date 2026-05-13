@@ -1,10 +1,11 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { BrowserQRCodeReader, VideoInputDevice } from '@zxing/browser';
-import { Typography } from '@mui/material';
+import { Modal, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import {
   ButtonContainer,
   QrContainer,
+  QrOverlay,
   QrReaderContainer,
 } from './QRScanner.styles';
 
@@ -91,22 +92,26 @@ const QRScanner: FC<QRScannerProps> = ({ onScanSuccess, onCancel }) => {
   };
 
   return (
-    <QrContainer>
-      <Typography variant="h6" mb={2}>
-        {t('qrCode.title')}
-      </Typography>
-      <QrReaderContainer>
-        <video ref={videoRef} />
-      </QrReaderContainer>
-      {scanError && (
-        <Typography variant="body2" color="error" mt={2}>
-          {scanError}
-        </Typography>
-      )}
-      <ButtonContainer onClick={handleCancel} variant="contained">
-        {t('modal.cancel')}
-      </ButtonContainer>
-    </QrContainer>
+    <Modal open onClose={handleCancel} closeAfterTransition>
+      <QrOverlay>
+        <QrContainer>
+          <Typography variant="h6" mb={2}>
+            {t('qrCode.title')}
+          </Typography>
+          <QrReaderContainer>
+            <video ref={videoRef} />
+          </QrReaderContainer>
+          {scanError && (
+            <Typography variant="body2" color="error" mt={2}>
+              {scanError}
+            </Typography>
+          )}
+          <ButtonContainer onClick={handleCancel} variant="contained">
+            {t('modal.cancel')}
+          </ButtonContainer>
+        </QrContainer>
+      </QrOverlay>
+    </Modal>
   );
 };
 

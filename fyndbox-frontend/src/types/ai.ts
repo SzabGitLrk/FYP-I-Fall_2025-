@@ -13,7 +13,10 @@ export interface SmartAssistClarificationOption {
 
 export interface SmartAssistItem {
   boxClientRef: string | null;
+  currentQuantity?: number | null;
+  detectedQuantity?: number | null;
   description?: string | null;
+  explicitQuantity?: boolean;
   name: string;
   orphaned?: boolean;
   quantity: number;

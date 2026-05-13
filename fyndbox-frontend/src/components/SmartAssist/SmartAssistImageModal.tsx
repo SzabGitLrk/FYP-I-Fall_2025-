@@ -399,6 +399,12 @@ const SmartAssistImageModal: FC<SmartAssistImageModalProps> = ({
                     size="small"
                     label="Quantity"
                     value={item.quantity || 1}
+                    helperText={
+                      item.currentQuantity !== null &&
+                      item.currentQuantity !== undefined
+                        ? `Current saved quantity${item.detectedQuantity && item.detectedQuantity !== item.currentQuantity ? `, detected ${item.detectedQuantity}` : ''}`
+                        : ' '
+                    }
                     onChange={(e) => {
                       const newQuantity = parseInt(e.target.value, 10);
                       setProcessResult((prev) => {

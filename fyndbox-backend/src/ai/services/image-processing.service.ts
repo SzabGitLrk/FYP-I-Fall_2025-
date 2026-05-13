@@ -75,7 +75,7 @@ export class ImageProcessingService {
         classified.expandedBoxes,
       );
 
-      prepared.intent = 'create'; // Image add defaults to create/update
+      prepared.intent = 'update'; // Image review should let users confirm current quantities for existing items.
       prepared.expandedBoxes = classified.expandedBoxes;
       prepared.suggestions = classified.suggestions;
       prepared.confidence = classified.confidence;
@@ -83,6 +83,7 @@ export class ImageProcessingService {
         workflowSource: 'vision-ai',
         resolvedAt: new Date().toISOString(),
       };
+      this.applyExistingItemQuantities(prepared, existingContext);
 
       const persistenceBlockingMessage = this.aiPersistenceService.validatePersistencePrerequisites(prepared);
       if (persistenceBlockingMessage) {
@@ -204,11 +205,93 @@ export class ImageProcessingService {
     });
 
     return {
-      intent: 'create',
+      intent: 'update',
       storageName: payload.storageName || 'Vision Storage',
       boxes,
       items,
       confidence: 0.9,
     };
+  }
+
+  private applyExistingItemQuantities(
+    normalizedData: any,
+    existingContext?: ExistingContext,
+  ): void {
+    if (!existingContext?.boxes?.length || !existingContext?.items?.length) {
+      return;
+    }
+
+    const storageName = typeof normalizedData?.storageName === 'string'
+      ? normalizedData.storageName
+      : null;
+    const matchedStorage = storageName
+      ? (existingContext.storages || []).find(
+          (storage) =>
+            this.normalizeLookupName(storage?.name) ===
+            this.normalizeLookupName(storageName),
+        )
+      : null;
+
+    const scopedBoxes = matchedStorage?.id
+      ? (existingContext.boxes || []).filter(
+          (box) => box?.storageId === matchedStorage.id,
+        )
+      : (existingContext.boxes || []);
+
+    normalizedData.items = (normalizedData.items || []).map((item: any) => {
+      const targetBoxName = this.getBoxNameForItem(normalizedData, item.boxClientRef);
+      const matchedBox = targetBoxName
+        ? scopedBoxes.find(
+            (box) =>
+              this.normalizeLookupName(box?.name) ===
+              this.normalizeLookupName(targetBoxName),
+          )
+        : null;
+
+      const existingItem = matchedBox
+        ? (existingContext.items || []).find(
+            (candidate) =>
+              candidate?.boxId === matchedBox.id &&
+              this.normalizeLookupName(candidate?.name) ===
+                this.normalizeLookupName(item?.name),
+          )
+        : null;
+
+      const detectedQuantity = item?.quantity || 1;
+      if (!existingItem) {
+        return {
+          ...item,
+          detectedQuantity,
+          explicitQuantity: true,
+        };
+      }
+
+      const currentQuantity = existingItem.quantity ?? 0;
+      return {
+        ...item,
+        currentQuantity,
+        detectedQuantity,
+        explicitQuantity: true,
+        quantity: currentQuantity,
+      };
+    });
+  }
+
+  private getBoxNameForItem(
+    normalizedData: any,
+    boxClientRef?: string | null,
+  ): string | null {
+    if (!boxClientRef) {
+      return null;
+    }
+
+    const box = normalizedData.boxes?.find(
+      (entry: any) => entry.clientRef === boxClientRef,
+    );
+    return box?.name ?? null;
+  }
+
+  private normalizeLookupName(value: string | null | undefined): string {
+    return (value || '').trim().toLowerCase().replace(/\s+/g, ' ');
   }
 }

@@ -1,25 +1,13 @@
-import { FC, useEffect, useRef, useState } from 'react';
-import { CircularProgress, Typography } from '@mui/material';
-import {
-  Clear,
-  ImageRounded,
-  MoreVertRounded,
-  PauseRounded,
-} from '@mui/icons-material';
+import { FC, useEffect, useState } from 'react';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { Clear } from '@mui/icons-material';
+import imageFallback from '../../assets/AddImage.png'; // Use your fallback image here
 import { useDeleteImage, useUploadImage } from '../../hooks/useImage';
 import {
-  BrowseText,
   ImageUploaderContainer,
-  ImageDropContent,
-  ImageDropZone,
   ImageLabel,
   ImageBox,
   ClearButton,
-  StatusIconButton,
-  UploadIconWrap,
-  UploadStatusActions,
-  UploadStatusCard,
-  UploadStatusText,
 } from './EntityActionModal.styles';
 
 interface ImageUploaderProps {
@@ -34,8 +22,6 @@ const ImageUploader: FC<ImageUploaderProps> = ({
   label = 'Image',
 }) => {
   const [image, setImage] = useState<string | undefined>(initialImage);
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     mutate: uploadImage,
     error: uploadError,
@@ -47,32 +33,19 @@ const ImageUploader: FC<ImageUploaderProps> = ({
     setImage(initialImage);
   }, [initialImage]);
 
-  const submitFile = (file: File) => {
-    uploadImage(file, {
-      onSuccess: (uploadedImageUrl) => {
-        setImage(uploadedImageUrl.imageUrl);
-        onImageUpload(uploadedImageUrl.imageUrl);
-      },
-      onError: (err) => {
-        console.error('Error uploading image:', err);
-      },
-    });
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    submitFile(file);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragActive(false);
-
-    const file = e.dataTransfer.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-
-    submitFile(file);
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      uploadImage(file, {
+        onSuccess: (uploadedImageUrl) => {
+          setImage(uploadedImageUrl.imageUrl);
+          onImageUpload(uploadedImageUrl.imageUrl);
+        },
+        onError: (err) => {
+          console.error('Error uploading image:', err);
+        },
+      });
+    }
   };
 
   const handleClearImage = () => {
@@ -108,99 +81,25 @@ const ImageUploader: FC<ImageUploaderProps> = ({
     <ImageUploaderContainer
       display="flex"
       flexDirection="column"
-      alignItems="stretch"
+      alignItems="center"
     >
       <ImageLabel variant="body1">{label}</ImageLabel>
-      <ImageDropZone
-        dragActive={dragActive}
-        onClick={() => fileInputRef.current?.click()}
-        onDragEnter={(e) => {
-          e.preventDefault();
-          setDragActive(true);
-        }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragActive(true);
-        }}
-        onDragLeave={(e) => {
-          e.preventDefault();
-          setDragActive(false);
-        }}
-        onDrop={handleDrop}
-      >
-        <ImageDropContent>
-          {image ? (
-            <>
-              <ImageBox src={image} alt="Uploaded image" />
-              <Typography variant="body1" fontWeight={700}>
-                Image ready
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Tap to replace it with another image
-              </Typography>
-            </>
-          ) : (
-            <>
-              <UploadIconWrap>
-                <ImageRounded sx={{ fontSize: 34, color: '#3B82F6' }} />
-              </UploadIconWrap>
-              <Typography variant="body1" fontWeight={700} color="text.primary">
-                Drop your image here, or <BrowseText>browse</BrowseText>
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Supports JPG, JPEG2000, PNG
-              </Typography>
-            </>
-          )}
-        </ImageDropContent>
+      <Box component="label">
+        <ImageBox src={image || imageFallback} alt="Uploaded image" />
         <input
           type="file"
           hidden
           accept="image/*"
-          ref={fileInputRef}
           onChange={handleImageChange}
         />
-      </ImageDropZone>
+        {isPending && <CircularProgress size={24} />}
+      </Box>
 
-      <UploadStatusCard>
-        <UploadStatusText>
-          <Typography variant="body2" fontWeight={700} color="text.primary" noWrap>
-            {isPending
-              ? 'Uploading...'
-              : image
-                ? 'Upload complete'
-                : 'No image selected'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {isPending
-              ? '100% - finalizing upload'
-              : image
-                ? 'Your image is attached and ready'
-                : 'Choose or drop an image to continue'}
-          </Typography>
-        </UploadStatusText>
-
-        <UploadStatusActions>
-          {isPending && <CircularProgress size={20} />}
-          <StatusIconButton size="small" disabled={!isPending}>
-            <PauseRounded fontSize="small" />
-          </StatusIconButton>
-          <ClearButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClearImage();
-            }}
-            disabled={!image || isPending}
-          >
-            <Clear fontSize="small" />
-          </ClearButton>
-          <StatusIconButton size="small">
-            <MoreVertRounded fontSize="small" />
-          </StatusIconButton>
-        </UploadStatusActions>
-      </UploadStatusCard>
-
+      {image && (
+        <ClearButton size="small" onClick={handleClearImage}>
+          <Clear />
+        </ClearButton>
+      )}
       {uploadError && (
         <Typography variant="caption" color="error">
           {uploadError.message}
