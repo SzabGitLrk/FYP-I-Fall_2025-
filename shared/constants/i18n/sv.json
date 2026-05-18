@@ -140,7 +140,8 @@
   },
   "favoritesSidebar": {
     "title": "Favoritlådor",
-    "noItemsFound": "Inga favoritobjekt ännu"
+    "noItemsFound": "Inga favoritobjekt ännu",
+    "emptyDescription": "Objekt du favoritmarkerar visas här."
   },
   "box": {
     "printQRcode": "Skriv ut QRkod",

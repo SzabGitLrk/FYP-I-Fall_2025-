@@ -11,7 +11,11 @@ import {
 } from './LanguageSelector.styles';
 import { useTranslation } from 'react-i18next';
 
-const LanguageSelector: FC = () => {
+interface LanguageSelectorProps {
+  compact?: boolean;
+}
+
+const LanguageSelector: FC<LanguageSelectorProps> = ({ compact = false }) => {
   const { language, switchLanguage } = useLanguage();
   const { t } = useTranslation();
 
@@ -20,7 +24,7 @@ const LanguageSelector: FC = () => {
   };
 
   return (
-    <LanguageSelectorWrapper>
+    <LanguageSelectorWrapper compact={compact}>
       <FlagIcon
         src={language === 'sv' ? swedishFlag : ukFlag}
         alt={language === 'sv' ? 'Swedish' : 'English'}

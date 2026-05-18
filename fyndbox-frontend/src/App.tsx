@@ -10,6 +10,7 @@ import BoxPage from './pages/BoxPage/BoxPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage';
+import AboutPage from './pages/AboutPage/AboutPage';
 
 const App: FC = () => {
   return (
@@ -44,6 +45,7 @@ const App: FC = () => {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/user-guide" element={<UserGuidePage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/" element={<LandingPage />} />
       </Routes>
     </BrowserRouter>

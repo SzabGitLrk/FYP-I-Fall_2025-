@@ -1,9 +1,14 @@
 import { FC } from 'react';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { Delete } from '@mui/icons-material';
-import { ImageBox } from '../EntityCard/EntityCard.styles';
 import BoxIconSvg from '../../assets/box-icon-black.svg';
-import { FavCardContainer } from './FavCard.styles';
+import {
+  FavCardContainer,
+  FavoriteCardContent,
+  FavoriteCardImage,
+  FavoriteCardText,
+  FavoriteDeleteButton,
+} from './FavCard.styles';
 
 interface FavCardProps {
   name: string;
@@ -22,27 +27,26 @@ const FavCard: FC<FavCardProps> = ({
 }) => {
   return (
     <FavCardContainer onClick={onClick}>
-      <Box display="flex" alignItems="center">
-        <Box flex={1}>
-          {image ? (
-            <ImageBox src={image} alt={name} />
-          ) : (
-            <ImageBox src={BoxIconSvg} alt={'Box Icon'} />
-          )}
-        </Box>
-        <Box flex={3}>
+      <FavoriteCardContent>
+        {image ? (
+          <FavoriteCardImage src={image} alt={name} />
+        ) : (
+          <FavoriteCardImage src={BoxIconSvg} alt={'Box Icon'} />
+        )}
+        <FavoriteCardText>
           <Typography variant="h6">{name}</Typography>
           <Typography variant="body1">{description}</Typography>
-        </Box>
-      </Box>
-      <IconButton
+        </FavoriteCardText>
+      </FavoriteCardContent>
+      <FavoriteDeleteButton
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
+        aria-label="Remove favorite"
       >
         <Delete />
-      </IconButton>
+      </FavoriteDeleteButton>
     </FavCardContainer>
   );
 };

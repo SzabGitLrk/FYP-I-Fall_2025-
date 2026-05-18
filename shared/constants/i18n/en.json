@@ -140,7 +140,8 @@
   },
   "favoritesSidebar": {
     "title": "Favorite Boxes",
-    "noItemsFound": "No Favorite items yet"
+    "noItemsFound": "No Favorite items yet",
+    "emptyDescription": "Items you favorite will appear here."
   },
   "box": {
     "printQRcode": "Print QR Code",

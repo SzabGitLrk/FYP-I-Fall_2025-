@@ -52,7 +52,7 @@ export const ImageLabel = styled(Typography)(({ theme }) => ({
   textAlign: 'center',
 }));
 
-export const ImageBox = styled('img')(({ theme }) => ({
+export const ImageBox = styled('img')(() => ({
   width: 96,
   height: 96,
   marginRight: 0,

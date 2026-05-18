@@ -4,12 +4,23 @@ interface LanguageOptionProps {
   isActive: boolean;
 }
 
-export const LanguageSelectorWrapper = styled(Box)(({ theme }) => ({
+interface LanguageSelectorWrapperProps {
+  compact?: boolean;
+}
+
+export const LanguageSelectorWrapper = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'compact',
+})<LanguageSelectorWrapperProps>(({ theme, compact }) => ({
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(6, 0),
+  padding: compact ? theme.spacing(1.8, 0, 0) : theme.spacing(6, 0),
   justifyContent: 'center',
   textAlign: 'center',
+  color: compact ? '#1F2B25' : 'inherit',
+  '& .MuiTypography-root': {
+    fontSize: compact ? '0.86rem' : undefined,
+    fontWeight: compact ? 600 : undefined,
+  },
 }));
 
 export const FlagIcon = styled('img')(({ theme }) => ({
