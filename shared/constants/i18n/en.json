@@ -91,7 +91,9 @@
       "savePassword": "Save password",
       "currentPassword": "Current password",
       "newPassword": "New password",
-      "passwordMatchError": "New password must be different from the current password"
+      "confirmPassword": "Confirm password",
+      "passwordMatchError": "New password must be different from the current password",
+      "confirmPasswordMatchError": "New password and confirm password must match"
     },
     "about": {
       "title": "About Fyndbox",

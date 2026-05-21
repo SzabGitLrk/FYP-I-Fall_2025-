@@ -49,6 +49,16 @@ export class ValidationService {
     if (wordCount < 3) {
       const hasStorageHint = /\bstorage\b/i.test(cleanedForValidation);
       if (hasStorageHint) {
+        // Check if an action verb is already present in the original input
+        const hasActionVerb =
+          /\b(create|add|update|remove|delete|increment|decrement|make|set\s?up)\b/i.test(
+            rawText,
+          );
+        if (hasActionVerb) {
+          // The user already specified an action — let it through to the parser.
+          return { isValid: true, message: null };
+        }
+
         const trimmedInput = rawText.trim();
         return {
           isValid: false,

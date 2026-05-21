@@ -1,10 +1,18 @@
 import { FC, useMemo, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import {
+  AutoAwesomeMosaicOutlined,
+  FavoriteBorderRounded,
   ExpandLessRounded,
   ExpandMoreRounded,
+  Inventory2Outlined,
   KeyboardArrowRightRounded,
+  LogoutRounded,
+  QrCodeScannerRounded,
+  SettingsOutlined,
 } from '@mui/icons-material';
+import BoxIconSvg from '../../assets/box-icon.svg';
+import ItemIconSvg from '../../assets/item-icon.svg';
 import TopBar from '../../components/TopBar/TopBar';
 import EntityCard from '../../components/EntityCard/EntityCard';
 import AddEntityButton from '../../components/AddEntityButton/AddEntityButton';
@@ -12,9 +20,15 @@ import DashboardFooter from '../../components/DashboardFooter/DashboardFooter';
 import SmartAssistButton from '../../components/SmartAssist/SmartAssistButton';
 import { CustomIcon } from '../../styles/commonStyles';
 import {
+  BrandLockup,
+  DashboardContent,
   DashboardContainer,
+  DashboardRail,
+  DashboardWorkspace,
   MainContainer,
   PrimaryActionsContainer,
+  RailNav,
+  RailNavItem,
   SubContainer,
 } from './DashboardPage.styles';
 import { EntityType } from '../../types/entityTypes';
@@ -50,10 +64,13 @@ import { getItems } from '../../api/itemService';
 import { TemplateSelectionStorage } from '../../types/templateHierarchy';
 import { Item } from '../../types/item';
 import { Storage } from '../../types/storage';
+import FyndBoxLogo from '../../assets/FyndBox.png';
+import { useAuth } from '../../hooks/useAuth';
 
 const DashboardPage: FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [expandedStorageIndex, setExpandedStorageIndex] = useState<
     number | null
   >(null);
@@ -310,6 +327,17 @@ const DashboardPage: FC = () => {
     setTemplateSidebarOpen(true);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
+  const getStorageItemCount = (storage: Storage) =>
+    storage.boxes?.reduce(
+      (total, storageBox) => total + (storageBox.items?.length ?? 0),
+      0,
+    ) ?? 0;
+
   const handleConfirmTemplateSelection = async (
     selectedTemplates: TemplateSelectionStorage[],
   ) => {
@@ -330,95 +358,168 @@ const DashboardPage: FC = () => {
 
   return (
     <DashboardContainer>
-      <TopBar />
-      <SearchField onSearch={handleSearchChange} />
-      <MainContainer>
-        {isLoading && (
-          <Box display="flex" justifyContent="center" alignItems="center" p={5}>
-            <Typography variant="body1">Loading...</Typography>
-          </Box>
-        )}
-        {error && (
-          <Typography variant="body1" color="error">
-            {error.message || 'Error loading storages'}
-          </Typography>
-        )}
-        {!isLoading && storages?.length === 0 && (
-          <Typography variant="h6" textAlign="center" color="textSecondary">
-            No Storages Found
-          </Typography>
-        )}
-        {storages?.map((storage, index) => (
-          <Box key={index}>
-            <EntityCard
-              name={storage.name}
-              description={storage.description ?? ''}
-              image={storage.image ?? ''}
-              iconButton={
-                <IconButton onClick={() => handleToggleExpand(index)}>
-                  {expandedStorageIndex === index ? (
-                    <CustomIcon>
-                      <ExpandLessRounded />
-                    </CustomIcon>
-                  ) : (
-                    <CustomIcon>
-                      <ExpandMoreRounded />
-                    </CustomIcon>
-                  )}
-                </IconButton>
-              }
-              entityType="storage"
-              onEdit={() => handleEditEntity('storage', storage)}
-            />
-            {expandedStorageIndex === index && (
-              <SubContainer>
-                {storage.boxes && storage.boxes?.length > 0 ? (
-                  storage.boxes?.map((box, boxIndex) => (
-                    <EntityCard
-                      key={boxIndex}
-                      name={box.name}
-                      description={box.description}
-                      iconButton={
-                        <IconButton
-                          onClick={() => handleBoxOpen(storage.id, box.id)}
-                        >
-                          <CustomIcon>
-                            <KeyboardArrowRightRounded />
-                          </CustomIcon>
-                        </IconButton>
-                      }
-                      image={box.image ?? ''}
-                      entityType="box"
-                      onEdit={() => handleEditEntity('box', box)}
-                    />
-                  ))
-                ) : (
-                  <Typography variant="h6" textAlign="center">
-                    {t('common.notifications.noBoxForStorage')}
-                  </Typography>
-                )}
-                <AddEntityButton
-                  entityType="box"
-                  onAdd={() => handleAddEntity('box')}
-                />
-              </SubContainer>
+      <DashboardRail>
+        <BrandLockup>
+          <img src={FyndBoxLogo} alt="FyndBox" />
+          <span>FyndBox</span>
+        </BrandLockup>
+        <RailNav>
+          <RailNavItem $active>
+            <Inventory2Outlined />
+            <span>
+              {t('dashboard.entity.storage', { defaultValue: 'Storage' })}
+            </span>
+          </RailNavItem>
+          <RailNavItem onClick={handleFavoriteClick}>
+            <FavoriteBorderRounded />
+            <span>{t('dashboard.footer.favorite')}</span>
+          </RailNavItem>
+          <RailNavItem onClick={handleScanClick}>
+            <QrCodeScannerRounded />
+            <span>{t('dashboard.footer.scan')}</span>
+          </RailNavItem>
+          <RailNavItem onClick={handleOpenTemplateSidebar}>
+            <AutoAwesomeMosaicOutlined />
+            <span>
+              {t('dashboard.footer.template', { defaultValue: 'Template' })}
+            </span>
+          </RailNavItem>
+          <RailNavItem onClick={handleSettingsClick}>
+            <SettingsOutlined />
+            <span>{t('dashboard.footer.settings')}</span>
+          </RailNavItem>
+          <RailNavItem onClick={handleLogout}>
+            <LogoutRounded />
+            <span>{t('sidebar.logout', { defaultValue: 'Logout' })}</span>
+          </RailNavItem>
+        </RailNav>
+      </DashboardRail>
+      <DashboardWorkspace>
+        <DashboardContent>
+          <TopBar />
+          <SearchField onSearch={handleSearchChange} />
+          <MainContainer>
+            {isLoading && (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                p={5}
+              >
+                <Typography variant="body1">Loading...</Typography>
+              </Box>
             )}
-          </Box>
-        ))}
-        {showQRScanner && (
-          <QRScanner
-            onScanSuccess={handleScanSuccess}
-            onCancel={handleCancelScan}
-          />
-        )}
-        <PrimaryActionsContainer>
-          <AddEntityButton
-            entityType="storage"
-            layout="inline"
-            onAdd={() => handleAddEntity('storage')}
-          />
-        </PrimaryActionsContainer>
-      </MainContainer>
+            {error && (
+              <Typography variant="body1" color="error">
+                {error.message || 'Error loading storages'}
+              </Typography>
+            )}
+            {!isLoading && storages?.length === 0 && (
+              <Typography variant="h6" textAlign="center" color="textSecondary">
+                No Storages Found
+              </Typography>
+            )}
+            {storages?.map((storage, index) => (
+              <Box key={index}>
+                <EntityCard
+                  name={storage.name}
+                  description={storage.description ?? ''}
+                  image={storage.image ?? ''}
+                  metaItems={[
+                    {
+                      icon: (
+                        <img
+                          src={BoxIconSvg}
+                          alt="Boxes"
+                          style={{ width: 18, height: 18 }}
+                        />
+                      ),
+                      label: t('dashboard.entity.boxCount', {
+                        count: storage.boxes?.length ?? 0,
+                        defaultValue: `${storage.boxes?.length ?? 0} Boxes`,
+                      }),
+                    },
+                    {
+                      icon: (
+                        <img
+                          src={ItemIconSvg}
+                          alt="Items"
+                          style={{ width: 18, height: 18 }}
+                        />
+                      ),
+                      label: t('dashboard.entity.itemCount', {
+                        count: getStorageItemCount(storage),
+                        defaultValue: `${getStorageItemCount(storage)} Items`,
+                      }),
+                    },
+                  ]}
+                  iconButton={
+                    <IconButton onClick={() => handleToggleExpand(index)}>
+                      {expandedStorageIndex === index ? (
+                        <CustomIcon>
+                          <ExpandLessRounded />
+                        </CustomIcon>
+                      ) : (
+                        <CustomIcon>
+                          <ExpandMoreRounded />
+                        </CustomIcon>
+                      )}
+                    </IconButton>
+                  }
+                  entityType="storage"
+                  onEdit={() => handleEditEntity('storage', storage)}
+                />
+                {expandedStorageIndex === index && (
+                  <SubContainer>
+                    {storage.boxes && storage.boxes?.length > 0 ? (
+                      storage.boxes?.map((box, boxIndex) => (
+                        <EntityCard
+                          key={boxIndex}
+                          name={box.name}
+                          description={box.description}
+                          iconButton={
+                            <IconButton
+                              onClick={() => handleBoxOpen(storage.id, box.id)}
+                            >
+                              <CustomIcon>
+                                <KeyboardArrowRightRounded />
+                              </CustomIcon>
+                            </IconButton>
+                          }
+                          image={box.image ?? ''}
+                          entityType="box"
+                          onEdit={() => handleEditEntity('box', box)}
+                        />
+                      ))
+                    ) : (
+                      <Typography variant="h6" textAlign="center">
+                        {t('common.notifications.noBoxForStorage')}
+                      </Typography>
+                    )}
+                    <AddEntityButton
+                      entityType="box"
+                      onAdd={() => handleAddEntity('box')}
+                    />
+                  </SubContainer>
+                )}
+              </Box>
+            ))}
+            {showQRScanner && (
+              <QRScanner
+                onScanSuccess={handleScanSuccess}
+                onCancel={handleCancelScan}
+              />
+            )}
+            <PrimaryActionsContainer>
+              <AddEntityButton
+                entityType="storage"
+                layout="inline"
+                onAdd={() => handleAddEntity('storage')}
+              />
+            </PrimaryActionsContainer>
+          </MainContainer>
+        </DashboardContent>
+      </DashboardWorkspace>
       <SmartAssistButton onClick={handleOpenSmartAddChooser} />
       <DashboardFooter
         onFavoriteClick={handleFavoriteClick}

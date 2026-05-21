@@ -91,7 +91,9 @@
       "savePassword": "Spara lösenord",
       "currentPassword": "Aktuellt lösenord",
       "newPassword": "Nytt lösenord",
-      "passwordMatchError": "Det nya lösenordet måste skilja sig från det nuvarande lösenordet"
+      "confirmPassword": "Bekräfta lösenord",
+      "passwordMatchError": "Det nya lösenordet måste skilja sig från det nuvarande lösenordet",
+      "confirmPasswordMatchError": "Nytt lösenord och bekräftat lösenord måste matcha"
     },
     "about": {
       "title": "Om Fyndbox",

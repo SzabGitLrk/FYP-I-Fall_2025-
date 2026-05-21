@@ -1,12 +1,19 @@
 import { FC } from 'react';
-import { Stack, Typography, IconButton } from '@mui/material';
+import { IconButton } from '@mui/material';
 import { FavoriteBorder, Favorite } from '@mui/icons-material';
 import {
   BoxDetailsContainer,
+  DetailsChip,
+  DetailsContent,
+  DetailsDescription,
+  DetailsMeta,
+  DetailsTitle,
+  FavoriteButtonWrap,
   ImageBox,
   ImageContainer,
 } from './BoxDetails.styles';
-import BoxIconSvg from '../../assets/box-icon-black.svg';
+import BoxIconSvg from '../../assets/box-icon.svg';
+import ItemIconSvg from '../../assets/item-icon.svg';
 import { useTranslation } from 'react-i18next';
 
 interface BoxDetailsProps {
@@ -14,6 +21,7 @@ interface BoxDetailsProps {
   description?: string;
   image?: string;
   isFavorite?: boolean;
+  itemCount?: number;
   onToggleFavorite: () => void;
 }
 
@@ -22,40 +30,48 @@ const BoxDetails: FC<BoxDetailsProps> = ({
   description,
   image,
   isFavorite,
+  itemCount = 0,
   onToggleFavorite,
 }) => {
   const { t } = useTranslation();
   return (
     <BoxDetailsContainer>
-      <ImageContainer flex={1}>
+      <ImageContainer>
         {image ? (
           <ImageBox src={image} alt={name} />
         ) : (
           <ImageBox src={BoxIconSvg} alt={'Box Icon'} />
         )}
       </ImageContainer>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        spacing={2}
-      >
-        {/* Left side with box name and description */}
-        <Stack spacing={0.5}>
-          <Typography variant="h6">{name}</Typography>
-          <Typography variant="body1">{description}</Typography>
-        </Stack>
-
-        {/* Right side with favorite icon */}
-        <Stack alignItems="center">
-          <IconButton onClick={onToggleFavorite}>
-            {isFavorite ? <Favorite /> : <FavoriteBorder />}
-          </IconButton>
-          <Typography variant="body2">
-            {isFavorite ? t('box.removeFavorite') : t('box.addFavorite')}
-          </Typography>
-        </Stack>
-      </Stack>
+      <DetailsContent>
+        <DetailsTitle>{name}</DetailsTitle>
+        <DetailsDescription>
+          {description ||
+            t('box.defaultDescription', {
+              defaultValue: `Manage your items in ${name}.`,
+            })}
+        </DetailsDescription>
+        <DetailsMeta>
+          <DetailsChip
+            icon={
+              <img
+                src={ItemIconSvg}
+                alt="Items"
+                style={{ width: 18, height: 18 }}
+              />
+            }
+            label={t('box.itemCount', {
+              count: itemCount,
+              defaultValue: `${itemCount} Items`,
+            })}
+          />
+        </DetailsMeta>
+      </DetailsContent>
+      <FavoriteButtonWrap>
+        <IconButton onClick={onToggleFavorite}>
+          {isFavorite ? <Favorite /> : <FavoriteBorder />}
+        </IconButton>
+      </FavoriteButtonWrap>
     </BoxDetailsContainer>
   );
 };

@@ -1,4 +1,4 @@
-import { IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import {
   Email,
   Lock,
@@ -15,15 +15,26 @@ import {
   isNameValid,
   isPasswordValid,
 } from '../../utils/validation';
-import PageHeader from '../../components/PageHeader/PageHeader';
 import AuthButtonsGroup from '../../components/AuthButtonsGroup/AuthButtonsGroup';
 import CustomTextField from '../../components/CustomTextField/CustomTextField';
 import {
-  FullPageContainer,
-  TextFieldsContainer,
+  CustomLink,
 } from '../../styles/commonStyles';
-import AppHeader from '../../components/AppHeader/AppHeader';
 import LanguageSelector from '../../components/LanguageSelector/LanguageSelector';
+import appLogo from '../../assets/FyndBox.png';
+import {
+  BrandBlock,
+  DecorativeLayer,
+  ErrorText,
+  FieldStack,
+  ForgotPasswordLink,
+  LanguageWrap,
+  LoginCard,
+  LoginContent,
+  LoginPageShell,
+  LoginTitle,
+  SoftCircle,
+} from '../LoginPage/LoginPage.styles';
 
 export const SignupPage = () => {
   const navigate = useNavigate();
@@ -61,99 +72,128 @@ export const SignupPage = () => {
   };
 
   return (
-    <FullPageContainer>
-      <AppHeader />
-      {loading && <Typography variant="body1">Loading...</Typography>}
-      {successMessage && (
-        <Typography variant="caption" color="info">
-          {successMessage}
-        </Typography>
-      )}
-      <PageHeader heading={t('signup.title')} />
-      <TextFieldsContainer>
-        <CustomTextField
-          label={t('common.name.label')}
-          placeholder={t('common.name.placeholder')}
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setNameError(false);
-            if (error) setError(null);
-          }}
-          error={nameError}
-          helperText={
-            nameError
-              ? t('common.name.errorMessage')
-                  .split('\n')
-                  .map((line, index) => (
-                    <span key={index}>
-                      {line}
-                      <br />
-                    </span>
-                  ))
-              : ''
-          }
-          startIcon={<AccountCircle />}
-        />
-        <CustomTextField
-          label={t('common.email.label')}
-          placeholder={t('common.email.placeholder')}
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setEmailError(false);
-            if (error) setError(null);
-          }}
-          error={emailError}
-          helperText={emailError ? t('common.email.errorMessage') : ''}
-          startIcon={<Email />}
-        />
-        <CustomTextField
-          label={t('common.password.label')}
-          type={showPassword ? 'text' : 'password'}
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setPasswordError(false);
-            if (error) setError(null);
-          }}
-          error={passwordError}
-          helperText={
-            passwordError
-              ? t('common.password.invalidPasswordError')
-                  .split('\n')
-                  .map((line, index) => (
-                    <span key={index}>
-                      {line}
-                      <br />
-                    </span>
-                  ))
-              : ''
-          }
-          startIcon={<Lock />}
-          endIcon={
-            <IconButton
-              onClick={togglePasswordVisibility}
-              aria-label="toggle password visibility"
-              edge="end"
-            >
-              {showPassword ? <VisibilityOff /> : <Visibility />}
-            </IconButton>
-          }
-        />
-      </TextFieldsContainer>
-      {error && (
-        <Typography variant="caption" color="error">
-          {error}
-        </Typography>
-      )}
-      <AuthButtonsGroup
-        showLoginButton={false}
-        onRegisterClick={handleSignupClick}
-      />
-      <LanguageSelector />
-    </FullPageContainer>
+    <LoginPageShell>
+      <DecorativeLayer />
+      <SoftCircle placement="top" />
+      <SoftCircle placement="left" />
+      <SoftCircle placement="right" />
+
+      <LoginContent>
+        <BrandBlock>
+          <img src={appLogo} alt="FyndBox" />
+          <span>FyndBox</span>
+        </BrandBlock>
+
+        <LoginCard>
+          <Box
+            component="form"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSignupClick();
+            }}
+          >
+            <LoginTitle variant="h1">{t('signup.title')}</LoginTitle>
+            {loading && <Typography variant="body1">Loading...</Typography>}
+            {successMessage && (
+              <Typography variant="caption" color="info">
+                {successMessage}
+              </Typography>
+            )}
+            <FieldStack>
+              <CustomTextField
+                label={t('common.name.label')}
+                placeholder={t('common.name.placeholder')}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setNameError(false);
+                  if (error) setError(null);
+                }}
+                error={nameError}
+                helperText={
+                  nameError
+                    ? t('common.name.errorMessage')
+                        .split('\n')
+                        .map((line, index) => (
+                          <span key={index}>
+                            {line}
+                            <br />
+                          </span>
+                        ))
+                    : ''
+                }
+                startIcon={<AccountCircle />}
+              />
+              <CustomTextField
+                label={t('common.email.label')}
+                placeholder={t('common.email.placeholder')}
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(false);
+                  if (error) setError(null);
+                }}
+                error={emailError}
+                helperText={emailError ? t('common.email.errorMessage') : ''}
+                startIcon={<Email />}
+              />
+              <CustomTextField
+                label={t('common.password.label')}
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError(false);
+                  if (error) setError(null);
+                }}
+                error={passwordError}
+                helperText={
+                  passwordError
+                    ? t('common.password.invalidPasswordError')
+                        .split('\n')
+                        .map((line, index) => (
+                          <span key={index}>
+                            {line}
+                            <br />
+                          </span>
+                        ))
+                    : ''
+                }
+                startIcon={<Lock />}
+                endIcon={
+                  <IconButton
+                    onClick={togglePasswordVisibility}
+                    aria-label="toggle password visibility"
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                }
+              />
+            </FieldStack>
+            {error && (
+              <ErrorText variant="caption" color="error">
+                {error}
+              </ErrorText>
+            )}
+            <AuthButtonsGroup
+              showLoginButton={false}
+              onRegisterClick={handleSignupClick}
+            />
+            <ForgotPasswordLink variant="body2">
+              <CustomLink href="/login">
+                {t('forgotPassword.backToLogin')}
+              </CustomLink>
+            </ForgotPasswordLink>
+          </Box>
+        </LoginCard>
+        <LanguageWrap>
+          <LanguageSelector compact />
+        </LanguageWrap>
+      </LoginContent>
+    </LoginPageShell>
   );
 };
 

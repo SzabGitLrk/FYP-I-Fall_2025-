@@ -1,3 +1,5 @@
+import { Item } from './item';
+
 export interface Box {
   id: string;
   name: string;
@@ -5,4 +7,5 @@ export interface Box {
   image?: string;
   storageId?: string;
   isFavorite?: boolean;
+  items?: Item[];
 }

@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   Modal,
   Stack,
   Typography,
@@ -17,6 +16,7 @@ import {
   Close,
   GraphicEqRounded,
   KeyboardVoiceRounded,
+  RateReviewRounded,
   ReplayRounded,
   StopRounded,
 } from '@mui/icons-material';
@@ -37,10 +37,12 @@ import {
   ConfirmAiResultRequest,
   ProcessTextResult,
   SmartAssistClarificationOption,
+  SmartAssistItem,
 } from '../../types/ai';
 import {
   SmartAssistActionRow,
   SmartAssistContent,
+  SmartAssistDestructiveButton,
   SmartAssistPrimaryButton,
   SmartAssistSecondaryButton,
 } from './SmartAssistModal.styles';
@@ -72,15 +74,15 @@ interface BrowserSpeechRecognitionLike {
   onend: (() => void) | null;
   onerror: ((event: BrowserSpeechRecognitionErrorEventLike) => void) | null;
   onresult:
-    | ((event: BrowserSpeechRecognitionEventLike) => void)
-    | null;
+  | ((event: BrowserSpeechRecognitionEventLike) => void)
+  | null;
   start: () => void;
   stop: () => void;
   abort: () => void;
 }
 
 interface BrowserSpeechRecognitionConstructor {
-  new (): BrowserSpeechRecognitionLike;
+  new(): BrowserSpeechRecognitionLike;
 }
 
 interface SmartAssistVoiceModalProps {
@@ -219,8 +221,8 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
   const supportsVoiceCapture = Boolean(
     typeof window !== 'undefined' &&
-      navigator.mediaDevices &&
-      typeof MediaRecorder !== 'undefined',
+    navigator.mediaDevices &&
+    typeof MediaRecorder !== 'undefined',
   );
   const supportsBrowserRecognition = Boolean(getSpeechRecognitionConstructor());
   const { mutateAsync: processText, isPending: isProcessingText } =
@@ -335,8 +337,8 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
       error instanceof Error
         ? error.message
         : t('smartAdd.requestFailed', {
-            defaultValue: 'Unable to process the instruction right now.',
-          });
+          defaultValue: 'Unable to process the instruction right now.',
+        });
 
     if (/Cannot\s+POST\s+\/ai\/process-text/i.test(message)) {
       return t('smartAdd.serviceUnavailable', {
@@ -928,13 +930,13 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
       setRequestError(
         error instanceof DOMException && error.name === 'NotAllowedError'
           ? t('smartAdd.voicePermissionDenied', {
-              defaultValue:
-                'Microphone access was blocked. Please allow microphone access and try again.',
-            })
+            defaultValue:
+              'Microphone access was blocked. Please allow microphone access and try again.',
+          })
           : t('smartAdd.voiceStartFailed', {
-              defaultValue:
-                'Unable to start voice recording right now. Please try again.',
-            }),
+            defaultValue:
+              'Unable to start voice recording right now. Please try again.',
+          }),
       );
     }
   };
@@ -989,11 +991,11 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
     if (isRecording) {
       return transcript
         ? t('smartAdd.voiceListeningLive', {
-            defaultValue: 'Listening...',
-          })
+          defaultValue: 'Listening...',
+        })
         : t('smartAdd.voiceListeningPrompt', {
-            defaultValue: 'Listening... Start speaking now.',
-          });
+          defaultValue: 'Listening... Start speaking now.',
+        });
     }
 
     if (isTranscribingVoice || isTranscribingMutation) {
@@ -1024,21 +1026,21 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
   const voiceModeLabel = isProcessingText
     ? t('smartAdd.voiceModeProcessing', {
-        defaultValue: 'Processing',
-      })
+      defaultValue: 'Processing',
+    })
     : isRecording
       ? t('smartAdd.voiceModeListening', {
-          defaultValue: 'Listening',
-        })
+        defaultValue: 'Listening',
+      })
       : isTranscribingVoice || isTranscribingMutation
         ? t('smartAdd.voiceModeTranscribing', {
-            defaultValue: 'Transcribing',
-          })
-      : transcript
-        ? t('smartAdd.voiceModeReview', {
+          defaultValue: 'Transcribing',
+        })
+        : transcript
+          ? t('smartAdd.voiceModeReview', {
             defaultValue: 'Review Transcript',
           })
-        : t('smartAdd.voiceModeReady', {
+          : t('smartAdd.voiceModeReady', {
             defaultValue: 'Ready',
           });
 
@@ -1057,32 +1059,89 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
   return (
     <>
-      <Modal open={open} onClose={handleClose}>
-        <ModalContainer>
-          <ModalBox
-            sx={(theme) => ({
-              width: {
-                xs: 'calc(100vw - 16px)',
-                sm: 'min(92vw, 860px)',
-                lg: 'min(86vw, 920px)',
-              },
-              maxHeight: {
-                xs: 'calc(100vh - 16px)',
-                sm: '88vh',
-              },
-              px: { xs: 1.5, sm: 2.25 },
-              py: { xs: 1.25, sm: 1.75 },
-              backgroundColor: theme.palette.background.paper,
-            })}
-          >
-            <CancelButton onClick={handleClose}>
-              <Close />
-            </CancelButton>
-
-            <SmartAssistContent sx={{ gap: 1.25, paddingTop: 2.25 }}>
-              <Typography variant="h4" sx={{ mb: 0 }}>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: 5,
+            overflow: 'hidden',
+            backgroundImage: 'none',
+            backgroundColor: '#fafcfa',
+            boxShadow: '0 32px 80px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.10)',
+          },
+        }}
+      >
+        {/* Gradient Header */}
+        <Box
+          sx={{
+            background:
+              'linear-gradient(135deg, rgba(137, 183, 153, 0.98) 0%, rgba(93, 157, 113, 0.98) 52%, rgba(73, 139, 96, 0.98) 100%)',
+            px: { xs: 3, sm: 4 },
+            pt: { xs: 2.5, sm: 3 },
+            pb: { xs: 2, sm: 2.5 },
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: -60,
+              right: -40,
+              width: 180,
+              height: 180,
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.06)',
+              pointerEvents: 'none',
+            },
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <KeyboardVoiceRounded sx={{ color: '#fff', fontSize: 24 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: '#fff',
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                  lineHeight: 1.3,
+                }}
+              >
                 {t('smartAdd.voiceTitle', { defaultValue: 'Voice Add' })}
               </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.78)',
+                  fontWeight: 400,
+                  mt: 0.25,
+                }}
+              >
+                {t('smartAdd.voiceSubtitle', {
+                  defaultValue: 'Speak your instructions and let AI transcribe them',
+                })}
+              </Typography>
+            </Box>
+          </Stack>
+        </Box>
+
+        <DialogContent sx={{ px: { xs: 2.5, sm: 3.5 }, pt: 2.5, pb: 1.5 }}>
+          <Stack spacing={1.5}>
 
               {!supportsVoiceCapture && (
                 <Alert severity="warning">
@@ -1331,9 +1390,9 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                       })}
                     </Typography>
                     {transcript && (
-                    <Typography
-                      variant="caption"
-                      sx={(theme) => ({
+                      <Typography
+                        variant="caption"
+                        sx={(theme) => ({
                           px: 1.2,
                           py: 0.45,
                           borderRadius: '999px',
@@ -1428,38 +1487,29 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
               {persistError && <Alert severity="error">{persistError}</Alert>}
 
-              <SmartAssistActionRow
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(3, minmax(0, 1fr))',
-                  },
-                  width: '100%',
-                  gap: 1.25,
-                }}
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ px: { xs: 2.5, sm: 3.5 }, pb: 2.5, pt: 0.5 }}>
+              <SmartAssistSecondaryButton
+                variant="outlined"
+                onClick={onClose}
+                disabled={isProcessing || isConfirming}
               >
-                <SmartAssistSecondaryButton
-                  variant="outlined"
-                  onClick={handleClose}
-                  disabled={isProcessing || isConfirming}
-                  sx={{ width: '100%', minWidth: 0 }}
-                >
-                  {t('modal.cancel', { defaultValue: 'Cancel' })}
-                </SmartAssistSecondaryButton>
+                {t('modal.cancel')}
+              </SmartAssistSecondaryButton>
 
                 {isRecording ? (
-                  <SmartAssistSecondaryButton
+                  <SmartAssistDestructiveButton
                     variant="outlined"
                     startIcon={<StopRounded />}
                     onClick={() => stopRecording(true)}
                     disabled={isProcessing || isConfirming}
-                    sx={{ width: '100%', minWidth: 0 }}
                   >
                     {t('smartAdd.voiceStop', {
                       defaultValue: 'Stop',
                     })}
-                  </SmartAssistSecondaryButton>
+                  </SmartAssistDestructiveButton>
                 ) : (
                   <SmartAssistSecondaryButton
                     variant="outlined"
@@ -1471,7 +1521,6 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                       isProcessing ||
                       isConfirming
                     }
-                    sx={{ width: '100%', minWidth: 0 }}
                   >
                     {t('smartAdd.voiceRetry', {
                       defaultValue: 'Retry',
@@ -1484,57 +1533,307 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                   startIcon={<Check />}
                   onClick={handleProcessTranscript}
                   disabled={!canProcessTranscript || hasClarificationState}
-                  sx={{ width: '100%', minWidth: 0 }}
                 >
                   {isProcessing
                     ? t('smartAdd.voiceProcessingShort', {
-                        defaultValue: 'Processing...',
-                      })
+                      defaultValue: 'Processing...',
+                    })
                     : t('modal.save', {
-                        defaultValue: 'Save',
-                      })}
+                      defaultValue: 'Save',
+                    })}
                 </SmartAssistPrimaryButton>
-              </SmartAssistActionRow>
-            </SmartAssistContent>
-          </ModalBox>
-        </ModalContainer>
-      </Modal>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={requiresConfirmation}
         onClose={handleConfirmationDialogClose}
         fullWidth
         maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 5,
+            overflow: 'hidden',
+            boxShadow:
+              '0 32px 80px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.10)',
+          },
+        }}
       >
-        <DialogTitle>
-          {t('smartAdd.confirmationTitle', {
-            defaultValue: 'Confirm Changes',
-          })}
-        </DialogTitle>
+        <Box
+          sx={{
+            background:
+              'linear-gradient(135deg, rgba(137, 183, 153, 0.98) 0%, rgba(93, 157, 113, 0.98) 52%, rgba(73, 139, 96, 0.98) 100%)',
+            px: { xs: 3, sm: 4 },
+            pt: { xs: 2.5, sm: 3 },
+            pb: { xs: 2, sm: 2.5 },
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: -60,
+              right: -40,
+              width: 180,
+              height: 180,
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.06)',
+              pointerEvents: 'none',
+            },
+          }}
+        >
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <RateReviewRounded sx={{ color: '#fff', fontSize: 24 }} />
+            </Box>
+            <Typography
+              variant="h5"
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {t('smartAdd.confirmationTitle', {
+                defaultValue: 'Confirm Changes',
+              })}
+            </Typography>
+          </Stack>
+        </Box>
 
         <DialogContent
-          dividers
           sx={{
+            px: { xs: 2.5, sm: 3.5 },
+            pt: 2.5,
+            pb: 1.5,
             maxHeight: '55vh',
             overflowY: 'auto',
           }}
         >
-          <Alert
-            severity="info"
-            sx={{
-              borderRadius: 2,
-              alignItems: 'flex-start',
-              '& .MuiAlert-message': {
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              },
-            }}
-          >
-            {reviewMessage}
-          </Alert>
+          {isDeleteWarningConfirmation ? (
+            <Alert
+              severity="warning"
+              sx={{
+                borderRadius: 3,
+                backgroundColor: 'rgba(93, 157, 113, 0.07)',
+                border: '1px solid rgba(93, 157, 113, 0.15)',
+                '& .MuiAlert-message': { whiteSpace: 'pre-wrap', wordBreak: 'break-word' },
+              }}
+            >
+              {reviewMessage}
+            </Alert>
+          ) : processResult?.parsedData ? (
+            <Stack spacing={0}>
+              {/* Storage Node */}
+              {processResult.parsedData.storageName && (
+                <>
+                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, rgba(93, 157, 113, 0.18) 0%, rgba(73, 139, 96, 0.12) 100%)',
+                        border: '1.5px solid rgba(93, 157, 113, 0.25)',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Typography sx={{ fontSize: 16 }}>🏠</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'rgba(73, 139, 96, 0.7)', fontWeight: 500, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        Storage
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                        {processResult.parsedData.storageName.charAt(0).toUpperCase() + processResult.parsedData.storageName.slice(1)}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  {(processResult.parsedData.boxes.length > 0 || processResult.parsedData.items.length > 0) && (
+                    <Box sx={{ ml: '17px', borderLeft: '2px solid rgba(93, 157, 113, 0.2)', height: 20 }} />
+                  )}
+                </>
+              )}
+
+              {/* Box Nodes with nested Items */}
+              {(() => {
+                const boxes = processResult.parsedData?.boxes || [];
+                const items = processResult.parsedData?.items || [];
+
+                if (boxes.length === 0 && items.length === 0) {
+                  return (
+                    <Alert
+                      severity="info"
+                      sx={{
+                        borderRadius: 3,
+                        mt: 1,
+                        backgroundColor: 'rgba(93, 157, 113, 0.07)',
+                        border: '1px solid rgba(93, 157, 113, 0.15)',
+                      }}
+                    >
+                      {reviewMessage}
+                    </Alert>
+                  );
+                }
+
+                // If no boxes but there are items, group them under a "Default" box
+                const boxList = boxes.length > 0
+                  ? boxes
+                  : [{ clientRef: '__default__', name: processResult.parsedData?.boxName || 'Default' }];
+
+                return boxList.map((box: any, bIdx: number) => {
+                  const boxItems = items.filter(
+                    (it: SmartAssistItem) =>
+                      it.boxClientRef === box.clientRef ||
+                      (boxes.length === 0) // if no boxes, all items go to default
+                  );
+
+                  return (
+                    <Box key={bIdx}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1.5}
+                        sx={{
+                          ml: processResult.parsedData?.storageName ? '17px' : 0,
+                          pl: processResult.parsedData?.storageName ? 2 : 0,
+                          position: 'relative',
+                          ...(processResult.parsedData?.storageName && {
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              left: 0,
+                              top: '50%',
+                              width: 16,
+                              height: 2,
+                              backgroundColor: 'rgba(93, 157, 113, 0.2)',
+                            },
+                          }),
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'linear-gradient(135deg, rgba(93, 157, 113, 0.12) 0%, rgba(137, 183, 153, 0.08) 100%)',
+                            border: '1.5px solid rgba(93, 157, 113, 0.18)',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Typography sx={{ fontSize: 14 }}>📦</Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ color: 'rgba(73, 139, 96, 0.6)', fontWeight: 500, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            Box
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                            {box.name.charAt(0).toUpperCase() + box.name.slice(1)}
+                          </Typography>
+                        </Box>
+                      </Stack>
+
+                      {/* Items inside this box */}
+                      {boxItems.length > 0 && (
+                        <Stack
+                          sx={{
+                            ml: processResult.parsedData?.storageName
+                              ? 'calc(17px + 16px + 15px)'
+                              : 'calc(16px + 15px)',
+                            mt: 0.5,
+                            mb: 1,
+                          }}
+                          spacing={0}
+                        >
+                          {boxItems.map((item: SmartAssistItem, iIdx: number) => (
+                            <Box key={iIdx}>
+                              <Box sx={{ ml: '1px', borderLeft: '2px solid rgba(93, 157, 113, 0.15)', height: 10 }} />
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                spacing={1.5}
+                                sx={{
+                                  pl: 2,
+                                  py: 0.75,
+                                  pr: 1.5,
+                                  position: 'relative',
+                                  borderRadius: 2.5,
+                                  backgroundColor: 'rgba(93, 157, 113, 0.04)',
+                                  border: '1px solid rgba(93, 157, 113, 0.08)',
+                                  '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    left: 0,
+                                    top: '50%',
+                                    width: 12,
+                                    height: 2,
+                                    backgroundColor: 'rgba(93, 157, 113, 0.15)',
+                                    ml: '-14px',
+                                  },
+                                }}
+                              >
+                                <Typography sx={{ fontSize: 13 }}>🏷️</Typography>
+                                <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
+                                  {item.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    fontWeight: 700,
+                                    color: 'rgba(73, 139, 96, 0.8)',
+                                    backgroundColor: 'rgba(93, 157, 113, 0.1)',
+                                    px: 1,
+                                    py: 0.25,
+                                    borderRadius: 1.5,
+                                    fontSize: '0.75rem',
+                                  }}
+                                >
+                                  ×{item.quantity}
+                                </Typography>
+                              </Stack>
+                            </Box>
+                          ))}
+                        </Stack>
+                      )}
+                    </Box>
+                  );
+                });
+              })()}
+            </Stack>
+          ) : (
+            <Alert
+              severity="info"
+              sx={{
+                borderRadius: 3,
+                backgroundColor: 'rgba(93, 157, 113, 0.07)',
+                border: '1px solid rgba(93, 157, 113, 0.15)',
+                '& .MuiAlert-message': { whiteSpace: 'pre-wrap', wordBreak: 'break-word' },
+              }}
+            >
+              {reviewMessage}
+            </Alert>
+          )}
         </DialogContent>
 
-        <DialogActions sx={{ padding: 2 }}>
+        <DialogActions
+          sx={{ px: { xs: 2.5, sm: 3.5 }, pb: 2.5, pt: 0.5 }}
+        >
           <SmartAssistSecondaryButton
             variant="outlined"
             onClick={() => setProcessResult(null)}

@@ -52,7 +52,7 @@ export class StorageService extends BaseService {
   async findAll(userId: string): Promise<Storage[]> {
     return this.storageRepository.find({
       where: { userId },
-      relations: ['boxes'],
+      relations: ['boxes', 'boxes.items'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -60,7 +60,7 @@ export class StorageService extends BaseService {
   async findOne(id: string, userId: string): Promise<Storage> {
     const storage = await this.storageRepository.findOne({
       where: { id, userId },
-      relations: ['boxes'],
+      relations: ['boxes', 'boxes.items'],
     });
     if (!storage) {
       throw new NotFoundException(

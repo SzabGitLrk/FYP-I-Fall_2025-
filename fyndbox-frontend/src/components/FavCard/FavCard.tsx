@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Typography } from '@mui/material';
 import { Delete } from '@mui/icons-material';
-import BoxIconSvg from '../../assets/box-icon-black.svg';
+import BoxIconSvg from '../../assets/box-icon.svg';
 import {
   FavCardContainer,
   FavoriteCardContent,

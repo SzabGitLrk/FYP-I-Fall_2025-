@@ -2,27 +2,49 @@ import { Box, Button, Container, IconButton, SvgIcon, Typography } from '@mui/ma
 import { styled } from '@mui/material/styles';
 
 export const HomeContainer = styled(Box)(() => ({
+  position: 'relative',
   minHeight: '100dvh',
   color: '#143225',
   fontFamily: '"Segoe UI", Arial, sans-serif',
-  background: '#F6F8F6',
-  overflowX: 'hidden',
+  backgroundColor: '#ffffff',
+  overflow: 'hidden',
   '& *': {
     boxSizing: 'border-box',
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    inset: '0 0 auto',
+    height: '52%',
+    minHeight: 360,
+    background:
+      'linear-gradient(135deg, rgba(137, 183, 153, 0.98) 0%, rgba(93, 157, 113, 0.98) 52%, rgba(73, 139, 96, 0.98) 100%)',
+    zIndex: 0,
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    left: '-12%',
+    right: '-12%',
+    top: '36%',
+    height: 210,
+    backgroundColor: '#ffffff',
+    borderRadius: '50% 50% 0 0 / 100% 100% 0 0',
+    boxShadow: '0 -16px 34px rgba(255, 255, 255, 0.84)',
+    zIndex: 0,
   },
 }));
 
 export const PageShell = styled(Container)(({ theme }) => ({
+  position: 'relative',
+  zIndex: 1,
   width: '100%',
-  maxWidth: '1500px !important',
-  padding: theme.spacing(1.5, 2, 0),
-  [theme.breakpoints.up('md')]: {
-    padding: theme.spacing(2.2, 2.2, 2.2),
-  },
-  [theme.breakpoints.up('xl')]: {
-    paddingLeft: theme.spacing(3),
-    paddingRight: theme.spacing(3),
-  },
+  maxWidth: '760px !important',
+  minHeight: '100dvh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(5.5, 2, 2.5),
 }));
 
 export const Navbar = styled(Box)(({ theme }) => ({
@@ -137,66 +159,54 @@ export const MobileMenu = styled(Box, {
 }));
 
 export const HeroSection = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(4),
-  alignItems: 'stretch',
-  margin: 0,
-  padding: theme.spacing(3),
-  borderRadius: 30,
-  backgroundColor: 'rgba(255, 255, 255, 0.96)',
-  border: '1px solid rgba(14, 54, 34, 0.04)',
-  boxShadow: '0 22px 56px rgba(29, 54, 39, 0.17)',
-  overflow: 'hidden',
   position: 'relative',
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  margin: 0,
+  padding: theme.spacing(6, 0, 3),
   '&::before': {
     content: '""',
     position: 'absolute',
-    inset: 0,
-    background:
-      'radial-gradient(circle at 105% -18%, rgba(21, 113, 69, 0.32) 0 18%, transparent 18.2%), radial-gradient(circle at -6% 106%, rgba(21, 113, 69, 0.3) 0 20%, transparent 20.2%)',
+    width: 510,
+    height: 510,
+    right: '-52%',
+    top: -245,
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
     pointerEvents: 'none',
   },
   '&::after': {
     content: '""',
     position: 'absolute',
-    inset: 0,
-    background: 'radial-gradient(circle, rgba(21, 113, 69, 0.18) 0 2px, transparent 2.4px)',
-    backgroundSize: '16px 16px',
-    backgroundPosition: '12px 12px',
-    mask:
-      'linear-gradient(#000 0 0) left 12px top 12px / 140px 112px no-repeat, linear-gradient(#000 0 0) right 390px bottom 48px / 88px 128px no-repeat',
-    WebkitMask:
-      'linear-gradient(#000 0 0) left 12px top 12px / 140px 112px no-repeat, linear-gradient(#000 0 0) right 390px bottom 48px / 88px 128px no-repeat',
+    width: 116,
+    height: 92,
+    left: '8%',
+    bottom: -28,
+    opacity: 0.45,
+    background: 'radial-gradient(circle, rgba(21,113,69,0.32) 0 3px, transparent 3.4px)',
+    backgroundSize: '18px 18px',
     pointerEvents: 'none',
   },
   '& > *': {
     position: 'relative',
     zIndex: 1,
   },
-  [theme.breakpoints.up('lg')]: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 'clamp(2rem, 3vw, 3.5rem)',
-    minHeight: 'calc(100dvh - 56px)',
-    padding: theme.spacing(9, 5, 7.5),
-  },
   [theme.breakpoints.down('sm')]: {
-    margin: theme.spacing(2, 0, 4),
-    padding: theme.spacing(3.2, 0, 0),
-    borderRadius: 24,
-    gap: theme.spacing(0),
-    background:
-      'linear-gradient(180deg, rgba(137, 183, 153, 0.98) 0, rgba(117, 166, 131, 0.98) 330px, transparent 330px)',
-    border: 'none',
-    boxShadow: 'none',
+    padding: theme.spacing(3.2, 0, 1.7),
     '&::before': {
-      background:
-        'radial-gradient(circle at 18% 16%, rgba(255,255,255,0.18), transparent 28%), radial-gradient(circle at 82% 24%, rgba(255,255,255,0.14), transparent 24%)',
+      width: 330,
+      height: 330,
+      right: '-48%',
+      top: -178,
     },
     '&::after': {
-      display: 'none',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      bottom: -42,
+      opacity: 0.28,
     },
   },
 }));
@@ -383,37 +393,26 @@ export const BoxesIllustration = styled(SvgIcon)(({ theme }) => ({
 }));
 
 export const LoginColumn = styled(Box)(({ theme }) => ({
-  flex: '0 0 clamp(455px, 31vw, 500px)',
+  width: '100%',
+  maxWidth: 495,
   minWidth: 0,
   display: 'flex',
   justifyContent: 'center',
-  [theme.breakpoints.up('lg')]: {
-    justifyContent: 'flex-end',
-  },
   [theme.breakpoints.down('sm')]: {
-    order: 2,
-    flex: 'none',
-    width: '100%',
-    padding: theme.spacing(0, 1.5),
+    maxWidth: 430,
   },
 }));
 
 export const LoginCard = styled(Box)(({ theme }) => ({
   width: '100%',
   maxWidth: 495,
-  padding: theme.spacing(3.5, 3),
+  padding: theme.spacing(4.6, 3.2, 3.6),
   borderRadius: 23,
-  backgroundColor: 'rgba(255, 255, 255, 0.94)',
+  backgroundColor: 'rgba(255, 255, 255, 0.96)',
   border: '1px solid rgba(19, 50, 31, 0.06)',
-  boxShadow: '0 18px 46px rgba(35, 53, 43, 0.13)',
+  boxShadow: '0 20px 42px rgba(31, 43, 37, 0.16)',
   backdropFilter: 'blur(16px)',
   textAlign: 'center',
-  [theme.breakpoints.up('sm')]: {
-    padding: theme.spacing(4.3, 3.2),
-  },
-  [theme.breakpoints.up('lg')]: {
-    padding: theme.spacing(4.6, 3.2, 3.6),
-  },
   '& .MuiTypography-h1': {
     color: '#13291F',
     fontSize: 'clamp(1.65rem, 2.5vw, 2.03rem)',
@@ -448,6 +447,14 @@ export const LoginCard = styled(Box)(({ theme }) => ({
     borderRadius: 13,
     fontWeight: 800,
   },
+  '& .MuiButton-contained': {
+    background: 'linear-gradient(180deg, #149052 0%, #07763F 100%)',
+    boxShadow: 'inset 0 4px 9px rgba(4, 80, 38, 0.2)',
+  },
+  '& .MuiButton-outlined': {
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.84)',
+  },
   '& [class*="ButtonsGroupWrapper"]': {
     width: '100%',
     padding: theme.spacing(2.5, 0, 1.7),
@@ -455,10 +462,8 @@ export const LoginCard = styled(Box)(({ theme }) => ({
   },
   [theme.breakpoints.down('sm')]: {
     maxWidth: 'none',
-    padding: theme.spacing(2.4, 2.2, 2),
+    padding: theme.spacing(3, 2.2, 2.3),
     borderRadius: 18,
-    backgroundColor: theme.palette.common.white,
-    boxShadow: '0 18px 42px rgba(16, 66, 42, 0.18)',
     '& .MuiTypography-h1': {
       fontSize: '1.65rem',
       lineHeight: 1.12,
@@ -495,7 +500,7 @@ export const LoginCardBrand = styled(Box)(({ theme }) => ({
   justifyContent: 'center',
   marginBottom: theme.spacing(1.7),
   [theme.breakpoints.down('sm')]: {
-    display: 'none',
+    marginBottom: theme.spacing(1.4),
   },
 }));
 
@@ -505,7 +510,8 @@ export const LoginCardLogo = styled('img')(({ theme }) => ({
   objectFit: 'contain',
   filter: 'drop-shadow(0 12px 20px rgba(21, 113, 69, 0.18))',
   [theme.breakpoints.down('sm')]: {
-    display: 'none',
+    width: 76,
+    height: 76,
   },
 }));
 
@@ -521,6 +527,85 @@ export const CardMeta = styled(Box)(({ theme }) => ({
       fontSize: '0.78rem',
       lineHeight: 1.35,
       color: '#111F18',
+    },
+  },
+}));
+
+export const LandingActions = styled(Box)(({ theme }) => ({
+  width: '100%',
+  '& [class*="ButtonsGroupWrapper"], & .MuiBox-root': {
+    width: '100%',
+  },
+  '& [class*="ButtonsGroupWrapper"]': {
+    padding: theme.spacing(3, 0, 1.6),
+    gap: theme.spacing(1.4),
+  },
+  '& .MuiButton-root': {
+    width: '100%',
+    minWidth: 0,
+    minHeight: 61,
+    borderRadius: 13,
+    fontSize: '1.12rem',
+    fontWeight: 800,
+    boxShadow: 'none',
+  },
+  '& .MuiButton-contained': {
+    background: 'linear-gradient(180deg, #149052 0%, #07763F 100%)',
+    boxShadow: 'inset 0 4px 9px rgba(4, 80, 38, 0.2)',
+  },
+  '& .MuiButton-outlined': {
+    borderWidth: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.84)',
+  },
+  [theme.breakpoints.down('sm')]: {
+    '& [class*="ButtonsGroupWrapper"]': {
+      padding: theme.spacing(2.1, 0, 1.1),
+      gap: theme.spacing(1.1),
+    },
+    '& .MuiButton-root': {
+      minHeight: 52,
+      fontSize: '1rem',
+    },
+  },
+}));
+
+export const LandingCardBody = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  justifyItems: 'center',
+  alignContent: 'center',
+  textAlign: 'center',
+  minHeight: 543,
+  '& .MuiTypography-h1': {
+    marginBottom: theme.spacing(1.7),
+    fontSize: '2.72rem',
+  },
+  '& .MuiTypography-body1': {
+    maxWidth: 500,
+    color: '#5E6573',
+    fontSize: '1.08rem',
+    lineHeight: 1.58,
+    fontWeight: 500,
+    letterSpacing: 0,
+    textAlign: 'justify',
+    textAlignLast: 'center',
+  },
+  '& .mobile-copy': {
+    display: 'none',
+  },
+  [theme.breakpoints.down('sm')]: {
+    minHeight: 455,
+    '& .MuiTypography-h1': {
+      fontSize: '2rem',
+    },
+    '& .MuiTypography-body1': {
+      fontSize: '0.98rem',
+      lineHeight: 1.46,
+    },
+    '& .desktop-copy': {
+      display: 'none',
+    },
+    '& .mobile-copy': {
+      display: 'block',
     },
   },
 }));

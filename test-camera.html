@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        canvas {
+            display: none;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            background: #4CAF50;
+            color: white;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        img {
+            max-width: 640px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Camera Test</h1>
+    <p>This page tests if your browser can access the camera.</p>
+    
+    <div id="status"></div>
+    
+    <button id="startBtn" onclick="startCamera()">Start Camera</button>
+    <button id="captureBtn" onclick="capturePhoto()" disabled>Capture Photo</button>
+    <button id="stopBtn" onclick="stopCamera()" disabled>Stop Camera</button>
+    
+    <br><br>
+    
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    
+    <div id="preview"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const preview = document.getElementById('preview');
+        
+        let stream = null;
+
+        function showStatus(message, type = 'info') {
+            status.innerHTML = `<div class="${type}">${message}</div>`;
+            console.log(message);
+        }
+
+        async function startCamera() {
+            console.log('Starting camera...');
+            showStatus('Requesting camera access...', 'info');
+            
+            try {
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    showStatus('Camera access is not supported in this browser.', 'error');
+                    return;
+                }
+
+                // Request camera access
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+
+                console.log('Camera access granted');
+                video.srcObject = stream;
+                
+                await video.play();
+                
+                showStatus('Camera started successfully!', 'success');
+                startBtn.disabled = true;
+                captureBtn.disabled = false;
+                stopBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                let errorMessage = 'Unable to access camera: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Permission denied. Please allow camera access.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'No camera found on this device.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage += 'Camera is already in use.';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage += 'Camera requires HTTPS (secure connection).';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showStatus(errorMessage, 'error');
+            }
+        }
+
+        function capturePhoto() {
+            console.log('Capturing photo...');
+            
+            if (!stream) {
+                showStatus('Camera is not active', 'error');
+                return;
+            }
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0);
+            
+            const imageDataUrl = canvas.toDataURL('image/png');
+            
+            preview.innerHTML = `
+                <h3>Captured Photo:</h3>
+                <img src="${imageDataUrl}" alt="Captured photo">
+            `;
+            
+            showStatus('Photo captured successfully!', 'success');
+        }
+
+        function stopCamera() {
+            console.log('Stopping camera...');
+            
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+            }
+            
+            startBtn.disabled = false;
+            captureBtn.disabled = true;
+            stopBtn.disabled = true;
+            
+            showStatus('Camera stopped', 'info');
+        }
+
+        // Check browser support on load
+        window.onload = function() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showStatus('⚠️ Your browser does not support camera access. Please use Chrome, Firefox, or Safari.', 'error');
+                startBtn.disabled = true;
+            } else {
+                showStatus('✓ Browser supports camera access. Click "Start Camera" to begin.', 'success');
+            }
+            
+            // Check if running on HTTPS or localhost
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                showStatus('⚠️ Camera access requires HTTPS. You are on HTTP. This may not work.', 'error');
+            }
+        };
+    </script>
+</body>
+</html>

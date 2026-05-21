@@ -9,19 +9,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  Drawer,
   IconButton,
   Stack,
   Typography,
 } from '@mui/material';
 import {
+  ArrowBack,
   ChevronRightRounded,
   ExpandMoreRounded,
-  FolderRounded,
-  Inventory2Rounded,
-  LibraryBooksRounded,
 } from '@mui/icons-material';
+import StorageIconSvg from '../../assets/storage-icon.svg';
+import BoxIconSvg from '../../assets/box-icon.svg';
+import ItemIconSvg from '../../assets/item-icon.svg';
 import { useTranslation } from 'react-i18next';
 import {
   TemplateHierarchyBox,
@@ -29,6 +28,26 @@ import {
   TemplateSelectionStorage,
 } from '../../types/templateHierarchy';
 import { Storage } from '../../types/storage';
+import {
+  BoxChildren,
+  BoxLabel,
+  BoxRow,
+  FooterHint,
+  HeaderSpacer,
+  HeaderTitle,
+  HierarchyIcon,
+  ItemLabel,
+  ItemRow,
+  ReviewButton,
+  StorageChildren,
+  StorageLabel,
+  StorageRow,
+  TemplateContent,
+  TemplateDrawer,
+  TemplateFooter,
+  TemplateHeader,
+  TemplateSubtitle,
+} from './TemplateHierarchySidebar.styles';
 
 interface TemplateHierarchySidebarProps {
   errorMessage: string | null;
@@ -70,7 +89,10 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
   const [isConfirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setExpandedStorages(new Set());
+      setExpandedBoxes(new Set());
+      setSelectedItems(new Set());
       setConfirmOpen(false);
     }
   }, [open]);
@@ -264,200 +286,171 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
 
   return (
     <>
-      <Drawer anchor="right" open={open} onClose={onClose}>
-        <Box
-          sx={{
-            width: { xs: '100vw', sm: 360 },
-            maxWidth: '100vw',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-          }}
-        >
-          <Box display="flex" alignItems="center" p={2}>
-            <Typography variant="h5" textAlign="center">
-              {t('templatesSidebar.title', {
-                defaultValue: 'Template Library',
-              })}
-            </Typography>
-          </Box>
-          <Divider orientation="horizontal" />
+      <TemplateDrawer anchor="right" open={open} onClose={onClose}>
+        <TemplateHeader>
+          <IconButton onClick={onClose} aria-label={t('common.back')}>
+            <ArrowBack />
+          </IconButton>
+          <HeaderTitle variant="h6">
+            {t('templatesSidebar.title', {
+              defaultValue: 'Template Library',
+            })}
+          </HeaderTitle>
+          <HeaderSpacer />
+        </TemplateHeader>
 
-          <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>
-            <Stack spacing={1.5}>
-              <Typography variant="body2" color="text.secondary">
-                {t('templatesSidebar.subtitle', {
-                  defaultValue:
-                    'Expand folders, tick what you want to create, and confirm before anything is saved.',
-                })}
-              </Typography>
+        <TemplateContent>
+          {successMessage && (
+            <Alert severity="success" sx={{ mb: 1.5 }}>{successMessage}</Alert>
+          )}
+          {errorMessage && <Alert severity="error" sx={{ mb: 1.5 }}>{errorMessage}</Alert>}
 
-              {successMessage && (
-                <Alert severity="success">{successMessage}</Alert>
-              )}
-              {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+          <Stack spacing={1.5}>
+            {templates.map((storage) => {
+              const selectedStorageCount = getSelectedCountForStorage(storage);
+              const totalStorageItems =
+                totalItemCountByStorage.get(storage.storageName) ?? 0;
+              const storageChecked =
+                totalStorageItems > 0 &&
+                selectedStorageCount === totalStorageItems;
+              const storageIndeterminate =
+                selectedStorageCount > 0 && !storageChecked;
+              const storageExpanded = expandedStorages.has(storage.storageName);
 
-              {templates.map((storage) => {
-                const selectedStorageCount = getSelectedCountForStorage(storage);
-                const totalStorageItems =
-                  totalItemCountByStorage.get(storage.storageName) ?? 0;
-                const storageChecked =
-                  totalStorageItems > 0 &&
-                  selectedStorageCount === totalStorageItems;
-                const storageIndeterminate =
-                  selectedStorageCount > 0 && !storageChecked;
-                const storageExpanded = expandedStorages.has(storage.storageName);
-
-                return (
-                  <Box key={storage.storageName}>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={0.5}
-                      sx={{ minHeight: 40 }}
+              return (
+                <Box key={storage.storageName}>
+                  <StorageRow>
+                    <IconButton
+                      size="small"
+                      onClick={() => toggleStorageExpanded(storage.storageName)}
                     >
-                      <IconButton
-                        size="small"
-                        onClick={() => toggleStorageExpanded(storage.storageName)}
-                      >
-                        {storageExpanded ? (
-                          <ExpandMoreRounded />
-                        ) : (
-                          <ChevronRightRounded />
-                        )}
-                      </IconButton>
-                      <Checkbox
-                        checked={storageChecked}
-                        indeterminate={storageIndeterminate}
-                        onChange={(event) =>
-                          handleStorageToggle(storage, event.target.checked)
-                        }
-                      />
-                      <LibraryBooksRounded fontSize="small" color="primary" />
-                      <Typography variant="body1" fontWeight={600}>
-                        {storage.storageName}
-                      </Typography>
-                    </Stack>
+                      {storageExpanded ? (
+                        <ExpandMoreRounded />
+                      ) : (
+                        <ChevronRightRounded />
+                      )}
+                    </IconButton>
+                    <Checkbox
+                      checked={storageChecked}
+                      indeterminate={storageIndeterminate}
+                      onChange={(event) =>
+                        handleStorageToggle(storage, event.target.checked)
+                      }
+                    />
+                    <HierarchyIcon src={StorageIconSvg} alt="Storage" />
+                    <StorageLabel>
+                      {storage.storageName}
+                    </StorageLabel>
+                  </StorageRow>
 
-                    {storageExpanded &&
-                      storage.boxes.map((box) => {
-                        const selectedBoxCount = getSelectedCountForBox(
-                          storage.storageName,
-                          box,
-                        );
-                        const boxChecked =
-                          box.items.length > 0 &&
-                          selectedBoxCount === box.items.length;
-                        const boxIndeterminate =
-                          selectedBoxCount > 0 && !boxChecked;
-                        const boxKey = `${storage.storageName}::${box.name}`;
-                        const boxExpanded = expandedBoxes.has(boxKey);
+                  {storageExpanded && (
+                    <StorageChildren>
+                    {storage.boxes.map((box) => {
+                      const selectedBoxCount = getSelectedCountForBox(
+                        storage.storageName,
+                        box,
+                      );
+                      const boxChecked =
+                        box.items.length > 0 &&
+                        selectedBoxCount === box.items.length;
+                      const boxIndeterminate =
+                        selectedBoxCount > 0 && !boxChecked;
+                      const boxKey = `${storage.storageName}::${box.name}`;
+                      const boxExpanded = expandedBoxes.has(boxKey);
 
-                        return (
-                          <Box key={box.name} sx={{ pl: 4 }}>
-                            <Stack
-                              direction="row"
-                              alignItems="center"
-                              spacing={0.5}
-                              sx={{ minHeight: 38 }}
+                      return (
+                        <Box key={box.name}>
+                          <BoxRow>
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                toggleBoxExpanded(storage.storageName, box.name)
+                              }
                             >
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  toggleBoxExpanded(storage.storageName, box.name)
-                                }
-                              >
-                                {boxExpanded ? (
-                                  <ExpandMoreRounded />
-                                ) : (
-                                  <ChevronRightRounded />
-                                )}
-                              </IconButton>
-                              <Checkbox
-                                checked={boxChecked}
-                                indeterminate={boxIndeterminate}
-                                onChange={(event) =>
-                                  handleBoxToggle(
-                                    storage,
-                                    box,
-                                    event.target.checked,
-                                  )
-                                }
-                              />
-                              <FolderRounded fontSize="small" color="primary" />
-                              <Typography variant="body2" fontWeight={600}>
-                                {box.name}
-                              </Typography>
-                            </Stack>
+                              {boxExpanded ? (
+                                <ExpandMoreRounded />
+                              ) : (
+                                <ChevronRightRounded />
+                              )}
+                            </IconButton>
+                            <Checkbox
+                              checked={boxChecked}
+                              indeterminate={boxIndeterminate}
+                              onChange={(event) =>
+                                handleBoxToggle(
+                                  storage,
+                                  box,
+                                  event.target.checked,
+                                )
+                              }
+                            />
+                            <HierarchyIcon src={BoxIconSvg} alt="Box" />
+                            <BoxLabel>
+                              {box.name}
+                            </BoxLabel>
+                          </BoxRow>
 
-                            {boxExpanded &&
-                              box.items.map((item) => (
-                                <Stack
-                                  key={item.name}
-                                  direction="row"
-                                  alignItems="center"
-                                  spacing={1}
-                                  sx={{ pl: 7.5, minHeight: 36 }}
-                                >
-                                  <Checkbox
-                                    checked={isItemSelected(
+                          {boxExpanded && (
+                            <BoxChildren>
+                            {box.items.map((item) => (
+                              <ItemRow key={item.name}>
+                                <Checkbox
+                                  checked={isItemSelected(
+                                    storage.storageName,
+                                    box.name,
+                                    item.name,
+                                  )}
+                                  onChange={(event) =>
+                                    handleItemToggle(
                                       storage.storageName,
                                       box.name,
                                       item.name,
-                                    )}
-                                    onChange={(event) =>
-                                      handleItemToggle(
-                                        storage.storageName,
-                                        box.name,
-                                        item.name,
-                                        event.target.checked,
-                                      )
-                                    }
-                                  />
-                                  <Inventory2Rounded
-                                    fontSize="small"
-                                    color="primary"
-                                  />
-                                  <Typography variant="body2">
-                                    {item.name}
-                                  </Typography>
-                                </Stack>
-                              ))}
-                          </Box>
-                        );
-                      })}
-                  </Box>
-                );
-              })}
-            </Stack>
-          </Box>
+                                      event.target.checked,
+                                    )
+                                  }
+                                />
+                                <HierarchyIcon src={ItemIconSvg} alt="Item" />
+                                <ItemLabel>
+                                  {item.name}
+                                </ItemLabel>
+                              </ItemRow>
+                            ))}
+                            </BoxChildren>
+                          )}
+                        </Box>
+                      );
+                    })}
+                    </StorageChildren>
+                  )}
+                </Box>
+              );
+            })}
+          </Stack>
+        </TemplateContent>
 
-          <Divider orientation="horizontal" />
-          <Box p={2}>
-            <Typography variant="caption" color="text.secondary">
-              {t('templatesSidebar.footerHint', {
-                defaultValue:
-                  'Existing descriptions and quantities are preserved automatically.',
-              })}
-            </Typography>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={() => setConfirmOpen(true)}
-              disabled={selectedStructure.length === 0 || isProcessing}
-              sx={{ mt: 1.5 }}
-            >
-              {isProcessing ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                t('templatesSidebar.reviewSelection', {
-                  defaultValue: 'Review Selection',
-                })
-              )}
-            </Button>
-          </Box>
-        </Box>
-      </Drawer>
+        <TemplateFooter>
+          <FooterHint>
+            {t('templatesSidebar.footerHint', {
+              defaultValue:
+                'Existing descriptions and quantities are preserved automatically.',
+            })}
+          </FooterHint>
+          <ReviewButton
+            fullWidth
+            variant="contained"
+            onClick={() => setConfirmOpen(true)}
+            disabled={selectedStructure.length === 0 || isProcessing}
+          >
+            {isProcessing ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              t('templatesSidebar.reviewSelection', {
+                defaultValue: 'Review Selection',
+              })
+            )}
+          </ReviewButton>
+        </TemplateFooter>
+      </TemplateDrawer>
 
       <Dialog
         open={isConfirmOpen}
@@ -468,126 +461,333 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
         }}
         fullWidth
         maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            overflow: 'hidden',
+            boxShadow: '0 24px 64px rgba(8, 38, 27, 0.18)',
+          },
+        }}
       >
-        <DialogTitle>
-          {isUpdating
-            ? t('templatesSidebar.confirmUpdateTitle', {
-                defaultValue: 'Update',
-              })
-            : t('templatesSidebar.confirmCreateTitle', {
-                defaultValue: 'Confirm Creation',
-              })}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={1.5}>
-            <Typography variant="body2" color="text.secondary">
-              {isUpdating
-                ? t('templatesSidebar.confirmUpdateMessage', {
-                    defaultValue:
-                      'Checked items will be created. Unchecked items will be removed. Existing matched items will remain intact.',
-                  })
-                : t('templatesSidebar.confirmCreateMessage', {
-                    defaultValue:
-                      'The checked storage, boxes, and items below will be created.',
-                  })}
-            </Typography>
+        {/* ── Gradient header ──────────────────────── */}
+        <Box
+          sx={{
+            background:
+              'linear-gradient(135deg, rgba(137, 183, 153, 0.98) 0%, rgba(93, 157, 113, 0.98) 52%, rgba(73, 139, 96, 0.98) 100%)',
+            px: 3,
+            py: 2.5,
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{ color: '#fff', fontWeight: 700, fontSize: '1.15rem' }}
+          >
+            {isUpdating
+              ? t('templatesSidebar.confirmUpdateTitle', {
+                  defaultValue: 'Update',
+                })
+              : t('templatesSidebar.confirmCreateTitle', {
+                  defaultValue: 'Confirm Creation',
+                })}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ color: 'rgba(255,255,255,0.78)', mt: 0.5, lineHeight: 1.5 }}
+          >
+            {isUpdating
+              ? t('templatesSidebar.confirmUpdateMessage', {
+                  defaultValue:
+                    'Checked items will be created. Unchecked items will be removed. Existing matched items will remain intact.',
+                })
+              : t('templatesSidebar.confirmCreateMessage', {
+                  defaultValue:
+                    'The checked storage, boxes, and items below will be created.',
+                })}
+          </Typography>
+        </Box>
 
-            <Alert severity="info">
-              {t('templatesSidebar.confirmSummary', {
-                defaultValue:
-                  '{{storages}} storages, {{boxes}} boxes, and {{items}} items selected.',
-                storages: selectedSummary.storages,
-                boxes: selectedSummary.boxes,
-                items: selectedSummary.items,
-              })}
-            </Alert>
+        <DialogContent sx={{ p: 0 }}>
+          <Stack spacing={0} sx={{ px: 3, py: 2.5 }}>
+            {/* ── Summary pill ──────────────────────── */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                bgcolor: '#EEF6F1',
+                borderRadius: 3,
+                px: 2,
+                py: 1.25,
+                mb: 2.5,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  bgcolor: 'primary.main',
+                  flexShrink: 0,
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{ color: 'primary.dark', fontWeight: 600 }}
+              >
+                {t('templatesSidebar.confirmSummary', {
+                  defaultValue:
+                    '{{storages}} storages, {{boxes}} boxes, and {{items}} items selected.',
+                  storages: selectedSummary.storages,
+                  boxes: selectedSummary.boxes,
+                  items: selectedSummary.items,
+                })}
+              </Typography>
+            </Box>
 
-            {templates.map((storage) => {
-              const selectedStorageCount = getSelectedCountForStorage(storage);
-              const isStorageSelected = selectedStorageCount > 0;
-              
-              // Only process storages that the user is actively working on (has selections)
-              if (!isStorageSelected) return null;
+            {/* ── Storage cards ─────────────────────── */}
+            <Stack spacing={2}>
+              {templates.map((storage) => {
+                const selectedStorageCount =
+                  getSelectedCountForStorage(storage);
+                const isStorageSelected = selectedStorageCount > 0;
 
-              const existingStorage = existingStorages.find(
-                (s) => s.name.toLowerCase() === storage.storageName.toLowerCase()
-              );
+                if (!isStorageSelected) return null;
 
-              return (
-                <Box key={storage.storageName} sx={{ mb: 1 }}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      {storage.storageName}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={existingStorage ? 'Remain Same' : 'Create'}
-                      color={existingStorage ? 'default' : 'success'}
-                      sx={{ height: 20, fontSize: '0.7rem' }}
-                    />
-                  </Stack>
-                  {storage.boxes.map((box) => {
-                    const selectedBoxCount = getSelectedCountForBox(storage.storageName, box);
-                    const isBoxSelected = selectedBoxCount > 0;
-                    const existingBox = existingStorage?.boxes?.find(
-                      (b) => b.name.toLowerCase() === box.name.toLowerCase()
-                    );
+                const existingStorage = existingStorages.find(
+                  (s) =>
+                    s.name.toLowerCase() ===
+                    storage.storageName.toLowerCase(),
+                );
 
-                    // Show if selected OR if it exists but is unselected (to be removed)
-                    if (!isBoxSelected && !existingBox) return null;
+                return (
+                  <Box
+                    key={storage.storageName}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'grey.200',
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {/* Storage header row */}
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      sx={{
+                        bgcolor: '#F6FAF7',
+                        px: 2,
+                        py: 1.5,
+                        borderBottom: '1px solid',
+                        borderColor: 'grey.200',
+                      }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <HierarchyIcon
+                          src={StorageIconSvg}
+                          alt="Storage"
+                          style={{ width: 20, height: 20 }}
+                        />
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 700, color: 'primary.dark' }}
+                        >
+                          {storage.storageName}
+                        </Typography>
+                      </Stack>
+                      <Chip
+                        size="small"
+                        label={existingStorage ? 'Remain Same' : 'Create'}
+                        sx={{
+                          height: 22,
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          bgcolor: existingStorage ? '#E8E8E8' : '#D4EDDA',
+                          color: existingStorage ? '#555' : '#155724',
+                        }}
+                      />
+                    </Stack>
 
-                    return (
-                      <Box key={box.name} sx={{ pl: 2, pt: 0.5 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography variant="body2" fontWeight={600} sx={{ textDecoration: !isBoxSelected ? 'line-through' : 'none' }}>
-                            {box.name}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label={isBoxSelected ? (existingBox ? 'Remain Same' : 'Create') : 'Remove'}
-                            color={isBoxSelected ? (existingBox ? 'default' : 'success') : 'error'}
-                            sx={{ height: 18, fontSize: '0.65rem' }}
-                          />
-                        </Stack>
-                        {box.items.map((item) => {
-                          const isSelected = isItemSelected(storage.storageName, box.name, item.name);
-                          
-                          // Show if selected OR if its parent box exists but it is unselected (to be removed)
-                          if (!isSelected && !existingBox) return null;
+                    {/* Boxes inside storage */}
+                    <Box sx={{ px: 2, py: 1.5 }}>
+                      {storage.boxes.map((box) => {
+                        const selectedBoxCount = getSelectedCountForBox(
+                          storage.storageName,
+                          box,
+                        );
+                        const isBoxSelected = selectedBoxCount > 0;
+                        const existingBox = existingStorage?.boxes?.find(
+                          (b) =>
+                            b.name.toLowerCase() === box.name.toLowerCase(),
+                        );
 
-                          return (
+                        if (!isBoxSelected && !existingBox) return null;
+
+                        return (
+                          <Box
+                            key={box.name}
+                            sx={{
+                              ml: 1,
+                              pl: 2,
+                              py: 0.75,
+                              borderLeft: '2px solid',
+                              borderColor: 'grey.300',
+                            }}
+                          >
                             <Stack
-                              key={item.name}
                               direction="row"
                               spacing={1}
                               alignItems="center"
-                              sx={{ pl: 2, pt: 0.25 }}
                             >
-                              <Typography variant="body2" color="text.secondary" sx={{ textDecoration: !isSelected ? 'line-through' : 'none' }}>
-                                {item.name}
+                              <HierarchyIcon
+                                src={BoxIconSvg}
+                                alt="Box"
+                                style={{ width: 18, height: 18 }}
+                              />
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontWeight: 600,
+                                  color: 'primary.dark',
+                                  textDecoration: !isBoxSelected
+                                    ? 'line-through'
+                                    : 'none',
+                                  opacity: !isBoxSelected ? 0.5 : 1,
+                                }}
+                              >
+                                {box.name}
                               </Typography>
                               <Chip
                                 size="small"
-                                label={isSelected ? (existingBox ? 'Remain Same' : 'Create') : 'Remove'}
-                                color={isSelected ? (existingBox ? 'default' : 'success') : 'error'}
-                                sx={{ height: 16, fontSize: '0.6rem' }}
+                                label={
+                                  isBoxSelected
+                                    ? existingBox
+                                      ? 'Remain Same'
+                                      : 'Create'
+                                    : 'Remove'
+                                }
+                                sx={{
+                                  height: 20,
+                                  fontSize: '0.65rem',
+                                  fontWeight: 600,
+                                  bgcolor: isBoxSelected
+                                    ? existingBox
+                                      ? '#E8E8E8'
+                                      : '#D4EDDA'
+                                    : '#F8D7DA',
+                                  color: isBoxSelected
+                                    ? existingBox
+                                      ? '#555'
+                                      : '#155724'
+                                    : '#721C24',
+                                }}
                               />
                             </Stack>
-                          );
-                        })}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              );
-            })}
+
+                            {/* Items inside box */}
+                            {box.items.map((item) => {
+                              const isSelected = isItemSelected(
+                                storage.storageName,
+                                box.name,
+                                item.name,
+                              );
+
+                              if (!isSelected && !existingBox) return null;
+
+                              return (
+                                <Stack
+                                  key={item.name}
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                  sx={{
+                                    ml: 2,
+                                    pl: 2,
+                                    py: 0.4,
+                                    borderLeft: '2px solid',
+                                    borderColor: 'grey.200',
+                                  }}
+                                >
+                                  <HierarchyIcon
+                                    src={ItemIconSvg}
+                                    alt="Item"
+                                    style={{ width: 16, height: 16 }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      color: 'text.secondary',
+                                      fontSize: '0.85rem',
+                                      textDecoration: !isSelected
+                                        ? 'line-through'
+                                        : 'none',
+                                      opacity: !isSelected ? 0.5 : 1,
+                                    }}
+                                  >
+                                    {item.name}
+                                  </Typography>
+                                  <Chip
+                                    size="small"
+                                    label={
+                                      isSelected
+                                        ? existingBox
+                                          ? 'Remain Same'
+                                          : 'Create'
+                                        : 'Remove'
+                                    }
+                                    sx={{
+                                      height: 18,
+                                      fontSize: '0.6rem',
+                                      fontWeight: 600,
+                                      bgcolor: isSelected
+                                        ? existingBox
+                                          ? '#E8E8E8'
+                                          : '#D4EDDA'
+                                        : '#F8D7DA',
+                                      color: isSelected
+                                        ? existingBox
+                                          ? '#555'
+                                          : '#155724'
+                                        : '#721C24',
+                                    }}
+                                  />
+                                </Stack>
+                              );
+                            })}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Stack>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 2, pb: 3 }}>
+
+        {/* ── Footer actions ───────────────────────── */}
+        <DialogActions
+          sx={{
+            px: 3,
+            py: 2,
+            borderTop: '1px solid',
+            borderColor: 'grey.200',
+            gap: 1,
+          }}
+        >
           <Button
             onClick={() => setConfirmOpen(false)}
             disabled={isProcessing}
             variant="outlined"
+            sx={{
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              borderColor: 'grey.300',
+              color: 'text.primary',
+              '&:hover': { borderColor: 'grey.500', bgcolor: 'grey.50' },
+            }}
           >
             {t('modal.cancel', { defaultValue: 'Cancel' })}
           </Button>
@@ -595,15 +795,29 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
             onClick={handleConfirmCreate}
             disabled={isProcessing || selectedStructure.length === 0}
             variant="contained"
+            sx={{
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 700,
+              px: 3,
+              boxShadow: '0 4px 14px rgba(21, 113, 69, 0.25)',
+              '&:hover': {
+                boxShadow: '0 6px 18px rgba(21, 113, 69, 0.35)',
+              },
+            }}
           >
             {isUpdating
               ? isProcessing
-                ? t('templatesSidebar.updating', { defaultValue: 'Updating...' })
+                ? t('templatesSidebar.updating', {
+                    defaultValue: 'Updating...',
+                  })
                 : t('templatesSidebar.confirmUpdate', {
                     defaultValue: 'Update Selected',
                   })
               : isProcessing
-                ? t('templatesSidebar.creating', { defaultValue: 'Creating...' })
+                ? t('templatesSidebar.creating', {
+                    defaultValue: 'Creating...',
+                  })
                 : t('templatesSidebar.confirmCreate', {
                     defaultValue: 'Create Selected',
                   })}

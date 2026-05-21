@@ -67,6 +67,35 @@ export class ImageProcessingService {
       const prompt = this.buildVisionPrompt(existingContext);
       const jsonOutput = await this.executeVisionModelCall(prompt, file);
       
+      // Validate that the image contains specific items
+      if (jsonOutput.hasSpecificItems === false) {
+        const reason = jsonOutput.reason || 'This image does not contain specific items that can be stored in your inventory.';
+        throw new BadRequestException(
+          `Unable to process this image. ${reason} Please upload an image with specific items like tools, books, electronics, or other storable objects.`
+        );
+      }
+      
+      // Validate maximum 5 different boxes
+      const itemCount = (jsonOutput.items || []).length;
+      const uniqueBoxNames = new Set((jsonOutput.items || []).map((item: any) => item.boxName).filter(Boolean));
+      const boxCount = uniqueBoxNames.size;
+      
+      if (boxCount > 5) {
+        throw new BadRequestException(
+          `This image contains items from too many different boxes (${boxCount} boxes detected). Please upload an image with items from 5 or fewer boxes for better organization. Try grouping related items together or splitting across multiple images.`
+        );
+      }
+      
+      // Validate that items array is not empty
+      if (itemCount === 0) {
+        this.logger.warn('Vision AI returned no items despite hasSpecificItems being true');
+        throw new BadRequestException(
+          'Unable to identify specific items in this image. Please try taking a clearer photo with better lighting and ensure items are clearly visible.'
+        );
+      }
+      
+      this.logger.debug(`Processing ${itemCount} items from ${boxCount} boxes`);
+      
       const parsedData = this.normalizeModelOutput(jsonOutput);
       const classified = this.textProcessingService.intentClassification(parsedData, existingContext, 0);
       
@@ -122,14 +151,35 @@ export class ImageProcessingService {
     return [
       'You are a Vision AI for the FyndBox inventory system.',
       'Analyze the provided image and identify all distinct objects.',
-      'Ignore any living things like dogs, cats, or people. Only process inanimate objects.',
-      "For each object, you must map it into the user's inventory hierarchy: Storage -> Box -> Item.",
+      'CRITICAL VALIDATION RULES:',
+      '1. Ignore any living things like dogs, cats, people, or animals. Only process inanimate objects.',
+      '2. Ignore generic scenes like buildings, sky, grass, earth, landscapes, nature, or empty spaces.',
+      '3. Only process images that contain SPECIFIC, IDENTIFIABLE, STORABLE ITEMS (e.g., tools, books, electronics, furniture, clothing, food items, etc.).',
+      '4. If the image contains ONLY people, animals, generic scenery, or no specific items, set "hasSpecificItems" to false.',
+      '5. MAXIMUM 5 BOXES: Items should belong to maximum 5 different boxes. If items belong to more than 5 boxes, set "hasSpecificItems" to false with reason "too many boxes".',
+      '6. You can identify any number of items as long as they belong to 5 or fewer boxes.',
+      '',
+      'IMPORTANT: You MUST identify and return ITEMS in the image. Each item must be listed in the items array.',
+      '',
+      "For each valid object, you must map it into the user's inventory hierarchy: Storage -> Box -> Item.",
+      "- Storage: The location where items are stored (e.g., 'Kitchen', 'Garage', 'Office')",
+      "- Box: A container or category within the storage (e.g., 'Appliances', 'Tools', 'Electronics')",
+      "- Items: The actual objects you see in the image (e.g., 'Coffee Maker', 'Hammer', 'Laptop')",
+      '',
       "You must check the user's existing inventory context provided below. If a suitable Storage, Box, or Item already exists, use its exact name.",
       'If it does not exist, invent a logical name for the new Storage, Box, or Item.',
+      '',
+      'REQUIRED OUTPUT FORMAT:',
       'Return the data strictly as JSON. Do not include markdown formatting.',
-      'JSON Shape: { "storageName": "string", "boxes": [{ "name": "string", "items": [{ "name": "string", "quantity": number, "description": "string" }] }] }',
-      'Note: Flatten the items array so it matches the expected downstream format where each item has a boxName.',
-      'Correct JSON Shape to return: { "storageName": "string", "boxes": [{ "name": "string" }], "items": [{ "name": "string", "quantity": number, "boxName": "string" }] }',
+      'JSON Shape: { "hasSpecificItems": boolean, "reason": "string (only if hasSpecificItems is false)", "storageName": "string", "boxes": [{ "name": "string" }], "items": [{ "name": "string", "quantity": number, "boxName": "string" }] }',
+      '',
+      'EXAMPLE OUTPUT:',
+      '{ "hasSpecificItems": true, "storageName": "Kitchen", "boxes": [{ "name": "Appliances" }], "items": [{ "name": "Coffee Maker", "quantity": 1, "boxName": "Appliances" }, { "name": "Toaster", "quantity": 1, "boxName": "Appliances" }] }',
+      '',
+      'IMPORTANT: Each item MUST have a boxName that matches one of the box names in the boxes array.',
+      '',
+      'If hasSpecificItems is false, provide a user-friendly reason explaining why (e.g., "This image only contains a person" or "This image shows a building without specific items" or "This image contains items from more than 5 boxes").',
+      '',
       `Existing Context: ${contextStr}`,
     ].join('\n');
   }
@@ -189,6 +239,14 @@ export class ImageProcessingService {
   }
 
   private normalizeModelOutput(payload: any): any {
+    // If the AI determined there are no specific items, this should have been caught earlier
+    // but we add a safety check here as well
+    if (payload.hasSpecificItems === false) {
+      throw new BadRequestException(
+        payload.reason || 'This image does not contain specific items that can be stored.'
+      );
+    }
+
     const boxes = (payload.boxes || []).map((b: any, index: number) => ({
       clientRef: `vision-box-${index}`,
       name: b.name || 'Unsorted',

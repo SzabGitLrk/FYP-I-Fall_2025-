@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Box, Divider, Drawer, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import {
   AccountCircle,
   Info,
@@ -15,8 +15,11 @@ import {
   LinkButton,
   LinkElement,
   LogoutButton,
+  MenuIconWrapper,
   SidebarContainer,
+  SidebarDrawer,
   SidebarElementContainer,
+  SidebarHeader,
 } from './Sidebar.styles';
 import { ButtonsGroupWrapper } from '../../styles/commonStyles';
 import { useTranslation } from 'react-i18next';
@@ -90,18 +93,28 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
 
   return (
     <>
-      <Drawer anchor="left" open={open} onClose={onClose}>
-        <Box display="flex" alignItems="center" p={2}>
+      <SidebarDrawer anchor="left" open={open} onClose={onClose}>
+        {/* ── Header ─────────────────────────────────── */}
+        <SidebarHeader>
           <AvatarContainer src={user?.image || ''} alt={user?.name}>
             {!user?.image && getUserInitials(user?.name!)}
           </AvatarContainer>
-          <Typography variant="h4">
+          <Typography
+            variant="h6"
+            sx={{
+              color: '#fff',
+              fontWeight: 700,
+              lineHeight: 1.25,
+              zIndex: 1,
+            }}
+          >
             {t('sidebar.title', {
               user: user && getDisplayName(user.name),
             })}
           </Typography>
-        </Box>
-        <Divider orientation="horizontal" />
+        </SidebarHeader>
+
+        {/* ── Body ───────────────────────────────────── */}
         <SidebarContainer>
           <SidebarElementContainer>
             {menuItems.map((item, index) => (
@@ -111,8 +124,10 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
                   onClick={() => handleNavigation(item.section)}
                 >
                   <IconButtonContainer>
-                    {iconMap[item.icon]}
-                    <Typography variant="body1" ml={2}>
+                    <MenuIconWrapper>
+                      {iconMap[item.icon]}
+                    </MenuIconWrapper>
+                    <Typography variant="body1" ml={1.5} fontWeight={600} fontSize="1.05rem">
                       {item.text}
                     </Typography>
                   </IconButtonContainer>
@@ -121,6 +136,7 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
               </LinkElement>
             ))}
           </SidebarElementContainer>
+
           <ButtonsGroupWrapper>
             <DeactivateButton
               variant="contained"
@@ -132,9 +148,11 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
               {t('sidebar.logout')}
             </LogoutButton>
           </ButtonsGroupWrapper>
+
           <LanguageSelector />
         </SidebarContainer>
-      </Drawer>
+      </SidebarDrawer>
+
       <ConfirmationDialog
         isOpen={isDeactivateDialogOpen}
         titleKey="modal.deactivateTitle"

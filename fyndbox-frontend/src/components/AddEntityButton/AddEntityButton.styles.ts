@@ -10,18 +10,20 @@ export const AddEntityContainer = styled(Box, {
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  margin: $layout === 'inline' ? 0 : theme.spacing(6, 0),
+  margin: $layout === 'inline' ? 0 : theme.spacing(3, 0),
 }));
 
 export const FabContainer = styled(Fab)(({ theme }) => ({
   zIndex: 0,
-  backgroundColor: theme.palette.secondary.contrastText,
-  color: theme.palette.secondary.main,
+  background: 'linear-gradient(180deg, #198D54 0%, #0B6C3B 100%)',
+  color: theme.palette.common.white,
+  boxShadow: '0 12px 22px rgba(8, 91, 48, 0.28)',
   '&:hover': {
-    backgroundColor: theme.palette.grey[700],
+    backgroundColor: theme.palette.primary.dark,
   },
 }));
 
 export const Label = styled(Typography)(({ theme }) => ({
-  color: theme.palette.secondary.contrastText,
+  color: theme.palette.primary.dark,
+  fontWeight: 800,
 }));

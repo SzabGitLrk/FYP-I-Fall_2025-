@@ -1,6 +1,21 @@
-import { Typography, Box, Link } from '@mui/material';
+import { Link } from '@mui/material';
 import { FC } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  Inventory2Rounded,
+  LocationOnRounded,
+  QrCode2Rounded,
+  WidgetsRounded,
+} from '@mui/icons-material';
+import {
+  AboutContact,
+  AboutContent,
+  AboutFeatureCard,
+  AboutFeatureGrid,
+  AboutFeatureIcon,
+  AboutIntro,
+  AboutSummary,
+} from './AboutUs.styles';
 
 const AboutUs: FC = () => {
   const { t } = useTranslation();
@@ -9,18 +24,22 @@ const AboutUs: FC = () => {
     {
       titleKey: 'settings.about.addUnitTitle',
       textKey: 'settings.about.addUnitText',
+      icon: <LocationOnRounded />,
     },
     {
       titleKey: 'settings.about.createBoxTitle',
       textKey: 'settings.about.createBoxText',
+      icon: <Inventory2Rounded />,
     },
     {
       titleKey: 'settings.about.addItemTitle',
       textKey: 'settings.about.addItemText',
+      icon: <WidgetsRounded />,
     },
     {
       titleKey: 'settings.about.printQRcodeTitle',
       textKey: 'settings.about.printQRcodeText',
+      icon: <QrCode2Rounded />,
     },
   ];
 
@@ -29,25 +48,28 @@ const AboutUs: FC = () => {
   const [beforeEmail, afterEmail] = contactUsText.split('{email}');
 
   return (
-    <Box>
-      <Typography variant="body1" pt={2}>
+    <AboutContent>
+      <AboutIntro variant="body1">
         {t('settings.about.welcomeText')}
-      </Typography>
+      </AboutIntro>
 
-      {sections.map((section, index) => (
-        <Box key={index} pt={2}>
-          <Typography fontWeight={700} variant="body1">
-            {t(section.titleKey)}
-          </Typography>
-          <Typography variant="body2">{t(section.textKey)}</Typography>
-        </Box>
-      ))}
+      <AboutFeatureGrid>
+        {sections.map((section) => (
+          <AboutFeatureCard key={section.titleKey}>
+            <AboutFeatureIcon>{section.icon}</AboutFeatureIcon>
+            <div>
+              <h3>{t(section.titleKey)}</h3>
+              <p>{t(section.textKey)}</p>
+            </div>
+          </AboutFeatureCard>
+        ))}
+      </AboutFeatureGrid>
 
-      <Typography variant="body2" pt={2}>
+      <AboutSummary variant="body2">
         {t('settings.about.withFyndboxText')}
-      </Typography>
+      </AboutSummary>
 
-      <Typography variant="body2" pt={2}>
+      <AboutContact variant="body2">
         {beforeEmail}
         <Link
           href={`mailto:${t('settings.about.email')}`}
@@ -57,8 +79,8 @@ const AboutUs: FC = () => {
           {t('settings.about.email')}
         </Link>
         {afterEmail}
-      </Typography>
-    </Box>
+      </AboutContact>
+    </AboutContent>
   );
 };
 

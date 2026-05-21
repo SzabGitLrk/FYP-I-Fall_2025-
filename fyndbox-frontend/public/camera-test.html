@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test - FyndBox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #5d9d71;
+            margin-bottom: 10px;
+        }
+        .info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #5d9d71;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            border: 2px solid #5d9d71;
+            border-radius: 8px;
+            margin: 20px 0;
+            background: #000;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 10px 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            border: none;
+            background: #5d9d71;
+            color: white;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        button:hover:not(:disabled) {
+            background: #498b60;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #d32f2f;
+            padding: 15px;
+            background: #ffebee;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #d32f2f;
+        }
+        .success {
+            color: #2e7d32;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #2e7d32;
+        }
+        #preview img {
+            max-width: 640px;
+            border: 2px solid #5d9d71;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📷 Camera Test - FyndBox</h1>
+        <p>This page tests if your browser can access the camera for the Smart Image Add feature.</p>
+        
+        <div class="info">
+            <strong>Current URL:</strong> <span id="currentUrl"></span><br>
+            <strong>Protocol:</strong> <span id="protocol"></span><br>
+            <strong>Camera API Available:</strong> <span id="apiAvailable"></span>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div>
+            <button id="startBtn" onclick="startCamera()">Start Camera</button>
+            <button id="captureBtn" onclick="capturePhoto()" disabled>Capture Photo</button>
+            <button id="stopBtn" onclick="stopCamera()" disabled>Stop Camera</button>
+        </div>
+        
+        <video id="video" autoplay playsinline style="display: none;"></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        
+        <div id="preview"></div>
+        
+        <div class="log">
+            <strong>Console Log:</strong>
+            <div id="logContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusDiv = document.getElementById('status');
+        const previewDiv = document.getElementById('preview');
+        const logContainer = document.getElementById('logContainer');
+
+        let stream = null;
+
+        // Log function
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.style.color = type === 'error' ? '#d32f2f' : type === 'success' ? '#2e7d32' : '#333';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(message);
+        }
+
+        // Check initial status
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('protocol').textContent = window.location.protocol;
+        
+        const hasCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        document.getElementById('apiAvailable').textContent = hasCamera ? '✅ Yes' : '❌ No';
+        
+        if (!hasCamera) {
+            statusDiv.innerHTML = '<div class="error">❌ Camera API is not available in this browser. Please use Chrome, Firefox, or Safari.</div>';
+            log('Camera API not available', 'error');
+        } else {
+            log('Camera API is available', 'success');
+        }
+
+        async function startCamera() {
+            log('Starting camera...');
+            statusDiv.innerHTML = '<div class="info">📷 Requesting camera access...</div>';
+            
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+                
+                log('Camera access granted', 'success');
+                log(`Stream active: ${stream.active}`);
+                log(`Video tracks: ${stream.getVideoTracks().length}`);
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                video.onloadedmetadata = () => {
+                    log('Video metadata loaded', 'success');
+                    video.play().then(() => {
+                        log('Video playing', 'success');
+                        statusDiv.innerHTML = '<div class="success">✅ Camera is active!</div>';
+                        startBtn.disabled = true;
+                        captureBtn.disabled = false;
+                        stopBtn.disabled = false;
+                    }).catch(err => {
+                        log(`Video play error: ${err.message}`, 'error');
+                        statusDiv.innerHTML = `<div class="error">❌ Failed to play video: ${err.message}</div>`;
+                    });
+                };
+                
+            } catch (error) {
+                log(`Camera error: ${error.name} - ${error.message}`, 'error');
+                let errorMessage = 'Unable to access camera';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No camera device found on this device.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMessage = 'Camera is already in use by another application.';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage = 'Camera access requires HTTPS. Please access the site via HTTPS or use localhost.';
+                } else {
+                    errorMessage = error.message;
+                }
+                
+                statusDiv.innerHTML = `<div class="error">❌ ${errorMessage}</div>`;
+            }
+        }
+
+        function capturePhoto() {
+            log('Capturing photo...');
+            
+            if (!video.videoWidth || !video.videoHeight) {
+                log('Video not ready', 'error');
+                statusDiv.innerHTML = '<div class="error">❌ Video is not ready. Please wait.</div>';
+                return;
+            }
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0);
+            
+            const dataUrl = canvas.toDataURL('image/webp');
+            log(`Photo captured (${canvas.width}x${canvas.height})`, 'success');
+            
+            previewDiv.innerHTML = `
+                <div class="success">✅ Photo captured successfully!</div>
+                <img src="${dataUrl}" alt="Captured photo">
+            `;
+        }
+
+        function stopCamera() {
+            log('Stopping camera...');
+            
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    log(`Stopping track: ${track.kind}`);
+                    track.stop();
+                });
+                stream = null;
+            }
+            
+            video.srcObject = null;
+            video.style.display = 'none';
+            
+            startBtn.disabled = false;
+            captureBtn.disabled = true;
+            stopBtn.disabled = true;
+            
+            statusDiv.innerHTML = '<div class="info">Camera stopped.</div>';
+            log('Camera stopped', 'success');
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

@@ -47,6 +47,11 @@ const SearchField: FC<SearchFieldProps> = ({ onSearch }) => {
         onKeyUp={handleKeyPress}
         slotProps={{
           input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
             endAdornment: (
               <InputAdornment position="end">
                 {searchQuery && (

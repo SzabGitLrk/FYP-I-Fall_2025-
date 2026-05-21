@@ -4,16 +4,34 @@ import QRCode from 'react-qr-code';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowBackIos } from '@mui/icons-material';
-import { Typography, CircularProgress, Divider, Box } from '@mui/material';
+import {
+  FavoriteBorderRounded,
+  Inventory2Outlined,
+  LogoutRounded,
+  QrCodeScannerRounded,
+  SettingsOutlined,
+  AutoAwesomeMosaicOutlined,
+} from '@mui/icons-material';
+import { Typography, CircularProgress, Box } from '@mui/material';
 import { useStorage } from '../../hooks/useStorage';
 import { useBox, useFavoriteBoxes, useUpdateBox } from '../../hooks/useBox';
 import BoxDetails from '../../components/BoxDetails/BoxDetails';
 import {
   BackButton,
+  BoxContent,
   BoxContainer,
+  BoxMain,
   ButtonContainer,
+  ItemsHeader,
+  ItemsTitle,
   PrintQRButton,
 } from './BoxPage.styles';
+import {
+  BrandLockup,
+  DashboardRail,
+  RailNav,
+  RailNavItem,
+} from '../DashboardPage/DashboardPage.styles';
 import AddEntityButton from '../../components/AddEntityButton/AddEntityButton';
 import DashboardFooter from '../../components/DashboardFooter/DashboardFooter';
 import {
@@ -29,6 +47,8 @@ import QRScanner from '../../components/QRScanner/QRScanner';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { useFooterActions } from '../../hooks/useFooterActions';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
+import FyndBoxLogo from '../../assets/FyndBox.png';
+import { useAuth } from '../../hooks/useAuth';
 
 const BoxPage: FC = () => {
   const { t } = useTranslation();
@@ -37,6 +57,7 @@ const BoxPage: FC = () => {
     boxId: string;
   }>();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isModalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [entityType, setEntityType] = useState<EntityType>('item');
@@ -238,60 +259,110 @@ const BoxPage: FC = () => {
     }, 300);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <BoxContainer>
-      <BackButton onClick={() => navigate('/dashboard')}>
-        <ArrowBackIos />
-        <Typography variant="h6">{storage?.name}</Typography>
-      </BackButton>
-      <Divider />
-      {/* BoxDetails component */}
-      {box && (
-        <BoxDetails
-          name={box.name}
-          description={box.description}
-          image={box.image}
-          isFavorite={box.isFavorite}
-          onToggleFavorite={handleToggleFavorite}
-        />
-      )}
-
-      {items && items.length === 0 ? (
-        <Typography variant="body2" p={3} sx={{ textAlign: 'center' }}>
-          {t('box.noItemsFound')}
-        </Typography>
-      ) : (
-        items?.map((item, index) => (
-          <Box key={index}>
-            <EntityCard
-              name={item.name}
-              description={item.description ?? ''}
-              image={item.image ?? ''}
-              quantity={item.quantity ?? 1}
-              entityType="item"
-              onEdit={() => handleEditEntity('item', item)}
+      <DashboardRail>
+        <BrandLockup>
+          <img src={FyndBoxLogo} alt="FyndBox" />
+          <span>FyndBox</span>
+        </BrandLockup>
+        <RailNav>
+          <RailNavItem $active onClick={() => navigate('/dashboard')}>
+            <Inventory2Outlined />
+            <span>
+              {t('dashboard.entity.storage', { defaultValue: 'Storage' })}
+            </span>
+          </RailNavItem>
+          <RailNavItem onClick={handleFavoriteClick}>
+            <FavoriteBorderRounded />
+            <span>{t('dashboard.footer.favorite')}</span>
+          </RailNavItem>
+          <RailNavItem onClick={handleScanClick}>
+            <QrCodeScannerRounded />
+            <span>{t('dashboard.footer.scan')}</span>
+          </RailNavItem>
+          <RailNavItem onClick={() => navigate('/dashboard')}>
+            <AutoAwesomeMosaicOutlined />
+            <span>
+              {t('dashboard.footer.template', { defaultValue: 'Template' })}
+            </span>
+          </RailNavItem>
+          <RailNavItem onClick={handleSettingsClick}>
+            <SettingsOutlined />
+            <span>{t('dashboard.footer.settings')}</span>
+          </RailNavItem>
+          <RailNavItem onClick={handleLogout}>
+            <LogoutRounded />
+            <span>{t('sidebar.logout', { defaultValue: 'Logout' })}</span>
+          </RailNavItem>
+        </RailNav>
+      </DashboardRail>
+      <BoxMain>
+        <BoxContent>
+          <BackButton onClick={() => navigate('/dashboard')}>
+            <ArrowBackIos />
+            <Typography variant="h6">{storage?.name}</Typography>
+          </BackButton>
+          {/* BoxDetails component */}
+          {box && (
+            <BoxDetails
+              name={box.name}
+              description={box.description}
+              image={box.image}
+              isFavorite={box.isFavorite}
+              itemCount={items?.length ?? 0}
+              onToggleFavorite={handleToggleFavorite}
             />
-          </Box>
-        ))
-      )}
-      {showQRScanner && (
-        <QRScanner
-          onScanSuccess={handleScanSuccess}
-          onCancel={handleCancelScan}
-        />
-      )}
-      {/* Add Item Button */}
-      <AddEntityButton
-        entityType="item"
-        onAdd={() => handleAddEntity('item')}
-      />
+          )}
+          <ItemsHeader>
+            <ItemsTitle>
+              {t('box.itemsTitle', { defaultValue: 'Items' })}
+            </ItemsTitle>
+          </ItemsHeader>
 
-      {/* QR Code Button */}
-      <ButtonContainer>
-        <PrintQRButton variant="contained" onClick={handlePrintQRCode}>
-          {t('box.printQRcode')}
-        </PrintQRButton>
-      </ButtonContainer>
+          {items && items.length === 0 ? (
+            <Typography variant="body2" p={3} sx={{ textAlign: 'center' }}>
+              {t('box.noItemsFound')}
+            </Typography>
+          ) : (
+            items?.map((item, index) => (
+              <Box key={index}>
+                <EntityCard
+                  name={item.name}
+                  description={item.description ?? ''}
+                  image={item.image ?? ''}
+                  quantity={item.quantity ?? 1}
+                  entityType="item"
+                  onEdit={() => handleEditEntity('item', item)}
+                />
+              </Box>
+            ))
+          )}
+          {showQRScanner && (
+            <QRScanner
+              onScanSuccess={handleScanSuccess}
+              onCancel={handleCancelScan}
+            />
+          )}
+          {/* Add Item Button */}
+          <AddEntityButton
+            entityType="item"
+            onAdd={() => handleAddEntity('item')}
+          />
+
+          {/* QR Code Button */}
+          <ButtonContainer>
+            <PrintQRButton variant="contained" onClick={handlePrintQRCode}>
+              {t('box.printQRcode')}
+            </PrintQRButton>
+          </ButtonContainer>
+        </BoxContent>
+      </BoxMain>
       <DashboardFooter
         onFavoriteClick={handleFavoriteClick}
         onScanClick={handleScanClick}
