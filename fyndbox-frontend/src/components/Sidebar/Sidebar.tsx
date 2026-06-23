@@ -1,8 +1,9 @@
 import { FC, useState } from 'react';
-import { Typography } from '@mui/material';
+import { IconButton, Typography } from '@mui/material';
 import {
   AccountCircle,
   Info,
+  ArrowBack,
   ChevronRight,
   Security,
 } from '@mui/icons-material';
@@ -11,11 +12,16 @@ import LanguageSelector from '../LanguageSelector/LanguageSelector';
 import {
   AvatarContainer,
   DeactivateButton,
+  HeaderSpacer,
+  HeaderTitle,
   IconButtonContainer,
   LinkButton,
   LinkElement,
   LogoutButton,
   MenuIconWrapper,
+  ProfileBlock,
+  ProfileEmail,
+  ProfileName,
   SidebarContainer,
   SidebarDrawer,
   SidebarElementContainer,
@@ -68,16 +74,7 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
     onClose();
   };
 
-  const getUserInitials = (name: string | undefined) => {
-    if (!name) return '';
-    const [firstName, lastName] = name.split(' ');
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-  };
 
-  const getDisplayName = (name: string) => {
-    const [firstName, lastName] = name.split(' ');
-    return lastName ? lastName : firstName;
-  };
 
   const iconMap: { [key: string]: JSX.Element } = {
     account_circle: <AccountCircle />,
@@ -91,31 +88,38 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
     section: string;
   }>;
 
+  const profileName = user?.name || 'Fayaz Hussain';
+  const profileEmail = user?.email || 'fayazhussain.cs@gmail.com';
+  const profileImage = user?.image || null;
+  const initials = profileName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((namePart) => namePart[0]?.toUpperCase())
+    .join('');
+
   return (
     <>
-      <SidebarDrawer anchor="left" open={open} onClose={onClose}>
+      <SidebarDrawer anchor="right" open={open} onClose={onClose}>
         {/* ── Header ─────────────────────────────────── */}
         <SidebarHeader>
-          <AvatarContainer src={user?.image || ''} alt={user?.name}>
-            {!user?.image && getUserInitials(user?.name!)}
-          </AvatarContainer>
-          <Typography
-            variant="h6"
-            sx={{
-              color: '#fff',
-              fontWeight: 700,
-              lineHeight: 1.25,
-              zIndex: 1,
-            }}
-          >
-            {t('sidebar.title', {
-              user: user && getDisplayName(user.name),
-            })}
-          </Typography>
+          <IconButton onClick={onClose} aria-label={t('common.back')}>
+            <ArrowBack />
+          </IconButton>
+          <HeaderTitle variant="h6">Settings</HeaderTitle>
+          <HeaderSpacer />
         </SidebarHeader>
 
         {/* ── Body ───────────────────────────────────── */}
         <SidebarContainer>
+          <ProfileBlock>
+            <AvatarContainer src={profileImage || ''} alt={profileName}>
+              {!profileImage && (initials || 'F')}
+            </AvatarContainer>
+            <ProfileName variant="h6">{profileName}</ProfileName>
+            <ProfileEmail variant="body2">{profileEmail}</ProfileEmail>
+          </ProfileBlock>
+
           <SidebarElementContainer>
             {menuItems.map((item, index) => (
               <LinkElement key={index}>
@@ -166,3 +170,4 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
 };
 
 export default Sidebar;
+

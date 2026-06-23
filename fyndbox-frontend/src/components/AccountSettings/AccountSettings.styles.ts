@@ -35,9 +35,12 @@ export const ProfileAvatar = styled(Avatar)(({ theme }) => ({
   width: 112,
   height: 112,
   objectFit: 'cover',
-  backgroundColor: '#B9BDBB',
+  backgroundColor: theme.palette.primary.main,
   border: '4px solid rgba(255, 255, 255, 0.9)',
   boxShadow: '0 16px 32px rgba(31, 43, 37, 0.14)',
+  color: theme.palette.common.white,
+  fontSize: '2.5rem',
+  fontWeight: 900,
   '& .MuiSvgIcon-root': {
     fontSize: 66,
   },

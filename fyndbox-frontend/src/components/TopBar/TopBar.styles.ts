@@ -5,7 +5,7 @@ export const AppBarContainer = styled(AppBar)(({ theme }) => ({
   zIndex: 1,
   overflow: 'hidden',
   background:
-    'linear-gradient(135deg, rgba(137, 183, 153, 0.98) 0%, rgba(93, 157, 113, 0.98) 52%, rgba(73, 139, 96, 0.98) 100%)',
+    'linear-gradient(135deg, rgba(73, 139, 96, 0.98) 0%, rgba(93, 157, 113, 0.98) 48%, rgba(137, 183, 153, 0.98) 100%)',
   color: theme.palette.common.white,
   minHeight: 154,
   boxShadow: 'none',
@@ -60,10 +60,10 @@ export const HeaderDotPattern = styled(Box)(({ theme }) => ({
 export const ToolbarContainer = styled(Toolbar)(({ theme }) => ({
   position: 'relative',
   display: 'flex',
-  justifyContent: 'center',
+  justifyContent: 'flex-start',
   alignItems: 'flex-start',
   minHeight: '154px !important',
-  padding: `${theme.spacing(3.2, 5.2)} !important`,
+  padding: `${theme.spacing(3.4, 6.2)} !important`,
   '& .MuiIconButton-root': {
     color: theme.palette.common.white,
   },
@@ -79,9 +79,9 @@ export const ToolbarContainer = styled(Toolbar)(({ theme }) => ({
 
 export const MobileHeaderStack = styled(Box)(({ theme }) => ({
   display: 'grid',
-  justifyItems: 'center',
-  gap: theme.spacing(0.6),
-  textAlign: 'center',
+  justifyItems: 'start',
+  gap: theme.spacing(0.8),
+  textAlign: 'left',
   [theme.breakpoints.down('md')]: {
     display: 'grid',
     justifyItems: 'start',
@@ -91,9 +91,9 @@ export const MobileHeaderStack = styled(Box)(({ theme }) => ({
 }));
 
 export const HeaderSubtitle = styled(Box)(({ theme }) => ({
-  color: 'rgba(255, 255, 255, 0.9)',
-  fontSize: '1rem',
-  fontWeight: 500,
+  color: 'rgba(255, 255, 255, 0.96)',
+  fontSize: '1.18rem',
+  fontWeight: 750,
   letterSpacing: 0,
   [theme.breakpoints.down('md')]: {
     display: 'none',

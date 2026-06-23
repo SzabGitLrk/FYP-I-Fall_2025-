@@ -32,7 +32,13 @@ export class ImageController {
   ): Promise<ApiResponse<{ imageUrl: string }>> {
     const lang = req.language;
     try {
+      console.log('[ImageController] Upload request received', {
+        file: file ? { name: file.originalname, size: file.size, mime: file.mimetype } : 'NO FILE',
+        user: req.user?.userId,
+      });
+
       if (!file) {
+        console.error('[ImageController] No file provided');
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
@@ -48,6 +54,7 @@ export class ImageController {
 
       // Call the image upload service to upload the file to S3
       const imageUrl = await this.imageService.uploadImage(file);
+      console.log('[ImageController] Upload successful, URL:', imageUrl);
 
       return {
         statusCode: HttpStatus.OK,
@@ -59,6 +66,16 @@ export class ImageController {
         data: { imageUrl },
       };
     } catch (error) {
+      console.error('[ImageController] Upload error:', {
+        message: error.message,
+        stack: error.stack,
+        error: error,
+      });
+      
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -81,7 +98,10 @@ export class ImageController {
   ): Promise<ApiResponse<null>> {
     const lang = req.language;
     try {
+      console.log('[ImageController] Delete request received for:', key);
+
       if (!key) {
+        console.error('[ImageController] No key provided');
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
@@ -97,6 +117,7 @@ export class ImageController {
 
       // Call the image service to delete the file from S3
       await this.imageService.deleteImage(key);
+      console.log('[ImageController] Delete successful');
 
       return {
         statusCode: HttpStatus.OK,
@@ -108,6 +129,12 @@ export class ImageController {
         data: null,
       };
     } catch (error) {
+      console.error('[ImageController] Delete error:', error.message);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

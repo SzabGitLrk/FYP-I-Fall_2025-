@@ -26,12 +26,6 @@ import {
   ItemsTitle,
   PrintQRButton,
 } from './BoxPage.styles';
-import {
-  BrandLockup,
-  DashboardRail,
-  RailNav,
-  RailNavItem,
-} from '../DashboardPage/DashboardPage.styles';
 import AddEntityButton from '../../components/AddEntityButton/AddEntityButton';
 import DashboardFooter from '../../components/DashboardFooter/DashboardFooter';
 import {
@@ -47,8 +41,10 @@ import QRScanner from '../../components/QRScanner/QRScanner';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import { useFooterActions } from '../../hooks/useFooterActions';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
-import FyndBoxLogo from '../../assets/FyndBox.png';
 import { useAuth } from '../../hooks/useAuth';
+import DashboardSidebar, {
+  DashboardSidebarItem,
+} from '../../components/DashboardSidebar/DashboardSidebar';
 
 const BoxPage: FC = () => {
   const { t } = useTranslation();
@@ -62,6 +58,7 @@ const BoxPage: FC = () => {
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [entityType, setEntityType] = useState<EntityType>('item');
   const [editingData, setEditingData] = useState<any | null>(null);
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const {
     handleFavoriteClick,
     handleScanClick,
@@ -264,45 +261,50 @@ const BoxPage: FC = () => {
     navigate('/login', { replace: true });
   };
 
+  const sidebarItems: DashboardSidebarItem[] = [
+    {
+      label: t('dashboard.entity.storage', { defaultValue: 'Storage' }),
+      icon: <Inventory2Outlined />,
+      active: true,
+      onClick: () => navigate('/dashboard'),
+    },
+    {
+      label: t('dashboard.footer.favorite'),
+      icon: <FavoriteBorderRounded />,
+      onClick: handleFavoriteClick,
+    },
+    {
+      label: t('dashboard.footer.scan'),
+      icon: <QrCodeScannerRounded />,
+      onClick: handleScanClick,
+    },
+    {
+      label: t('dashboard.footer.template', { defaultValue: 'Template' }),
+      icon: <AutoAwesomeMosaicOutlined />,
+      onClick: () => navigate('/dashboard'),
+    },
+    {
+      label: t('dashboard.footer.settings'),
+      icon: <SettingsOutlined />,
+      onClick: handleSettingsClick,
+    },
+  ];
+
+  const logoutItem: DashboardSidebarItem = {
+    label: t('sidebar.logout', { defaultValue: 'Logout' }),
+    icon: <LogoutRounded />,
+    onClick: handleLogout,
+  };
+
   return (
     <BoxContainer>
-      <DashboardRail>
-        <BrandLockup>
-          <img src={FyndBoxLogo} alt="FyndBox" />
-          <span>FyndBox</span>
-        </BrandLockup>
-        <RailNav>
-          <RailNavItem $active onClick={() => navigate('/dashboard')}>
-            <Inventory2Outlined />
-            <span>
-              {t('dashboard.entity.storage', { defaultValue: 'Storage' })}
-            </span>
-          </RailNavItem>
-          <RailNavItem onClick={handleFavoriteClick}>
-            <FavoriteBorderRounded />
-            <span>{t('dashboard.footer.favorite')}</span>
-          </RailNavItem>
-          <RailNavItem onClick={handleScanClick}>
-            <QrCodeScannerRounded />
-            <span>{t('dashboard.footer.scan')}</span>
-          </RailNavItem>
-          <RailNavItem onClick={() => navigate('/dashboard')}>
-            <AutoAwesomeMosaicOutlined />
-            <span>
-              {t('dashboard.footer.template', { defaultValue: 'Template' })}
-            </span>
-          </RailNavItem>
-          <RailNavItem onClick={handleSettingsClick}>
-            <SettingsOutlined />
-            <span>{t('dashboard.footer.settings')}</span>
-          </RailNavItem>
-          <RailNavItem onClick={handleLogout}>
-            <LogoutRounded />
-            <span>{t('sidebar.logout', { defaultValue: 'Logout' })}</span>
-          </RailNavItem>
-        </RailNav>
-      </DashboardRail>
-      <BoxMain>
+      <DashboardSidebar
+        items={sidebarItems}
+        logoutItem={logoutItem}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((current) => !current)}
+      />
+      <BoxMain $sidebarCollapsed={isSidebarCollapsed}>
         <BoxContent>
           <BackButton onClick={() => navigate('/dashboard')}>
             <ArrowBackIos />
@@ -389,3 +391,4 @@ const BoxPage: FC = () => {
 };
 
 export default BoxPage;
+

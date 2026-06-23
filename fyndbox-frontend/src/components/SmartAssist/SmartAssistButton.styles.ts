@@ -15,13 +15,14 @@ export const StyledSmartAssistButton = styled(Fab, {
       : 'auto',
   zIndex: $placement === 'floating' ? 1200 : 0,
 
-  width: 62,
-  height: 62,
+  width: 64,
+  height: 64,
+  minHeight: 64,
 
   background:
     $placement === 'inline'
       ? theme.palette.secondary.contrastText
-      : 'linear-gradient(135deg, rgba(93, 157, 113, 0.98) 0%, rgba(73, 139, 96, 0.98) 50%, rgba(58, 125, 82, 0.98) 100%)',
+      : 'linear-gradient(135deg, rgba(18, 128, 75, 0.98) 0%, rgba(7, 81, 47, 0.98) 100%)',
   color:
     $placement === 'inline'
       ? theme.palette.secondary.main
@@ -29,70 +30,29 @@ export const StyledSmartAssistButton = styled(Fab, {
   border:
     $placement === 'inline'
       ? 'none'
-      : '2px solid rgba(255, 255, 255, 0.20)',
+      : '2px solid rgba(255, 255, 255, 0.34)',
   boxShadow:
     $placement === 'inline'
       ? '0 4px 12px rgba(0, 0, 0, 0.12)'
-      : '0 14px 32px rgba(73, 139, 96, 0.32), 0 4px 12px rgba(73, 139, 96, 0.16)',
+      : '0 16px 34px rgba(7, 81, 47, 0.30), 0 5px 14px rgba(7, 81, 47, 0.18)',
 
-  overflow: 'hidden',
-
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: '-50%',
-    left: '-50%',
-    width: '200%',
-    height: '200%',
-    background:
-      'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.12) 60deg, transparent 120deg)',
-    animation:
-      $placement === 'floating'
-        ? 'smartButtonShimmer 4s ease-in-out infinite'
-        : 'none',
-    pointerEvents: 'none',
+  '& .MuiSvgIcon-root': {
+    width: 36,
+    height: 36,
+    strokeWidth: 2.8,
   },
-
-  '@keyframes smartButtonShimmer': {
-    '0%': {
-      transform: 'rotate(0deg)',
-    },
-    '100%': {
-      transform: 'rotate(360deg)',
-    },
-  },
-
-  '@keyframes smartButtonPulseRing': {
-    '0%': {
-      boxShadow:
-        '0 14px 32px rgba(73, 139, 96, 0.32), 0 4px 12px rgba(73, 139, 96, 0.16), 0 0 0 0 rgba(93, 157, 113, 0.28)',
-    },
-    '50%': {
-      boxShadow:
-        '0 14px 32px rgba(73, 139, 96, 0.32), 0 4px 12px rgba(73, 139, 96, 0.16), 0 0 0 8px rgba(93, 157, 113, 0)',
-    },
-    '100%': {
-      boxShadow:
-        '0 14px 32px rgba(73, 139, 96, 0.32), 0 4px 12px rgba(73, 139, 96, 0.16), 0 0 0 0 rgba(93, 157, 113, 0.28)',
-    },
-  },
-
-  animation:
-    $placement === 'floating'
-      ? 'smartButtonPulseRing 3s ease-in-out infinite'
-      : 'none',
 
   transition:
-    'transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease',
+    'transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, background-color 200ms ease',
 
   '&:hover': {
-    transform: 'scale(1.08)',
+    transform: 'translateY(-2px) scale(1.04)',
     backgroundColor:
       $placement === 'inline'
         ? theme.palette.grey[700]
         : theme.palette.primary.dark,
     boxShadow:
-      '0 18px 40px rgba(73, 139, 96, 0.38), 0 6px 16px rgba(73, 139, 96, 0.20)',
+      '0 20px 44px rgba(7, 81, 47, 0.36), 0 7px 18px rgba(7, 81, 47, 0.22)',
   },
 
   '&:active': {
@@ -103,11 +63,9 @@ export const StyledSmartAssistButton = styled(Fab, {
     backgroundColor: theme.palette.grey[200],
     color: theme.palette.grey[500],
     borderColor: theme.palette.grey[300],
-    animation: 'none',
-    '&::before': {
-      animation: 'none',
-    },
+    boxShadow: 'none',
   },
+
   [theme.breakpoints.down('md')]: {
     right: $placement === 'floating' ? '50%' : 'auto',
     bottom:
@@ -118,5 +76,8 @@ export const StyledSmartAssistButton = styled(Fab, {
     width: 64,
     height: 64,
     zIndex: 1300,
+    '&:hover': {
+      transform: $placement === 'floating' ? 'translateX(50%) scale(1.04)' : 'scale(1.04)',
+    },
   },
 }));

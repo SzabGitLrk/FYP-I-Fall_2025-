@@ -20,15 +20,11 @@ import DashboardFooter from '../../components/DashboardFooter/DashboardFooter';
 import SmartAssistButton from '../../components/SmartAssist/SmartAssistButton';
 import { CustomIcon } from '../../styles/commonStyles';
 import {
-  BrandLockup,
   DashboardContent,
   DashboardContainer,
-  DashboardRail,
   DashboardWorkspace,
   MainContainer,
   PrimaryActionsContainer,
-  RailNav,
-  RailNavItem,
   SubContainer,
 } from './DashboardPage.styles';
 import { EntityType } from '../../types/entityTypes';
@@ -64,8 +60,10 @@ import { getItems } from '../../api/itemService';
 import { TemplateSelectionStorage } from '../../types/templateHierarchy';
 import { Item } from '../../types/item';
 import { Storage } from '../../types/storage';
-import FyndBoxLogo from '../../assets/FyndBox.png';
 import { useAuth } from '../../hooks/useAuth';
+import DashboardSidebar, {
+  DashboardSidebarItem,
+} from '../../components/DashboardSidebar/DashboardSidebar';
 
 const DashboardPage: FC = () => {
   const { t } = useTranslation();
@@ -79,6 +77,7 @@ const DashboardPage: FC = () => {
   const [entityType, setEntityType] = useState<EntityType>('storage');
   const [editingData, setEditingData] = useState<any | null>(null);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isSmartAddChooserOpen, setSmartAddChooserOpen] = useState(false);
   const [isSmartAddOpen, setSmartAddOpen] = useState(false);
   const [isSmartAddVoiceOpen, setSmartAddVoiceOpen] = useState(false);
@@ -356,45 +355,52 @@ const DashboardPage: FC = () => {
     });
   };
 
+  const sidebarItems: DashboardSidebarItem[] = [
+    {
+      label: t('dashboard.entity.storage', { defaultValue: 'Storage' }),
+      icon: <Inventory2Outlined />,
+      active: !isSidebarOpen && !showFavorites && !isTemplateSidebarOpen,
+    },
+    {
+      label: t('dashboard.footer.favorite'),
+      icon: <FavoriteBorderRounded />,
+      active: showFavorites,
+      onClick: handleFavoriteClick,
+    },
+    {
+      label: t('dashboard.footer.scan'),
+      icon: <QrCodeScannerRounded />,
+      onClick: handleScanClick,
+    },
+    {
+      label: t('dashboard.footer.template', { defaultValue: 'Template' }),
+      icon: <AutoAwesomeMosaicOutlined />,
+      active: isTemplateSidebarOpen,
+      onClick: handleOpenTemplateSidebar,
+    },
+    {
+      label: t('dashboard.footer.settings'),
+      icon: <SettingsOutlined />,
+      active: isSidebarOpen,
+      onClick: handleSettingsClick,
+    },
+  ];
+
+  const logoutItem: DashboardSidebarItem = {
+    label: t('sidebar.logout', { defaultValue: 'Logout' }),
+    icon: <LogoutRounded />,
+    onClick: handleLogout,
+  };
+
   return (
     <DashboardContainer>
-      <DashboardRail>
-        <BrandLockup>
-          <img src={FyndBoxLogo} alt="FyndBox" />
-          <span>FyndBox</span>
-        </BrandLockup>
-        <RailNav>
-          <RailNavItem $active>
-            <Inventory2Outlined />
-            <span>
-              {t('dashboard.entity.storage', { defaultValue: 'Storage' })}
-            </span>
-          </RailNavItem>
-          <RailNavItem onClick={handleFavoriteClick}>
-            <FavoriteBorderRounded />
-            <span>{t('dashboard.footer.favorite')}</span>
-          </RailNavItem>
-          <RailNavItem onClick={handleScanClick}>
-            <QrCodeScannerRounded />
-            <span>{t('dashboard.footer.scan')}</span>
-          </RailNavItem>
-          <RailNavItem onClick={handleOpenTemplateSidebar}>
-            <AutoAwesomeMosaicOutlined />
-            <span>
-              {t('dashboard.footer.template', { defaultValue: 'Template' })}
-            </span>
-          </RailNavItem>
-          <RailNavItem onClick={handleSettingsClick}>
-            <SettingsOutlined />
-            <span>{t('dashboard.footer.settings')}</span>
-          </RailNavItem>
-          <RailNavItem onClick={handleLogout}>
-            <LogoutRounded />
-            <span>{t('sidebar.logout', { defaultValue: 'Logout' })}</span>
-          </RailNavItem>
-        </RailNav>
-      </DashboardRail>
-      <DashboardWorkspace>
+      <DashboardSidebar
+        items={sidebarItems}
+        logoutItem={logoutItem}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((current) => !current)}
+      />
+      <DashboardWorkspace $sidebarCollapsed={isSidebarCollapsed}>
         <DashboardContent>
           <TopBar />
           <SearchField onSearch={handleSearchChange} />
@@ -588,3 +594,4 @@ const DashboardPage: FC = () => {
 };
 
 export default DashboardPage;
+

@@ -31,7 +31,10 @@ export const useUpdateUser = () => {
 
   return useMutation<User, Error, UpdateUserData>({
     mutationFn: (data: UpdateUserData) => updateUser(data.user),
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
+      // Update the 'user' query cache directly with the response
+      queryClient.setQueryData(['user'], updatedUser);
+      // Also invalidate to trigger refetch if needed
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
     onError: (error: Error) => {

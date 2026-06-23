@@ -48,7 +48,7 @@ export class ImageProcessingService {
 
     if (!this.llmProviderConfig.apiKey) {
       throw new BadRequestException('Vision AI is not configured on the server.');
-    }
+    }   
 
     const decision = this.aiRateLimitService.consumeLlmFallback(userId);
     if (!decision.allowed) {

@@ -8,7 +8,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   IconButton,
   Stack,
   Typography,
@@ -46,7 +45,6 @@ import {
   TemplateDrawer,
   TemplateFooter,
   TemplateHeader,
-  TemplateSubtitle,
 } from './TemplateHierarchySidebar.styles';
 
 interface TemplateHierarchySidebarProps {
@@ -293,7 +291,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
           </IconButton>
           <HeaderTitle variant="h6">
             {t('templatesSidebar.title', {
-              defaultValue: 'Template Library',
+              defaultValue: 'Templates',
             })}
           </HeaderTitle>
           <HeaderSpacer />
@@ -463,7 +461,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: 4,
+            borderRadius: 1.5,
             overflow: 'hidden',
             boxShadow: '0 24px 64px rgba(8, 38, 27, 0.18)',
           },
@@ -473,7 +471,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
         <Box
           sx={{
             background:
-              'linear-gradient(135deg, rgba(137, 183, 153, 0.98) 0%, rgba(93, 157, 113, 0.98) 52%, rgba(73, 139, 96, 0.98) 100%)',
+              'linear-gradient(135deg, rgba(73, 139, 96, 0.98) 0%, rgba(93, 157, 113, 0.98) 48%, rgba(137, 183, 153, 0.98) 100%)',
             px: 3,
             py: 2.5,
           }}
@@ -515,7 +513,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
                 alignItems: 'center',
                 gap: 1,
                 bgcolor: '#EEF6F1',
-                borderRadius: 3,
+                borderRadius: 1.5,
                 px: 2,
                 py: 1.25,
                 mb: 2.5,
@@ -565,7 +563,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
                     sx={{
                       border: '1px solid',
                       borderColor: 'grey.200',
-                      borderRadius: 3,
+                      borderRadius: 1.5,
                       overflow: 'hidden',
                     }}
                   >
@@ -780,7 +778,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
             disabled={isProcessing}
             variant="outlined"
             sx={{
-              borderRadius: 3,
+              borderRadius: 1.5,
               textTransform: 'none',
               fontWeight: 600,
               px: 3,
@@ -796,7 +794,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
             disabled={isProcessing || selectedStructure.length === 0}
             variant="contained"
             sx={{
-              borderRadius: 3,
+              borderRadius: 1.5,
               textTransform: 'none',
               fontWeight: 700,
               px: 3,
@@ -829,3 +827,4 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
 };
 
 export default TemplateHierarchySidebar;
+

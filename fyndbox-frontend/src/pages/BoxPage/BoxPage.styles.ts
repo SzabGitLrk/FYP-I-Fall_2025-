@@ -13,12 +13,17 @@ export const BoxContainer = styled(Container)(({ theme }) => ({
   },
 }));
 
-export const BoxMain = styled(Box)(({ theme }) => ({
+export const BoxMain = styled(Box, {
+  shouldForwardProp: (prop) => prop !== '$sidebarCollapsed',
+})<{ $sidebarCollapsed?: boolean }>(({ theme, $sidebarCollapsed = false }) => ({
   position: 'relative',
   flex: 1,
   minWidth: 0,
   overflow: 'hidden',
+  marginLeft: $sidebarCollapsed ? 100 : 330,
+  width: `calc(100% - ${$sidebarCollapsed ? 100 : 330}px)`,
   padding: theme.spacing(2.2, 4.4, 0),
+  transition: 'margin-left 220ms ease',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -45,6 +50,8 @@ export const BoxMain = styled(Box)(({ theme }) => ({
     zIndex: 0,
   },
   [theme.breakpoints.down('md')]: {
+    marginLeft: 0,
+    width: '100%',
     padding: theme.spacing(1, 1.6, 0),
     '&::before': {
       height: 150,
@@ -113,3 +120,6 @@ export const BackButton = styled(IconButton)(({ theme }) => ({
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
 }));
+
+
+

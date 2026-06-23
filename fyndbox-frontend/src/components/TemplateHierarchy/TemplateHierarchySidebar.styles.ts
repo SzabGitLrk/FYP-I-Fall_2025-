@@ -27,22 +27,34 @@ export const TemplateHeader = styled(Box)(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: '48px 1fr 48px',
   alignItems: 'center',
-  minHeight: 64,
-  padding: theme.spacing(1, 1.25),
-  background: theme.palette.common.white,
-  boxShadow: '0 5px 16px rgba(20, 54, 39, 0.08)',
+  minHeight: 72,
+  padding: theme.spacing(1.5, 1.5),
+  background:
+    'linear-gradient(135deg, rgba(73, 139, 96, 0.98) 0%, rgba(93, 157, 113, 0.98) 48%, rgba(137, 183, 153, 0.98) 100%)',
+  boxShadow: '0 12px 26px rgba(0, 35, 18, 0.18)',
   position: 'relative',
   zIndex: 1,
   '& .MuiIconButton-root': {
-    color: theme.palette.primary.dark,
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    color: theme.palette.common.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    border: '1px solid rgba(255, 255, 255, 0.28)',
+    boxShadow: '0 8px 18px rgba(0, 35, 18, 0.16)',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.24)',
+    },
   },
 }));
 
 export const HeaderTitle = styled(Typography)(({ theme }) => ({
   textAlign: 'center',
-  fontWeight: 700,
-  color: theme.palette.primary.dark,
+  fontWeight: 950,
+  color: theme.palette.common.white,
   fontSize: '1.05rem',
+  letterSpacing: 0,
+  textShadow: '0 12px 26px rgba(0, 35, 18, 0.32)',
 }));
 
 export const HeaderSpacer = styled(Box)({
@@ -56,7 +68,7 @@ export const TemplateContent = styled(Box)(({ theme }) => ({
   flex: 1,
   padding: theme.spacing(2),
   overflowY: 'auto',
-  backgroundColor: '#F6FAF7',
+  backgroundColor: theme.palette.common.white,
 }));
 
 export const TemplateSubtitle = styled(Typography)(({ theme }) => ({
@@ -70,11 +82,18 @@ export const StorageRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(0.5),
-  minHeight: 48,
-  padding: theme.spacing(1, 0),
+  minHeight: 56,
+  padding: theme.spacing(1.1, 1.2),
+  borderRadius: 12,
+  overflow: 'hidden',
+  background: 'linear-gradient(135deg, #FFFFFF 0%, #F4FBF6 100%)',
+  border: '1px solid rgba(21, 113, 69, 0.18)',
+  borderLeft: `6px solid ${theme.palette.primary.main}`,
+  boxShadow: '0 8px 24px rgba(15, 57, 39, 0.08)',
   '& .MuiIconButton-root': {
     width: 32,
     height: 32,
+    borderRadius: 12,
     color: theme.palette.primary.dark,
   },
   '& .MuiCheckbox-root': {
@@ -100,21 +119,18 @@ export const BoxRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(0.5),
-  minHeight: 44,
-  padding: theme.spacing(0.75, 0),
+  minHeight: 48,
+  marginBottom: theme.spacing(0.9),
+  padding: theme.spacing(0.8, 1),
   position: 'relative',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    left: -20,
-    top: '50%',
-    width: 16,
-    height: 0,
-    borderTop: `2px solid ${theme.palette.grey[300]}`,
-  },
+  borderRadius: 12,
+  backgroundColor: theme.palette.common.white,
+  border: '1px solid rgba(21, 113, 69, 0.14)',
+  boxShadow: '0 6px 18px rgba(15, 57, 39, 0.06)',
   '& .MuiIconButton-root': {
     width: 30,
     height: 30,
+    borderRadius: 12,
     color: theme.palette.primary.dark,
   },
   '& .MuiCheckbox-root': {
@@ -140,18 +156,13 @@ export const ItemRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1),
-  minHeight: 42,
-  padding: theme.spacing(0.5, 0),
+  minHeight: 44,
+  marginBottom: theme.spacing(0.8),
+  padding: theme.spacing(0.75, 1),
   position: 'relative',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    left: -20,
-    top: '50%',
-    width: 16,
-    height: 0,
-    borderTop: `2px solid ${theme.palette.grey[300]}`,
-  },
+  borderRadius: 12,
+  backgroundColor: '#FBFDFB',
+  border: '1px solid rgba(21, 113, 69, 0.1)',
   '& .MuiCheckbox-root': {
     color: theme.palette.primary.main,
     padding: theme.spacing(0.5),
@@ -199,3 +210,4 @@ export const ReviewButton = styled(Button)(({ theme }) => ({
     boxShadow: 'none',
   },
 }));
+

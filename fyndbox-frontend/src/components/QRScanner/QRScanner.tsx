@@ -1,12 +1,21 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { BrowserQRCodeReader, VideoInputDevice } from '@zxing/browser';
-import { Modal, Typography } from '@mui/material';
+import { Modal } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import {
-  ButtonContainer,
+  QrBodyContent,
+  QrCloseButton,
   QrContainer,
+  QrCornerBracket,
+  QrErrorMessage,
+  QrHeader,
+  QrHeaderTitle,
+  QrInstructionText,
   QrOverlay,
   QrReaderContainer,
+  QrScanningFrame,
+  QrScanningLine,
+  QrScanningOverlay,
 } from './QRScanner.styles';
 
 interface QRScannerProps {
@@ -95,20 +104,35 @@ const QRScanner: FC<QRScannerProps> = ({ onScanSuccess, onCancel }) => {
     <Modal open onClose={handleCancel} closeAfterTransition>
       <QrOverlay>
         <QrContainer>
-          <Typography variant="h6" mb={2}>
-            {t('qrCode.title')}
-          </Typography>
-          <QrReaderContainer>
-            <video ref={videoRef} />
-          </QrReaderContainer>
-          {scanError && (
-            <Typography variant="body2" color="error" mt={2}>
-              {scanError}
-            </Typography>
-          )}
-          <ButtonContainer onClick={handleCancel} variant="contained">
-            {t('modal.cancel')}
-          </ButtonContainer>
+          {/* Header */}
+          <QrHeader>
+            <QrHeaderTitle>{t('qrCode.title')}</QrHeaderTitle>
+            <QrCloseButton onClick={handleCancel}>×</QrCloseButton>
+          </QrHeader>
+
+          {/* Body Content */}
+          <QrBodyContent>
+            {/* Camera Feed with Scanning Overlay */}
+            <QrReaderContainer>
+              <video ref={videoRef} />
+              <QrScanningOverlay>
+                <QrScanningFrame />
+                <QrCornerBracket className="top-left" />
+                <QrCornerBracket className="top-right" />
+                <QrCornerBracket className="bottom-left" />
+                <QrCornerBracket className="bottom-right" />
+                <QrScanningLine />
+              </QrScanningOverlay>
+            </QrReaderContainer>
+
+            {/* Instruction Text */}
+            <QrInstructionText>
+              {t('qrCode.instruction', { defaultValue: 'Point your camera at a QR code to scan' })}
+            </QrInstructionText>
+
+            {/* Error Message */}
+            {scanError && <QrErrorMessage>{scanError}</QrErrorMessage>}
+          </QrBodyContent>
         </QrContainer>
       </QrOverlay>
     </Modal>

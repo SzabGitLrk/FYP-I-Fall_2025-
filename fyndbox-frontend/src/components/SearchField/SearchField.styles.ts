@@ -28,33 +28,39 @@ export const SearchTextField = styled(TextField)(({ theme }) => ({
   backgroundColor: '#FFFFFF',
   borderRadius: '50px',
   width: '100%',
-  maxWidth: 520,
-  boxShadow: '0 10px 24px rgba(26, 45, 34, 0.13)',
+  maxWidth: 720,
+  border: '3px solid rgba(21, 113, 69, 0.26)',
+  boxShadow:
+    '0 18px 38px rgba(26, 45, 34, 0.18), 0 0 0 10px rgba(21, 113, 69, 0.08)',
   '& .MuiOutlinedInput-root': {
-    minHeight: 54,
-    paddingLeft: theme.spacing(2),
+    minHeight: 66,
+    paddingLeft: theme.spacing(2.4),
     borderRadius: '50px',
     color: '#17231C',
     fontWeight: 500,
     '& fieldset': {
-      borderColor: 'rgba(12, 64, 38, 0.1)',
+      borderColor: 'rgba(21, 113, 69, 0.34)',
+      borderWidth: 2,
     },
     '&:hover fieldset': {
-      borderColor: 'rgba(12, 64, 38, 0.18)',
+      borderColor: 'rgba(21, 113, 69, 0.44)',
     },
     '&.Mui-focused fieldset': {
       borderColor: theme.palette.primary.main,
-      boxShadow: '0 0 0 3px rgba(21, 113, 69, 0.1)',
+      borderWidth: 2,
+      boxShadow: '0 0 0 8px rgba(21, 113, 69, 0.16)',
     },
   },
   '& .MuiInputBase-input': {
-    padding: theme.spacing(1.7, 1, 1.7, 0.2),
-    fontSize: '1rem',
+    padding: theme.spacing(2.2, 1.2, 2.2, 0.2),
+    fontSize: '1.08rem',
   },
   '& .MuiInputAdornment-positionStart': {
-    marginRight: theme.spacing(1.1),
+    marginRight: theme.spacing(1.4),
   },
   '& .MuiSvgIcon-root': {
+    width: 25,
+    height: 25,
     color: '#7C8480',
   },
   [theme.breakpoints.down('md')]: {

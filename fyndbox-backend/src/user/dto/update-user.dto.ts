@@ -7,6 +7,10 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @IsOptional()
   @IsString()
+  readonly image?: string;
+
+  @IsOptional()
+  @IsString()
   readonly resetToken?: string;
 
   @IsOptional()

@@ -9,22 +9,32 @@ export const EntityCardContainer = styled(Card, {
 })<EntityCardContainerProps>(({ theme, isBoxCard }) => ({
   position: 'relative',
   overflow: 'visible',
-  backgroundColor: '#FFFFFF',
-  borderRadius: 8,
-  marginBottom: isBoxCard ? theme.spacing(1.2) : theme.spacing(1.9),
+  background:
+    'linear-gradient(135deg, #FFFFFF 0%, #F4FBF6 100%)',
+  borderRadius: 12,
+  marginBottom: isBoxCard ? theme.spacing(1.6) : theme.spacing(2.4),
   color: '#064326',
-  border: '1px solid rgba(12, 62, 38, 0.04)',
-  borderLeft: `4px solid ${theme.palette.primary.main}`,
-  boxShadow: '0 12px 28px rgba(20, 42, 29, 0.1)',
+  border: '1px solid rgba(21, 113, 69, 0.18)',
+  borderLeft: `6px solid ${theme.palette.primary.main}`,
+  boxShadow:
+    '0 18px 36px rgba(20, 42, 29, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.82) inset',
+  transition:
+    'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
+  '&:hover': {
+    transform: 'translateY(-3px)',
+    borderColor: 'rgba(21, 113, 69, 0.3)',
+    boxShadow:
+      '0 24px 44px rgba(20, 42, 29, 0.18), 0 0 0 1px rgba(21, 113, 69, 0.1) inset',
+  },
   '& .MuiCardContent-root': {
-    padding: theme.spacing(1.8, 2.4),
+    padding: theme.spacing(isBoxCard ? 2.1 : 2.8, 3.2),
     '&:last-child': {
-      paddingBottom: theme.spacing(1.8),
+      paddingBottom: theme.spacing(isBoxCard ? 2.1 : 2.8),
     },
   },
   '& .MuiIconButton-root': {
-    width: 42,
-    height: 42,
+    width: isBoxCard ? 44 : 50,
+    height: isBoxCard ? 44 : 50,
     borderRadius: 8,
     color: '#064326',
     backgroundColor: 'rgba(226, 235, 228, 0.74)',
@@ -55,9 +65,9 @@ export const EntityCardContainer = styled(Card, {
 }));
 
 export const ImageBox = styled('img')(({ theme }) => ({
-  width: 72,
-  height: 72,
-  marginRight: theme.spacing(2),
+  width: 92,
+  height: 92,
+  marginRight: theme.spacing(2.8),
   objectFit: 'contain',
   borderRadius: 18,
   padding: theme.spacing(1.05),
@@ -79,7 +89,7 @@ export const ContentBox = styled(Box)({
 export const NameText = styled(Typography)(({ theme }) => ({
   wordBreak: 'break-word',
   color: '#064326',
-  fontSize: '1.45rem',
+  fontSize: '1.72rem',
   lineHeight: 1.18,
   fontWeight: 900,
   letterSpacing: 0,
@@ -91,7 +101,7 @@ export const NameText = styled(Typography)(({ theme }) => ({
 export const DescriptionText = styled(Typography)(({ theme }) => ({
   wordBreak: 'break-word',
   color: '#5D6A62',
-  fontSize: '0.95rem',
+  fontSize: '1.02rem',
   [theme.breakpoints.down('md')]: {
     display: 'none',
   },
@@ -101,20 +111,20 @@ export const MetaRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   flexWrap: 'wrap',
-  gap: theme.spacing(1),
-  marginTop: theme.spacing(1),
+  gap: theme.spacing(1.2),
+  marginTop: theme.spacing(1.3),
 }));
 
 export const MetaChip = styled(Box)(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',
   gap: theme.spacing(0.55),
-  minHeight: 30,
-  padding: theme.spacing(0.45, 1.05),
+  minHeight: 36,
+  padding: theme.spacing(0.65, 1.3),
   borderRadius: 8,
   backgroundColor: '#EAF4ED',
   color: '#064326',
-  fontSize: '0.86rem',
+  fontSize: '0.94rem',
   fontWeight: 800,
   '& .MuiSvgIcon-root': {
     width: 18,

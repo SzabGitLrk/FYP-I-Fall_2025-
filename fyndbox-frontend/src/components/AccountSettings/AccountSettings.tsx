@@ -23,72 +23,140 @@ const AccountSettings: FC = () => {
   const navigate = useNavigate();
   const { data: user, error, isLoading } = useUser();
   const { mutate: updateUser } = useUpdateUser();
-  const { mutate: uploadImage, isPending } = useUploadImage();
+  const { mutateAsync: uploadImage, isPending } = useUploadImage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [nameError, setNameError] = useState(false);
   const [isChanged, setIsChanged] = useState(false);
   const [initialName, setInitialName] = useState('');
   const [initialProfileImage, setInitialProfileImage] = useState<string | null>(
     null,
   );
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       setName(user.name || '');
       setEmail(user.email || '');
       setProfileImage(user.image || null);
+      setUploadedImageUrl(user.image || null);
       setInitialName(user.name || '');
       setInitialProfileImage(user.image || null);
     }
   }, [user]);
 
   useEffect(() => {
-    setIsChanged(name !== initialName || profileImage !== initialProfileImage);
-  }, [name, profileImage, initialName, initialProfileImage]);
+    setIsChanged(name !== initialName || uploadedImageUrl !== initialProfileImage);
+  }, [name, uploadedImageUrl, initialName, initialProfileImage]);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
-      uploadImage(file, {
-        onSuccess: (data) => {
-          setProfileImage(data.imageUrl);
-        },
-      });
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setSaveError('Image size must be less than 5MB');
+        return;
+      }
+
+      // Show preview immediately
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const preview = e.target?.result as string;
+        setProfileImage(preview);
+      };
+      reader.readAsDataURL(file);
+
+      // Upload to server
+      try {
+        console.log('Uploading image to server...', file.name, file.type);
+        const data = await uploadImage(file);
+        console.log('Image uploaded successfully:', data.imageUrl);
+        setUploadedImageUrl(data.imageUrl);
+        setSaveError(null);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Failed to upload image. Please check your connection and try again.';
+        setSaveError(errorMessage);
+        console.error('Error uploading image:', {
+          error: err,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+        });
+        // Keep preview visible even if upload fails
+      }
     }
   };
 
-  const handleSave = () => {
+  const handleCameraClick = () => {
+    document.getElementById('avatarUpload')?.click();
+  };
+
+  const handleSave = async () => {
     if (!name) {
       setNameError(true);
       return;
     }
 
-    updateUser(
-      { user: { name, image: profileImage ?? undefined } },
-      {
-        onSuccess: () => {
-          setInitialName(name);
-          setInitialProfileImage(profileImage);
-          setIsChanged(false);
-          navigate('/dashboard');
+    setSaveError(null);
+    setIsSaving(true);
+
+    try {
+      // Use the uploaded image URL, not the preview
+      const imageToSave = uploadedImageUrl || profileImage || undefined;
+
+      updateUser(
+        { user: { name, image: imageToSave } },
+        {
+          onSuccess: () => {
+            setInitialName(name);
+            setInitialProfileImage(uploadedImageUrl);
+            setIsChanged(false);
+            setProfileImage(uploadedImageUrl);
+            setIsSaving(false);
+            navigate('/dashboard');
+          },
+          onError: (error) => {
+            setSaveError(
+              error instanceof Error
+                ? error.message
+                : 'Failed to save profile. Please try again.',
+            );
+            setIsSaving(false);
+            console.error('Failed to update user:', error);
+          },
         },
-        onError: (error) => {
-          console.error('Failed to update user:', error);
-        },
-      },
-    );
+      );
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : 'An error occurred during save.',
+      );
+      setIsSaving(false);
+    }
   };
 
   return (
     <AccountSettingsContainer>
       {isLoading && <Typography variant="body1">Loading...</Typography>}
       <ProfileContainer>
-        <ProfileAvatar src={profileImage || ''} alt={name} />
+        <ProfileAvatar src={profileImage || ''} alt={name}>
+          {!profileImage && (name.charAt(0).toUpperCase() || 'F')}
+        </ProfileAvatar>
         <IconButton
           color="primary"
-          component="label"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCameraClick();
+          }}
+          disabled={isPending}
           sx={{
             position: 'absolute',
             bottom: -10,
@@ -96,8 +164,9 @@ const AccountSettings: FC = () => {
           }}
         >
           <input
+            id="avatarUpload"
             hidden
-            accept="image/*"
+            accept="image/jpeg, image/png, image/webp"
             type="file"
             onChange={handleImageChange}
           />
@@ -149,14 +218,14 @@ const AccountSettings: FC = () => {
             </CustomIcon>
           }
           onClick={handleSave}
-          disabled={!isChanged}
+          disabled={!isChanged || isSaving}
         >
-          {t('modal.save')}
+          {isSaving ? 'Saving...' : t('modal.save')}
         </SaveButton>
       </ButtonsGroupWrapper>
-      {error && (
+      {(error || saveError) && (
         <Typography variant="caption" color="error">
-          {error.message}
+          {error?.message || saveError}
         </Typography>
       )}
     </AccountSettingsContainer>

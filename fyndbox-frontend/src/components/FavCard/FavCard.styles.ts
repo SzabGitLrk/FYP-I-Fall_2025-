@@ -9,7 +9,7 @@ export const FavCardContainer = styled(Box)(({ theme }) => ({
   minHeight: 84,
   backgroundColor: theme.palette.common.white,
   border: `1px solid ${theme.palette.grey[200]}`,
-  borderRadius: theme.spacing(1.5),
+  borderRadius: 12,
   boxShadow: '0 8px 24px rgba(15, 57, 39, 0.08)',
   '&:hover': {
     backgroundColor: '#F7FBF8',
@@ -42,7 +42,7 @@ export const FavoriteCardText = styled(Box)(({ theme }) => ({
   color: theme.palette.primary.dark,
   '& .MuiTypography-h6': {
     fontSize: '1rem',
-    fontWeight: 700,
+    fontWeight: 900,
     lineHeight: 1.25,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -66,3 +66,4 @@ export const FavoriteDeleteButton = styled(IconButton)(({ theme }) => ({
     backgroundColor: '#FFE7E7',
   },
 }));
+

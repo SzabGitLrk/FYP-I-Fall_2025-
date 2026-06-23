@@ -27,22 +27,34 @@ export const FavoritesHeader = styled(Box)(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: '48px 1fr 48px',
   alignItems: 'center',
-  minHeight: 64,
-  padding: theme.spacing(1, 1.25),
-  borderBottom: `1px solid ${theme.palette.grey[200]}`,
-  boxShadow: '0 5px 16px rgba(20, 54, 39, 0.08)',
+  minHeight: 72,
+  padding: theme.spacing(1.5, 1.5),
+  background:
+    'linear-gradient(135deg, rgba(73, 139, 96, 0.98) 0%, rgba(93, 157, 113, 0.98) 48%, rgba(137, 183, 153, 0.98) 100%)',
+  boxShadow: '0 12px 26px rgba(0, 35, 18, 0.18)',
   position: 'relative',
   zIndex: 1,
   '& .MuiIconButton-root': {
-    color: theme.palette.primary.dark,
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    color: theme.palette.common.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    border: '1px solid rgba(255, 255, 255, 0.28)',
+    boxShadow: '0 8px 18px rgba(0, 35, 18, 0.16)',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.24)',
+    },
   },
 }));
 
 export const HeaderTitle = styled(Typography)(({ theme }) => ({
   textAlign: 'center',
-  fontWeight: 700,
-  color: theme.palette.primary.dark,
+  fontWeight: 950,
+  color: theme.palette.common.white,
   fontSize: '1.05rem',
+  letterSpacing: 0,
+  textShadow: '0 12px 26px rgba(0, 35, 18, 0.32)',
 }));
 
 export const HeaderSpacer = styled(Box)({
@@ -57,7 +69,7 @@ export const FavoritesList = styled(Box)(({ theme }) => ({
   gap: theme.spacing(1.5),
   padding: theme.spacing(2),
   overflowY: 'auto',
-  backgroundColor: '#F6FAF7',
+  backgroundColor: theme.palette.common.white,
 }));
 
 export const EmptyState = styled(Box)(({ theme }) => ({
@@ -89,3 +101,4 @@ export const EmptyStateDescription = styled(Typography)({
   fontWeight: 400,
   lineHeight: 1.5,
 });
+

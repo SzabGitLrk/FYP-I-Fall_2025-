@@ -14,11 +14,17 @@ const publicRoutes = [
   '/auth/reset-password',
 ];
 
+// Determine the API base URL based on environment
+const getApiBaseUrl = () => {
+  if (import.meta.env.MODE === 'production') {
+    return import.meta.env.VITE_API_URL || '/api';
+  }
+  // In development, use the proxy path which routes to VITE_API_URL
+  return '/api';
+};
+
 const apiClient = axios.create({
-  baseURL:
-    import.meta.env.MODE === 'production'
-      ? import.meta.env.VITE_API_URL
-      : '/api',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
