@@ -1,0 +1,63 @@
+# Environment Variables
+.env
+.env.local
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+templates/.env.local
+
+# Flask
+instance/
+.flaskenv
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Build Files
+build/
+dist/
+*.egg-info/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Uploads
+uploads/
+temp/
+tmp/
+
+# SQLite
+*.db
+*.sqlite3
+
+# Secrets
+secrets.json
+config.json
+credentials.json
+
+# AI Models (optional)
+models/
+weights/
+checkpoints/

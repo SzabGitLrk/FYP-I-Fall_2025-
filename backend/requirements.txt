@@ -1,0 +1,15 @@
+flask
+flask-cors
+pandas
+numpy
+scikit-learn
+xgboost
+joblib
+pytesseract
+pillow
+gTTS
+deep-translator
+opencv-python
+paddleocr
+paddlepaddle
+protobuf<=3.20.3

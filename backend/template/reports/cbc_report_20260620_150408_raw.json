@@ -1,0 +1,33 @@
+{
+  "patient_name": "Mrs. PIRTIRA",
+  "patient_age": "28",
+  "patient_gender": "Female",
+  "test_date": "18-DEC-25",
+  "lab_name": "LUMHS Diagnostic & Research Laboratory",
+  "WBC": 9.6,
+  "RBC": 4.37,
+  "Hemoglobin": 8.8,
+  "Hematocrit": 30.2,
+  "MCV": 69.1,
+  "MCH": 20.1,
+  "MCHC": 29.1,
+  "RDW": null,
+  "Platelets": 329,
+  "Neutrophils": 70.8,
+  "Lymphocytes": 27.0,
+  "Monocytes": 1.0,
+  "Eosinophils": 1.0,
+  "Basophils": 0.2,
+  "ESR": 30,
+  "remarks": "",
+  "peripheral_film": [
+    "Anisocytosis",
+    "Hypochromic",
+    "Microcytic",
+    "Target cell"
+  ],
+  "interpretation": "Iron deficiency anemia",
+  "suggestions": [
+    "Suggest Iron TIBC & ferritin level"
+  ]
+}
