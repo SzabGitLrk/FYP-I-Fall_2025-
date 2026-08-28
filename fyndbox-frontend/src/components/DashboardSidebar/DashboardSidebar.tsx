@@ -56,7 +56,6 @@ const DashboardSidebar: FC<DashboardSidebarProps> = ({
   const mainItems = items.slice(0, 4);
   const preferenceItems = items.slice(4);
   const profileName = user?.name || 'FyndBox User';
-  const profileEmail = user?.email || 'storage@fyndbox.com';
   const initials = profileName
     .split(' ')
     .filter(Boolean)
@@ -137,7 +136,6 @@ const DashboardSidebar: FC<DashboardSidebarProps> = ({
         </RailAvatar>
         <RailProfileText $collapsed={isCollapsed}>
           <strong>{profileName}</strong>
-          <span>{profileEmail}</span>
         </RailProfileText>
       </RailProfileCard>
 

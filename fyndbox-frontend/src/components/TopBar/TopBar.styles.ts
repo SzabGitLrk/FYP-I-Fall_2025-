@@ -3,13 +3,14 @@ import { AppBar, Box, styled, Toolbar } from '@mui/material';
 export const AppBarContainer = styled(AppBar)(({ theme }) => ({
   position: 'relative',
   zIndex: 1,
-  overflow: 'hidden',
+  overflow: 'visible',
   background:
     'linear-gradient(135deg, rgba(73, 139, 96, 0.98) 0%, rgba(93, 157, 113, 0.98) 48%, rgba(137, 183, 153, 0.98) 100%)',
   color: theme.palette.common.white,
-  minHeight: 154,
+  minHeight: 200,
   boxShadow: 'none',
   borderRadius: 0,
+  marginBottom: theme.spacing(3),
   '&::before, &::after': {
     content: '""',
     position: 'absolute',
@@ -33,8 +34,9 @@ export const AppBarContainer = styled(AppBar)(({ theme }) => ({
     top: 34,
   },
   [theme.breakpoints.down('md')]: {
-    minHeight: 176,
+    minHeight: 220,
     borderRadius: 0,
+    marginBottom: theme.spacing(2),
   },
 }));
 
@@ -60,17 +62,22 @@ export const HeaderDotPattern = styled(Box)(({ theme }) => ({
 export const ToolbarContainer = styled(Toolbar)(({ theme }) => ({
   position: 'relative',
   display: 'flex',
+  flexDirection: 'column',
   justifyContent: 'flex-start',
-  alignItems: 'flex-start',
-  minHeight: '154px !important',
+  alignItems: 'stretch',
+  width: '100%',
+  minHeight: 'auto !important',
   padding: `${theme.spacing(3.4, 6.2)} !important`,
+  paddingBottom: theme.spacing(2),
+  gap: theme.spacing(1.5),
   '& .MuiIconButton-root': {
     color: theme.palette.common.white,
   },
   [theme.breakpoints.down('md')]: {
-    alignItems: 'flex-start',
-    minHeight: '176px !important',
-    padding: `${theme.spacing(3, 2, 0)} !important`,
+    alignItems: 'stretch',
+    padding: `${theme.spacing(3, 2)} !important`,
+    paddingBottom: theme.spacing(1.8),
+    gap: theme.spacing(1.2),
     '& .MuiIconButton-root': {
       color: theme.palette.common.white,
     },
@@ -82,11 +89,13 @@ export const MobileHeaderStack = styled(Box)(({ theme }) => ({
   justifyItems: 'start',
   gap: theme.spacing(0.8),
   textAlign: 'left',
+  marginBottom: theme.spacing(0.8),
   [theme.breakpoints.down('md')]: {
     display: 'grid',
     justifyItems: 'start',
     textAlign: 'left',
     gap: theme.spacing(2.2),
+    marginBottom: theme.spacing(0.8),
   },
 }));
 
@@ -127,4 +136,29 @@ export const NotificationSlot = styled(Box)(({ theme }) => ({
     right: theme.spacing(2),
     top: theme.spacing(3),
   },
+}));
+
+export const SearchContainer = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: '100%',
+  maxWidth: '60%',
+  margin: '0 auto',
+  '& input': {
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: 'none',
+  },
+  [theme.breakpoints.down('md')]: {
+    maxWidth: '100%',
+  },
+}));
+
+export const HeaderContentWrapper = styled(Box)(() => ({
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  height: 'auto',
 }));

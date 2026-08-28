@@ -130,33 +130,33 @@ export const LoginContent = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: theme.spacing(3.8),
+  gap: theme.spacing(2.2),
   [theme.breakpoints.down('sm')]: {
-    gap: theme.spacing(2.2),
+    gap: theme.spacing(1.6),
   },
 }));
 
 export const BrandBlock = styled(Box)(({ theme }) => ({
   display: 'grid',
   justifyItems: 'center',
-  gap: theme.spacing(1),
+  gap: theme.spacing(0.6),
   color: theme.palette.common.white,
   fontWeight: 800,
-  fontSize: '1.9rem',
+  fontSize: '1.8rem',
   lineHeight: 1,
   textShadow: '0 10px 24px rgba(10, 62, 35, 0.22)',
   '& img': {
-    width: 112,
-    height: 112,
+    width: 100,
+    height: 100,
     objectFit: 'contain',
     borderRadius: '50%',
     filter: 'drop-shadow(0 14px 18px rgba(9, 67, 36, 0.2))',
   },
   [theme.breakpoints.down('sm')]: {
-    fontSize: '1.55rem',
+    fontSize: '1.45rem',
     '& img': {
-      width: 82,
-      height: 82,
+      width: 76,
+      height: 76,
     },
   },
 }));
@@ -164,7 +164,7 @@ export const BrandBlock = styled(Box)(({ theme }) => ({
 export const LoginCard = styled(Box)(({ theme }) => ({
   width: '100%',
   maxWidth: 668,
-  padding: theme.spacing(5.2, 5.8, 3.6),
+  padding: theme.spacing(3.6, 4.2, 2.6),
   borderRadius: 16,
   backgroundColor: 'rgba(255, 255, 255, 0.96)',
   border: '1px solid rgba(16, 66, 42, 0.04)',
@@ -172,18 +172,18 @@ export const LoginCard = styled(Box)(({ theme }) => ({
   backdropFilter: 'blur(12px)',
   '& form': {
     display: 'grid',
-    gap: theme.spacing(1.6),
+    gap: theme.spacing(1.3),
   },
   '& [class*="ButtonsGroupWrapper"]': {
-    padding: theme.spacing(2.9, 0, 1.2),
-    gap: theme.spacing(1.4),
+    padding: theme.spacing(1.9, 0, 0.8),
+    gap: theme.spacing(1.1),
   },
   '& .MuiButton-root': {
     width: '100%',
     minWidth: 0,
-    minHeight: 61,
+    minHeight: 56,
     borderRadius: 13,
-    fontSize: '1.12rem',
+    fontSize: '1.05rem',
     fontWeight: 800,
     boxShadow: 'none',
   },
@@ -197,44 +197,47 @@ export const LoginCard = styled(Box)(({ theme }) => ({
   },
   [theme.breakpoints.down('sm')]: {
     maxWidth: 430,
-    padding: theme.spacing(3.1, 2.2, 2.3),
+    padding: theme.spacing(2.4, 1.8, 1.8),
     borderRadius: 14,
+    '& form': {
+      gap: theme.spacing(1),
+    },
     '& .MuiButton-root': {
-      minHeight: 52,
-      fontSize: '1rem',
+      minHeight: 48,
+      fontSize: '0.95rem',
     },
     '& [class*="ButtonsGroupWrapper"]': {
-      padding: theme.spacing(2.1, 0, 0.9),
-      gap: theme.spacing(1.1),
+      padding: theme.spacing(1.5, 0, 0.6),
+      gap: theme.spacing(0.9),
     },
   },
 }));
 
 export const LoginTitle = styled(Typography)(({ theme }) => ({
-  marginBottom: theme.spacing(2.7),
+  marginBottom: theme.spacing(1.6),
   color: '#121A16',
-  fontSize: '2.55rem',
+  fontSize: '2.3rem',
   lineHeight: 1.1,
   fontWeight: 800,
   letterSpacing: 0,
   [theme.breakpoints.down('sm')]: {
-    fontSize: '2rem',
-    marginBottom: theme.spacing(2),
+    fontSize: '1.85rem',
+    marginBottom: theme.spacing(1.3),
   },
 }));
 
 export const FieldStack = styled(Box)(({ theme }) => ({
   display: 'grid',
-  gap: theme.spacing(1.7),
+  gap: theme.spacing(1.3),
   '& .MuiTextField-root': {
     margin: 0,
   },
   '& .MuiFormLabel-root': {
     position: 'relative',
     transform: 'none',
-    marginBottom: theme.spacing(1.1),
+    marginBottom: theme.spacing(0.85),
     color: '#72777D',
-    fontSize: '1rem',
+    fontSize: '0.95rem',
     lineHeight: 1.2,
     fontWeight: 500,
     letterSpacing: 0,
@@ -246,7 +249,7 @@ export const FieldStack = styled(Box)(({ theme }) => ({
     },
   },
   '& .MuiInputBase-root': {
-    minHeight: 58,
+    minHeight: 56,
     borderRadius: 8,
     padding: theme.spacing(0, 1.5),
     backgroundColor: '#F2F5F3',
@@ -267,30 +270,30 @@ export const FieldStack = styled(Box)(({ theme }) => ({
   },
   '& .MuiInputBase-input': {
     color: '#202924',
-    fontSize: '1.2rem',
+    fontSize: '1.1rem',
     fontWeight: 500,
     letterSpacing: 0,
-    padding: theme.spacing(1.2, 0),
+    padding: theme.spacing(1, 0),
   },
   '& .MuiInputAdornment-root .MuiSvgIcon-root': {
     color: '#7D8580',
-    fontSize: '1.45rem',
+    fontSize: '1.35rem',
   },
   '& .MuiIconButton-root': {
     color: '#7D8580',
-    padding: theme.spacing(0.6),
+    padding: theme.spacing(0.5),
   },
   '& .MuiFormHelperText-root': {
     marginLeft: 0,
     fontWeight: 600,
   },
   [theme.breakpoints.down('sm')]: {
-    gap: theme.spacing(1.3),
+    gap: theme.spacing(1),
     '& .MuiInputBase-root': {
-      minHeight: 52,
+      minHeight: 48,
     },
     '& .MuiInputBase-input': {
-      fontSize: '1rem',
+      fontSize: '0.95rem',
     },
   },
 }));

@@ -145,17 +145,30 @@ export class AuthController {
         ),
       };
     } catch (error) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          success: false,
-          message: this.translationService.getTranslation(
+      // Check if it's an email configuration error
+      const isConfigError = error.message && (
+        error.message.includes('email configuration') ||
+        error.message.includes('Email service is not configured') ||
+        error.message.includes('environment variables') ||
+        error.message.includes('MAIL_')
+      );
+      
+      const statusCode = isConfigError ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.INTERNAL_SERVER_ERROR;
+      const errorMessage = isConfigError 
+        ? 'Email service is not properly configured. Please contact support.'
+        : this.translationService.getTranslation(
             'api.auth.forgotPassword.error',
             lang,
-          ),
+          );
+
+      throw new HttpException(
+        {
+          statusCode,
+          success: false,
+          message: errorMessage,
           error: error.message,
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        statusCode,
       );
     }
   }

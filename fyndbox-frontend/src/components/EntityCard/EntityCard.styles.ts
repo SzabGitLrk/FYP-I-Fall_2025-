@@ -12,7 +12,7 @@ export const EntityCardContainer = styled(Card, {
   background:
     'linear-gradient(135deg, #FFFFFF 0%, #F4FBF6 100%)',
   borderRadius: 12,
-  marginBottom: isBoxCard ? theme.spacing(1.6) : theme.spacing(2.4),
+  marginBottom: isBoxCard ? theme.spacing(1.2) : theme.spacing(1.8),
   color: '#064326',
   border: '1px solid rgba(21, 113, 69, 0.18)',
   borderLeft: `6px solid ${theme.palette.primary.main}`,
@@ -27,14 +27,14 @@ export const EntityCardContainer = styled(Card, {
       '0 24px 44px rgba(20, 42, 29, 0.18), 0 0 0 1px rgba(21, 113, 69, 0.1) inset',
   },
   '& .MuiCardContent-root': {
-    padding: theme.spacing(isBoxCard ? 2.1 : 2.8, 3.2),
+    padding: theme.spacing(isBoxCard ? 1.6 : 2.2, 2.6),
     '&:last-child': {
-      paddingBottom: theme.spacing(isBoxCard ? 2.1 : 2.8),
+      paddingBottom: theme.spacing(isBoxCard ? 1.6 : 2.2),
     },
   },
   '& .MuiIconButton-root': {
-    width: isBoxCard ? 44 : 50,
-    height: isBoxCard ? 44 : 50,
+    width: isBoxCard ? 40 : 44,
+    height: isBoxCard ? 40 : 44,
     borderRadius: 8,
     color: '#064326',
     backgroundColor: 'rgba(226, 235, 228, 0.74)',
@@ -44,40 +44,40 @@ export const EntityCardContainer = styled(Card, {
   },
   '& .MuiSvgIcon-root': {
     color: '#064326',
-    fontSize: '1.55rem !important',
+    fontSize: '1.35rem !important',
   },
   [theme.breakpoints.down('md')]: {
-    marginBottom: isBoxCard ? theme.spacing(1) : theme.spacing(1.45),
+    marginBottom: isBoxCard ? theme.spacing(0.8) : theme.spacing(1.1),
     borderLeftWidth: 3,
     boxShadow: '0 9px 20px rgba(20, 42, 29, 0.1)',
     '& .MuiCardContent-root': {
-      padding: theme.spacing(1.35, 1.4),
+      padding: theme.spacing(1.1, 1.1),
       '&:last-child': {
-        paddingBottom: theme.spacing(1.35),
+        paddingBottom: theme.spacing(1.1),
       },
     },
     '& .MuiIconButton-root': {
-      width: 34,
-      height: 34,
-      borderRadius: 7,
+      width: 32,
+      height: 32,
+      borderRadius: 6,
     },
   },
 }));
 
 export const ImageBox = styled('img')(({ theme }) => ({
-  width: 92,
-  height: 92,
-  marginRight: theme.spacing(2.8),
+  width: 72,
+  height: 72,
+  marginRight: theme.spacing(2.2),
   objectFit: 'contain',
-  borderRadius: 18,
-  padding: theme.spacing(1.05),
+  borderRadius: 16,
+  padding: theme.spacing(0.8),
   backgroundColor: '#ECF5EF',
   [theme.breakpoints.down('md')]: {
-    width: 58,
-    height: 58,
-    marginRight: theme.spacing(1.4),
-    borderRadius: 16,
-    padding: theme.spacing(0.85),
+    width: 48,
+    height: 48,
+    marginRight: theme.spacing(1.1),
+    borderRadius: 14,
+    padding: theme.spacing(0.7),
   },
 }));
 
@@ -89,19 +89,19 @@ export const ContentBox = styled(Box)({
 export const NameText = styled(Typography)(({ theme }) => ({
   wordBreak: 'break-word',
   color: '#064326',
-  fontSize: '1.72rem',
-  lineHeight: 1.18,
+  fontSize: '1.45rem',
+  lineHeight: 1.15,
   fontWeight: 900,
   letterSpacing: 0,
   [theme.breakpoints.down('md')]: {
-    fontSize: '1.1rem',
+    fontSize: '0.95rem',
   },
 }));
 
 export const DescriptionText = styled(Typography)(({ theme }) => ({
   wordBreak: 'break-word',
   color: '#5D6A62',
-  fontSize: '1.02rem',
+  fontSize: '0.9rem',
   [theme.breakpoints.down('md')]: {
     display: 'none',
   },
@@ -111,30 +111,30 @@ export const MetaRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   flexWrap: 'wrap',
-  gap: theme.spacing(1.2),
-  marginTop: theme.spacing(1.3),
+  gap: theme.spacing(0.9),
+  marginTop: theme.spacing(0.95),
 }));
 
 export const MetaChip = styled(Box)(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',
-  gap: theme.spacing(0.55),
-  minHeight: 36,
-  padding: theme.spacing(0.65, 1.3),
-  borderRadius: 8,
+  gap: theme.spacing(0.5),
+  minHeight: 32,
+  padding: theme.spacing(0.5, 1),
+  borderRadius: 7,
   backgroundColor: '#EAF4ED',
   color: '#064326',
-  fontSize: '0.94rem',
-  fontWeight: 800,
+  fontSize: '0.85rem',
+  fontWeight: 700,
   '& .MuiSvgIcon-root': {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     color: '#157145',
-    fontSize: '18px !important',
+    fontSize: '16px !important',
   },
   [theme.breakpoints.down('md')]: {
-    minHeight: 28,
-    fontSize: '0.78rem',
+    minHeight: 24,
+    fontSize: '0.72rem',
   },
 }));
 
@@ -142,18 +142,18 @@ export const QuantityText = styled(Typography)(({ theme }) => ({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  minWidth: 82,
-  minHeight: 38,
-  padding: theme.spacing(0.6, 1.3),
-  borderRadius: 8,
-  backgroundColor: '#EAF4ED',
-  color: '#064326',
-  fontSize: '1rem',
-  fontWeight: 900,
+  minWidth: 'auto',
+  minHeight: 'auto',
+  padding: 0,
+  borderRadius: 0,
+  backgroundColor: 'transparent',
+  color: '#99A09A',
+  fontSize: '0.8rem',
+  fontWeight: 400,
   whiteSpace: 'nowrap',
   [theme.breakpoints.down('md')]: {
-    minWidth: 64,
-    minHeight: 32,
-    fontSize: '0.85rem',
+    minWidth: 'auto',
+    minHeight: 'auto',
+    fontSize: '0.7rem',
   },
 }));

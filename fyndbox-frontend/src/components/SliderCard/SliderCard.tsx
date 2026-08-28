@@ -1,6 +1,5 @@
 import { FC } from 'react';
-import { Typography } from '@mui/material';
-import { CardContainer, StepCounter } from './SliderCard.style';
+import { CardContainer, StepCounter, StepTitle, StepDescription } from './SliderCard.style';
 
 interface SliderCardProps {
   title: string;
@@ -12,14 +11,14 @@ const SliderCard: FC<SliderCardProps> = ({ title, description, step }) => {
   return (
     <CardContainer>
       <StepCounter>
-        <Typography variant="h6">{step}</Typography>
+        {step}
       </StepCounter>
-      <Typography variant="h6" p={1}>
+      <StepTitle>
         {title}
-      </Typography>
-      <Typography variant="body2" pb={2} px={1}>
+      </StepTitle>
+      <StepDescription>
         {description}
-      </Typography>
+      </StepDescription>
     </CardContainer>
   );
 };

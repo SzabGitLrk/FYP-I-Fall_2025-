@@ -72,11 +72,12 @@ export const ActionButtonsContainer = styled(DialogActions)(({ theme }) => ({
 }));
 
 export const CancelButton = styled(DialogBaseButton)(({ theme }) => ({
-  backgroundColor: theme.palette.secondary.main,
-  color: theme.palette.secondary.contrastText,
-  border: `1px solid ${theme.palette.secondary.contrastText}`,
+  backgroundColor: theme.palette.error.main,
+  color: theme.palette.common.white,
+  border: `1px solid ${theme.palette.error.main}`,
   '&:hover': {
-    backgroundColor: theme.palette.secondary.dark,
+    backgroundColor: theme.palette.error.dark,
+    borderColor: theme.palette.error.dark,
   },
 }));
 

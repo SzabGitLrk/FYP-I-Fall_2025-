@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 export const useFooterActions = () => {
   const navigate = useNavigate();
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
 
@@ -29,11 +28,11 @@ export const useFooterActions = () => {
   };
 
   const handleSettingsClick = () => {
-    setSidebarOpen(true);
+    navigate('/settings');
   };
 
   const handleCloseSidebar = () => {
-    setSidebarOpen(false);
+    // No longer used - settings is now a full page
   };
 
   const handleCloseFavbar = () => {
@@ -50,6 +49,6 @@ export const useFooterActions = () => {
     handleCloseFavbar,
     showQRScanner,
     showFavorites,
-    isSidebarOpen,
+    isSidebarOpen: false,
   };
 };

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import * as postmark from 'postmark';
+import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
 import { UserService } from '../user/user.service';
 import { BaseService } from '../common/base.service';
@@ -21,7 +21,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService extends BaseService {
-  private postmarkClient;
+  private mailTransporter;
 
   constructor(
     private userService: UserService,
@@ -31,11 +31,27 @@ export class AuthService extends BaseService {
     private boxService: BoxService,
   ) {
     super();
-    const postmarkApiKey = process.env.POSTMARK_API_KEY;
-    if (!postmarkApiKey) {
-      throw new Error('POSTMARK_API_KEY is not set in environment variables');
+    
+    // Initialize Nodemailer transporter
+    const mailHost = process.env.MAIL_HOST;
+    const mailPort = process.env.MAIL_PORT;
+    const mailUser = process.env.MAIL_USER;
+    const mailPassword = process.env.MAIL_PASSWORD;
+
+    if (!mailHost || !mailPort || !mailUser || !mailPassword) {
+      console.warn('Email configuration is incomplete. Email features will not work.');
+      this.mailTransporter = null;
+    } else {
+      this.mailTransporter = nodemailer.createTransport({
+        host: mailHost,
+        port: Number(mailPort),
+        secure: false, // true for 465, false for other ports
+        auth: {
+          user: mailUser,
+          pass: mailPassword,
+        },
+      });
     }
-    this.postmarkClient = new postmark.ServerClient(postmarkApiKey);
   }
 
   async login(loginDto: LoginDto): Promise<{ access_token: string }> {
@@ -116,33 +132,41 @@ export class AuthService extends BaseService {
     );
 
     const frontendUrl = process.env.FRONTEND_URL;
-    const fromEmail = process.env.POSTMARK_FROM_EMAIL;
-    const templateId = process.env.POSTMARK_WELCOME_TEMPLATE_ID;
+    const mailFrom = process.env.MAIL_FROM;
     const productName = process.env.PRODUCT_NAME;
 
-    if (!frontendUrl || !fromEmail || !templateId || !productName) {
-      throw new Error(
-        'FRONTEND_URL, POSTMARK_FROM_EMAIL, PRODUCT_NAME, or POSTMARK_WELCOME_TEMPLATE_ID is missing in environment variables',
-      );
+    if (!frontendUrl || !mailFrom || !productName) {
+      console.warn('Email environment variables missing, skipping welcome email');
+    } else if (this.mailTransporter) {
+      const loginUrl = `${frontendUrl}/login`;
+
+      try {
+        await this.mailTransporter.sendMail({
+          from: mailFrom,
+          to: createUserDto.email,
+          subject: `Welcome to ${productName}!`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Hello ${createUserDto.name},</h2>
+              <p>Welcome to ${productName}! We're excited to have you on board.</p>
+              <p>Your account has been successfully created with the email: <strong>${createUserDto.email}</strong></p>
+              <p>You can now log in and start using ${productName}:</p>
+              <a href="${loginUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+                Log In to ${productName}
+              </a>
+              <p>If you have any questions, feel free to reach out to our support team.</p>
+              <br>
+              <p>Best regards,<br>The ${productName} Team</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              <p style="color: #666; font-size: 12px;">This is an automated email, please do not reply.</p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail signup if email fails
+      }
     }
-
-    // login URL
-    const loginUrl = `${frontendUrl}/login`;
-
-    await this.postmarkClient.sendEmailWithTemplate({
-      From: fromEmail,
-      To: createUserDto.email,
-      TemplateId: parseInt(templateId, 10),
-      TemplateModel: {
-        name: createUserDto.name,
-        email: createUserDto.email,
-        product_name: productName,
-        product_url: frontendUrl,
-        login_url: loginUrl,
-        company_name: productName,
-        company_address: fromEmail,
-      },
-    });
 
     const payload = { email: newUser.email, sub: newUser.id };
     const access_token = this.jwtService.sign(payload);
@@ -174,7 +198,17 @@ export class AuthService extends BaseService {
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const user = await this.userService.findByEmail(email);
+    // Find user by email - will throw NotFoundException if not found
+    const user = await this.userService.findByEmail(email).catch(() => {
+      // For security, don't reveal if email exists or not
+      // Just return success to prevent email enumeration
+      return null;
+    });
+
+    // If user not found, return silently (security best practice)
+    if (!user) {
+      return;
+    }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     user.resetToken = resetToken;
@@ -185,32 +219,52 @@ export class AuthService extends BaseService {
     });
 
     const frontendUrl = process.env.FRONTEND_URL;
-    const fromEmail = process.env.POSTMARK_FROM_EMAIL;
-    const templateId = process.env.POSTMARK_FORGOT_PASSWORD_TEMPLATE_ID;
+    const mailFrom = process.env.MAIL_FROM;
     const productName = process.env.PRODUCT_NAME;
 
-    if (!frontendUrl || !fromEmail || !templateId) {
+    if (!frontendUrl || !mailFrom || !productName) {
       throw new Error(
-        'FRONTEND_URL, POSTMARK_FROM_EMAIL, PRODUCT_NAME, or POSTMARK_FORGOT_PASSWORD_TEMPLATE_ID is missing in environment variables',
+        'FRONTEND_URL, MAIL_FROM, or PRODUCT_NAME is missing in environment variables',
       );
     }
+
+    if (!this.mailTransporter) {
+      throw new Error('Email service is not configured. Please check your email settings.');
+    }
+
     // Generate the reset URL
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
     // Send the reset password email
-    await this.postmarkClient.sendEmailWithTemplate({
-      From: fromEmail,
-      To: email,
-      TemplateId: parseInt(templateId, 10),
-      TemplateModel: {
-        name: user.name || 'User',
-        action_url: resetUrl,
-        company_name: productName,
-        product_name: productName,
-        product_url: frontendUrl,
-        company_address: fromEmail,
-      },
-    });
+    try {
+      await this.mailTransporter.sendMail({
+        from: mailFrom,
+        to: email,
+        subject: `Reset your ${productName} password`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Hello ${user.name || 'User'},</h2>
+            <p>We received a request to reset your password for your ${productName} account.</p>
+            <p>Click the button below to reset your password:</p>
+            <a href="${resetUrl}" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+              Reset Password
+            </a>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+            <p><strong>This link will expire in 1 hour.</strong></p>
+            <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+            <br>
+            <p>Best regards,<br>The ${productName} Team</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #666; font-size: 12px;">This is an automated email, please do not reply.</p>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      // Log the email error but don't expose it to the user
+      console.error('Failed to send password reset email:', emailError);
+      throw new Error('Failed to send password reset email. Please check your email configuration.');
+    }
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {

@@ -1,8 +1,7 @@
 import { FC } from 'react';
-import { Tooltip } from '@mui/material';
-import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { useTranslation } from 'react-i18next';
-import { StyledSmartAssistButton } from './SmartAssistButton.styles';
+import { StyledSmartAssistButton, FABWrapper } from './SmartAssistButton.styles';
 
 interface SmartAssistButtonProps {
   onClick: () => void;
@@ -19,16 +18,16 @@ const SmartAssistButton: FC<SmartAssistButtonProps> = ({
   const label = t('smartAdd.title', { defaultValue: 'Smart Add' });
 
   return (
-    <Tooltip title={label} placement="left" arrow>
+    <FABWrapper>
       <StyledSmartAssistButton
         $placement={placement}
         aria-label={label}
         onClick={onClick}
         disabled={disabled}
       >
-        <AddRoundedIcon />
+        <AutoAwesomeRoundedIcon />
       </StyledSmartAssistButton>
-    </Tooltip>
+    </FABWrapper>
   );
 };
 

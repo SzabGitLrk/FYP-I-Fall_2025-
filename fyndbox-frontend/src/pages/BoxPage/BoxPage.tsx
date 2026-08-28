@@ -25,6 +25,8 @@ import {
   ItemsHeader,
   ItemsTitle,
   PrintQRButton,
+  BoxHeaderSection,
+  ItemsScrollContainer,
 } from './BoxPage.styles';
 import AddEntityButton from '../../components/AddEntityButton/AddEntityButton';
 import DashboardFooter from '../../components/DashboardFooter/DashboardFooter';
@@ -38,7 +40,6 @@ import EntityCard from '../../components/EntityCard/EntityCard';
 import { EntityType } from '../../types/entityTypes';
 import EntityActionModal from '../../components/Modal/EntityActionModal';
 import QRScanner from '../../components/QRScanner/QRScanner';
-import Sidebar from '../../components/Sidebar/Sidebar';
 import { useFooterActions } from '../../hooks/useFooterActions';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
 import { useAuth } from '../../hooks/useAuth';
@@ -65,11 +66,9 @@ const BoxPage: FC = () => {
     handleScanSuccess,
     handleCancelScan,
     handleSettingsClick,
-    handleCloseSidebar,
     handleCloseFavbar,
-    showQRScanner,
     showFavorites,
-    isSidebarOpen,
+    showQRScanner,
   } = useFooterActions();
 
   // Fetch storage details using storageId
@@ -306,63 +305,71 @@ const BoxPage: FC = () => {
       />
       <BoxMain $sidebarCollapsed={isSidebarCollapsed}>
         <BoxContent>
-          <BackButton onClick={() => navigate('/dashboard')}>
-            <ArrowBackIos />
-            <Typography variant="h6">{storage?.name}</Typography>
-          </BackButton>
-          {/* BoxDetails component */}
-          {box && (
-            <BoxDetails
-              name={box.name}
-              description={box.description}
-              image={box.image}
-              isFavorite={box.isFavorite}
-              itemCount={items?.length ?? 0}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          )}
-          <ItemsHeader>
-            <ItemsTitle>
-              {t('box.itemsTitle', { defaultValue: 'Items' })}
-            </ItemsTitle>
-          </ItemsHeader>
+          <BoxHeaderSection>
+            <BackButton onClick={() => navigate('/dashboard')}>
+              <ArrowBackIos />
+              <Typography variant="h6">{storage?.name}</Typography>
+            </BackButton>
+            {/* BoxDetails component */}
+            {box && (
+              <BoxDetails
+                name={box.name}
+                description={box.description}
+                image={box.image}
+                isFavorite={box.isFavorite}
+                itemCount={items?.length ?? 0}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            )}
+            <ItemsHeader>
+              <ItemsTitle>
+                {t('box.itemsInBoxTitle', { 
+                  boxName: box?.name,
+                  defaultValue: `Items in ${box?.name}` 
+                })}
+              </ItemsTitle>
+            </ItemsHeader>
+          </BoxHeaderSection>
 
-          {items && items.length === 0 ? (
-            <Typography variant="body2" p={3} sx={{ textAlign: 'center' }}>
-              {t('box.noItemsFound')}
-            </Typography>
-          ) : (
-            items?.map((item, index) => (
-              <Box key={index}>
-                <EntityCard
-                  name={item.name}
-                  description={item.description ?? ''}
-                  image={item.image ?? ''}
-                  quantity={item.quantity ?? 1}
-                  entityType="item"
-                  onEdit={() => handleEditEntity('item', item)}
-                />
-              </Box>
-            ))
-          )}
-          {showQRScanner && (
-            <QRScanner
-              onScanSuccess={handleScanSuccess}
-              onCancel={handleCancelScan}
+          <ItemsScrollContainer>
+            {items && items.length === 0 ? (
+              <Typography variant="body2" p={3} sx={{ textAlign: 'center' }}>
+                {t('box.noItemsFound')}
+              </Typography>
+            ) : (
+              items?.map((item, index) => (
+                <Box key={index}>
+                  <EntityCard
+                    name={item.name}
+                    description={item.description ?? ''}
+                    image={item.image ?? ''}
+                    quantity={item.quantity ?? 1}
+                    entityType="item"
+                    onEdit={() => handleEditEntity('item', item)}
+                  />
+                </Box>
+              ))
+            )}
+            {showQRScanner && (
+              <QRScanner
+                onScanSuccess={handleScanSuccess}
+                onCancel={handleCancelScan}
+              />
+            )}
+            
+            {/* Add Item Button - Inside scroll container */}
+            <AddEntityButton
+              entityType="item"
+              onAdd={() => handleAddEntity('item')}
             />
-          )}
-          {/* Add Item Button */}
-          <AddEntityButton
-            entityType="item"
-            onAdd={() => handleAddEntity('item')}
-          />
 
-          {/* QR Code Button */}
-          <ButtonContainer>
-            <PrintQRButton variant="contained" onClick={handlePrintQRCode}>
-              {t('box.printQRcode')}
-            </PrintQRButton>
-          </ButtonContainer>
+            {/* QR Code Button - Inside scroll container */}
+            <ButtonContainer>
+              <PrintQRButton variant="contained" onClick={handlePrintQRCode}>
+                {t('box.printQRcode')}
+              </PrintQRButton>
+            </ButtonContainer>
+          </ItemsScrollContainer>
         </BoxContent>
       </BoxMain>
       <DashboardFooter
@@ -380,7 +387,6 @@ const BoxPage: FC = () => {
         onSave={handleSave}
         onDelete={handleDelete}
       />
-      <Sidebar open={isSidebarOpen} onClose={handleCloseSidebar} />
       <FavoritesSidebar
         open={showFavorites}
         favorites={favoriteBoxes}

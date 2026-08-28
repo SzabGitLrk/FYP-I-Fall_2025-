@@ -1,8 +1,8 @@
 import { Box, Chip, styled, Typography } from '@mui/material';
 
 export const ImageBox = styled('img')(({}) => ({
-  width: 136,
-  height: 136,
+  width: 108,
+  height: 108,
   objectFit: 'contain',
 }));
 
@@ -10,16 +10,22 @@ export const BoxDetailsContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
-  gap: theme.spacing(3.5),
-  minHeight: 156,
-  margin: theme.spacing(2.5, 0, 3.8),
-  padding: theme.spacing(2.4, 3.2),
+  gap: theme.spacing(2.8),
+  minHeight: 128,
+  margin: theme.spacing(2, 0, 3),
+  padding: theme.spacing(1.9, 2.6),
   borderRadius: 8,
-  background:
-    'linear-gradient(135deg, rgba(240, 247, 242, 0.96) 0%, rgba(232, 242, 235, 0.88) 100%)',
-  border: '1px solid rgba(12, 64, 38, 0.06)',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid rgba(21, 113, 69, 0.08)',
   boxShadow: '0 12px 28px rgba(20, 42, 29, 0.08)',
   overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: '#FFFFFF',
+    zIndex: 0,
+  },
   '&::after': {
     content: '""',
     position: 'absolute',
@@ -28,13 +34,13 @@ export const BoxDetailsContainer = styled(Box)(({ theme }) => ({
     width: 250,
     height: 250,
     borderRadius: '50%',
-    backgroundColor: 'rgba(137, 183, 153, 0.14)',
+    backgroundColor: 'rgba(137, 183, 153, 0.08)',
   },
   [theme.breakpoints.down('md')]: {
     alignItems: 'flex-start',
-    gap: theme.spacing(2),
-    marginTop: theme.spacing(1.8),
-    padding: theme.spacing(2),
+    gap: theme.spacing(1.6),
+    marginTop: theme.spacing(1.4),
+    padding: theme.spacing(1.6),
   },
 }));
 
@@ -42,19 +48,19 @@ export const ImageContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  flex: '0 0 152px',
-  width: 152,
-  height: 152,
+  flex: '0 0 120px',
+  width: 120,
+  height: 120,
   borderRadius: '50%',
   backgroundColor: 'rgba(255, 255, 255, 0.68)',
   boxShadow: 'inset 0 0 0 1px rgba(21, 113, 69, 0.04)',
   [theme.breakpoints.down('md')]: {
-    flexBasis: 86,
-    width: 86,
-    height: 86,
+    flexBasis: 72,
+    width: 72,
+    height: 72,
     '& img': {
-      width: 78,
-      height: 78,
+      width: 64,
+      height: 64,
     },
   },
 }));
@@ -68,18 +74,18 @@ export const DetailsContent = styled(Box)(({}) => ({
 
 export const DetailsTitle = styled(Typography)(({ theme }) => ({
   color: '#063F25',
-  fontSize: '1.75rem',
+  fontSize: '1.5rem',
   lineHeight: 1.15,
   fontWeight: 900,
   letterSpacing: 0,
   [theme.breakpoints.down('md')]: {
-    fontSize: '1.35rem',
+    fontSize: '1.15rem',
   },
 }));
 
 export const DetailsDescription = styled(Typography)(({}) => ({
   color: '#4D5C54',
-  fontSize: '1rem',
+  fontSize: '0.88rem',
   fontWeight: 500,
 }));
 
@@ -87,19 +93,23 @@ export const DetailsMeta = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   flexWrap: 'wrap',
-  gap: theme.spacing(1.2),
-  marginTop: theme.spacing(2),
+  gap: theme.spacing(0.9),
+  marginTop: theme.spacing(1.5),
 }));
 
 export const DetailsChip = styled(Chip)(({}) => ({
-  height: 34,
-  borderRadius: 8,
+  height: 30,
+  borderRadius: 7,
   backgroundColor: '#FFFFFF',
   color: '#064326',
-  fontWeight: 800,
+  fontWeight: 700,
+  fontSize: '0.82rem',
   boxShadow: '0 6px 14px rgba(20, 42, 29, 0.08)',
   '& .MuiChip-icon': {
     color: '#157145',
+    width: 16,
+    height: 16,
+    fontSize: '16px !important',
   },
 }));
 
@@ -108,11 +118,11 @@ export const FavoriteButtonWrap = styled(Box)(({ theme }) => ({
   zIndex: 1,
   display: 'grid',
   justifyItems: 'center',
-  gap: theme.spacing(0.5),
+  gap: theme.spacing(0.4),
   '& .MuiIconButton-root': {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 7,
     backgroundColor: '#FFFFFF',
     color: '#064326',
     boxShadow: '0 8px 18px rgba(20, 42, 29, 0.1)',
@@ -120,6 +130,7 @@ export const FavoriteButtonWrap = styled(Box)(({ theme }) => ({
   '& .MuiTypography-root': {
     color: '#4D5C54',
     fontWeight: 600,
+    fontSize: '0.75rem',
   },
   [theme.breakpoints.down('sm')]: {
     position: 'absolute',

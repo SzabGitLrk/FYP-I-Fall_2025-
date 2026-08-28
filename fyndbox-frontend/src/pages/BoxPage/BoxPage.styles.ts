@@ -20,6 +20,9 @@ export const BoxMain = styled(Box, {
   flex: 1,
   minWidth: 0,
   overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100vh',
   marginLeft: $sidebarCollapsed ? 100 : 330,
   width: `calc(100% - ${$sidebarCollapsed ? 100 : 330}px)`,
   padding: theme.spacing(2.2, 4.4, 0),
@@ -71,7 +74,54 @@ export const BoxContent = styled(Box)(({ theme }) => ({
   width: '100%',
   maxWidth: 1040,
   margin: '0 auto',
-  paddingBottom: `calc(${theme.spacing(14)} + env(safe-area-inset-bottom, 0px))`,
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
+  overflow: 'hidden',
+  paddingBottom: `calc(${theme.spacing(1)} + env(safe-area-inset-bottom, 0px))`,
+  [theme.breakpoints.down('md')]: {
+    paddingBottom: `calc(${theme.spacing(10)} + env(safe-area-inset-bottom, 0px))`,
+  },
+}));
+
+export const BoxHeaderSection = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  zIndex: 2,
+  flex: '0 0 auto',
+  paddingBottom: theme.spacing(2),
+}));
+
+export const ItemsScrollContainer = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  flex: '1 1 auto',
+  minHeight: 0,
+  overflowY: 'auto',
+  overflowX: 'hidden',
+  overscrollBehavior: 'contain',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+  paddingRight: '4px',
+  paddingBottom: theme.spacing(2),
+  /* Custom Scrollbar Styling - Matches Dashboard */
+  scrollbarWidth: 'thin',
+  scrollbarColor: 'rgba(21, 113, 69, 0.45) rgba(5, 63, 37, 0.08)',
+  '&::-webkit-scrollbar': {
+    width: 10,
+  },
+  '&::-webkit-scrollbar-track': {
+    backgroundColor: 'rgba(5, 63, 37, 0.06)',
+    borderRadius: 999,
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: 'rgba(21, 113, 69, 0.38)',
+    borderRadius: 999,
+    border: '2px solid rgba(251, 253, 251, 0.9)',
+  },
+  '&::-webkit-scrollbar-thumb:hover': {
+    backgroundColor: 'rgba(21, 113, 69, 0.58)',
+  },
 }));
 
 export const ItemsHeader = styled(Box)(({ theme }) => ({
@@ -82,10 +132,12 @@ export const ItemsHeader = styled(Box)(({ theme }) => ({
 }));
 
 export const ItemsTitle = styled(Typography)(({}) => ({
-  color: '#063F25',
-  fontSize: '1.15rem',
-  fontWeight: 900,
-  letterSpacing: 0,
+  color: '#99A09A',
+  fontSize: '0.8rem',
+  fontWeight: 400,
+  letterSpacing: 0.3,
+  textTransform: 'uppercase',
+  margin: 0,
 }));
 
 export const PrintQRButton = styled(BaseButton)(({ theme }) => ({
@@ -98,7 +150,8 @@ export const PrintQRButton = styled(BaseButton)(({ theme }) => ({
 
 export const ButtonContainer = styled(Box)(({ theme }) => ({
   textAlign: 'center',
-  padding: theme.spacing(4, 0, 0),
+  padding: theme.spacing(3, 0, 2),
+  marginTop: theme.spacing(2),
   [theme.breakpoints.down('md')]: {
     display: 'none',
   },

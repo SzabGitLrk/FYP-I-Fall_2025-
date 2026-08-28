@@ -782,9 +782,13 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
               textTransform: 'none',
               fontWeight: 600,
               px: 3,
-              borderColor: 'grey.300',
-              color: 'text.primary',
-              '&:hover': { borderColor: 'grey.500', bgcolor: 'grey.50' },
+              borderColor: 'error.main',
+              color: 'error.main',
+              '&:hover': { 
+                borderColor: 'error.dark', 
+                bgcolor: 'error.light',
+                color: 'error.dark',
+              },
             }}
           >
             {t('modal.cancel', { defaultValue: 'Cancel' })}
@@ -798,6 +802,7 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
               textTransform: 'none',
               fontWeight: 700,
               px: 3,
+              whiteSpace: 'nowrap',
               boxShadow: '0 4px 14px rgba(21, 113, 69, 0.25)',
               '&:hover': {
                 boxShadow: '0 6px 18px rgba(21, 113, 69, 0.35)',
@@ -810,14 +815,14 @@ const TemplateHierarchySidebar: FC<TemplateHierarchySidebarProps> = ({
                     defaultValue: 'Updating...',
                   })
                 : t('templatesSidebar.confirmUpdate', {
-                    defaultValue: 'Update Selected',
+                    defaultValue: 'Update',
                   })
               : isProcessing
                 ? t('templatesSidebar.creating', {
                     defaultValue: 'Creating...',
                   })
                 : t('templatesSidebar.confirmCreate', {
-                    defaultValue: 'Create Selected',
+                    defaultValue: 'Create',
                   })}
           </Button>
         </DialogActions>

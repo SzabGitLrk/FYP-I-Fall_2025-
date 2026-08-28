@@ -20,7 +20,6 @@ import {
   LogoutButton,
   MenuIconWrapper,
   ProfileBlock,
-  ProfileEmail,
   ProfileName,
   SidebarContainer,
   SidebarDrawer,
@@ -89,7 +88,6 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
   }>;
 
   const profileName = user?.name || 'Fayaz Hussain';
-  const profileEmail = user?.email || 'fayazhussain.cs@gmail.com';
   const profileImage = user?.image || null;
   const initials = profileName
     .split(' ')
@@ -117,7 +115,6 @@ const Sidebar: FC<{ open: boolean; onClose: () => void }> = ({
               {!profileImage && (initials || 'F')}
             </AvatarContainer>
             <ProfileName variant="h6">{profileName}</ProfileName>
-            <ProfileEmail variant="body2">{profileEmail}</ProfileEmail>
           </ProfileBlock>
 
           <SidebarElementContainer>

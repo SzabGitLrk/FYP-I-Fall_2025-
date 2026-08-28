@@ -7,8 +7,9 @@ import {
   AboutCard,
   AboutPageContainer,
   AboutPageShell,
+  GoBackButton,
+  StyledArrowBack,
 } from './AboutPage.styles';
-import { GoBackButton, StyledArrowBack } from '../../styles/commonStyles';
 
 const AboutPage: FC = () => {
   const navigate = useNavigate();
@@ -17,13 +18,10 @@ const AboutPage: FC = () => {
   return (
     <AboutPageContainer>
       <AboutPageShell>
-        <GoBackButton onClick={() => navigate('/')}>
-          <StyledArrowBack />
-          <Typography variant="h6" component="span" pl={1}>
-            {t('common.back')}
-          </Typography>
-        </GoBackButton>
         <AboutCard>
+          <GoBackButton onClick={() => navigate('/')}>
+            <StyledArrowBack />
+          </GoBackButton>
           <Typography variant="h1">
             {t('settings.about.title', { defaultValue: 'About Fyndbox' })}
           </Typography>

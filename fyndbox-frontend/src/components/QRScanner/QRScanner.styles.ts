@@ -57,15 +57,16 @@ export const QrCloseButton = styled(Button)(({ theme }) => ({
   padding: 0,
   borderRadius: '50%',
   color: theme.palette.common.white,
-  backgroundColor: 'rgba(255, 255, 255, 0.16)',
-  border: '1px solid rgba(255, 255, 255, 0.28)',
+  backgroundColor: theme.palette.error.main,
+  border: `1px solid ${theme.palette.error.main}`,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   fontSize: '1.4rem',
   transition: 'all 0.2s ease',
   '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.24)',
+    backgroundColor: theme.palette.error.dark,
+    borderColor: theme.palette.error.dark,
   },
 }));
 

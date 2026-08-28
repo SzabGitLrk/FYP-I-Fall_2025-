@@ -397,15 +397,16 @@ export const DashboardContent = styled(Box)(({ theme }) => ({
     minHeight: '100dvh',
     height: 'auto',
     overflow: 'visible',
-  '& > span': {
-    display: 'grid',
-    placeItems: 'center',
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%',
-    overflow: 'hidden',
-    lineHeight: 1,
-  },
+    overflowY: 'visible',
+    '& > span': {
+      display: 'grid',
+      placeItems: 'center',
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+      overflow: 'hidden',
+      lineHeight: 1,
+    },
   },
 }));
 
@@ -413,8 +414,31 @@ export const SubContainer = styled(Box)(({ theme }) => ({
   display: 'grid',
   gap: theme.spacing(1.4),
   margin: theme.spacing(-0.5, 0, 1.4, 4.5),
+  maxHeight: '500px',
+  overflowY: 'auto',
+  overflowX: 'hidden',
+  paddingRight: theme.spacing(0.5),
+  /* Custom Scrollbar Styling */
+  scrollbarWidth: 'thin',
+  scrollbarColor: 'rgba(21, 113, 69, 0.4) transparent',
+  '&::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: 'transparent',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: 'rgba(21, 113, 69, 0.4)',
+    borderRadius: '4px',
+    border: '2px solid transparent',
+    backgroundClip: 'padding-box',
+    '&:hover': {
+      backgroundColor: 'rgba(21, 113, 69, 0.6)',
+    },
+  },
   [theme.breakpoints.down('md')]: {
     marginLeft: theme.spacing(1.7),
+    maxHeight: '400px',
   },
 }));
 
@@ -426,7 +450,8 @@ export const PrimaryActionsContainer = styled(Box)(({ theme }) => ({
   flexWrap: 'wrap',
   margin: theme.spacing(1.3, 0, 0),
   [theme.breakpoints.down('md')]: {
-    display: 'none',
+    margin: theme.spacing(2.5, 0, 2),
+    gap: theme.spacing(1.5),
   },
 }));
 

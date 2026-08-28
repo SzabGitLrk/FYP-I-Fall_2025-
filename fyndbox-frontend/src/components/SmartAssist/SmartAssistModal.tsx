@@ -221,7 +221,7 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
         open={open}
         onClose={handleModalClose}
         fullWidth
-        maxWidth="md"
+        maxWidth="sm"
         PaperProps={{
           sx: {
             borderRadius: 5,
@@ -229,6 +229,9 @@ const SmartAssistModal: FC<SmartAssistModalProps> = ({
             backgroundImage: 'none',
             backgroundColor: '#fafcfa',
             boxShadow: '0 32px 80px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.10)',
+            margin: { xs: 2, sm: 3 },
+            maxHeight: { xs: 'calc(100% - 32px)', sm: 'calc(100% - 64px)' },
+            width: { xs: 'calc(100% - 32px)', sm: '100%' },
           },
         }}
       >

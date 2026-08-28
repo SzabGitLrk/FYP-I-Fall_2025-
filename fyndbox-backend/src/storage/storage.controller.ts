@@ -66,6 +66,42 @@ export class StorageController {
     }
   }
 
+  @Get('search-structured')
+  async searchStructured(
+    @Request() req: any,
+    @Query('keyword') keyword: string,
+  ): Promise<ApiResponse<any>> {
+    const lang = req.language;
+    try {
+      const results = await this.storageService.searchStructured(
+        req.user.userId,
+        keyword,
+      );
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        message: this.translationService.getTranslation(
+          'api.storages.search.success',
+          lang,
+        ),
+        data: results,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          success: false,
+          message: this.translationService.getTranslation(
+            'api.storages.search.error',
+            lang,
+          ),
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Get()
   async findAll(
     @Request() req: any,

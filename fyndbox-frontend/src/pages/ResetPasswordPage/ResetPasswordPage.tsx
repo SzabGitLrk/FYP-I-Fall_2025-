@@ -1,25 +1,32 @@
 import { FC, useEffect, useState } from 'react';
-import { CardContent, IconButton, Typography } from '@mui/material';
+import { Box, CardContent, IconButton } from '@mui/material';
 import { Lock, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import CustomTextField from '../../components/CustomTextField/CustomTextField';
-import {
-  CustomLink,
-  FullPageContainer,
-  TextFieldsContainer,
-} from '../../styles/commonStyles';
-import AppHeader from '../../components/AppHeader/AppHeader';
-import PageHeader from '../../components/PageHeader/PageHeader';
+import { CustomLink } from '../../styles/commonStyles';
 import { useAuth } from '../../hooks/useAuth';
 import {
+  ResetPasswordPageShell,
+  DecorativeLayer,
+  SoftCircle,
+  ResetPasswordContent,
+  BrandBlock,
+  ResetPasswordCard,
+  ResetPasswordTitle,
+  ResetPasswordDescription,
+  FieldStack,
   ButtonContainer,
   ErrorCard,
   ErrorCardContainer,
   SendButton,
+  ErrorText,
+  BackToLoginLink,
+  LanguageWrap,
 } from './ResetPasswordPage.styles';
 import { isPasswordNonEmpty, isPasswordValid } from '../../utils/validation';
 import LanguageSelector from '../../components/LanguageSelector/LanguageSelector';
+import appLogo from '../../assets/FyndBox.png';
 
 const ResetPasswordPage: FC = () => {
   const { t } = useTranslation();
@@ -75,103 +82,128 @@ const ResetPasswordPage: FC = () => {
   };
 
   return (
-    <FullPageContainer>
-      <AppHeader />
-      {loading && <Typography variant="body1">Loading...</Typography>}
-      {tokenError && (
-        <ErrorCardContainer>
-          <ErrorCard>
-            <CardContent>
-              <Typography variant="body1" textAlign="center" gutterBottom>
+    <ResetPasswordPageShell>
+      <DecorativeLayer />
+      <SoftCircle placement="top" />
+      <SoftCircle placement="left" />
+      <SoftCircle placement="right" />
+
+      <ResetPasswordContent>
+        <BrandBlock>
+          <img src={appLogo} alt="FyndBox" />
+          <span>FyndBox</span>
+        </BrandBlock>
+
+        {tokenError ? (
+          <ErrorCardContainer>
+            <ErrorCard>
+              <CardContent>
                 {t('resetPassword.error.tokenInvalidOrUsed')}
-              </Typography>
-            </CardContent>
-          </ErrorCard>
-        </ErrorCardContainer>
-      )}
-      {!tokenError && (
-        <>
-          <PageHeader heading={t('resetPassword.title')} />
-          <Typography variant="body1" py={2}>
-            {t('resetPassword.description')}
-          </Typography>
-          <TextFieldsContainer>
-            <CustomTextField
-              label={t('resetPassword.newPassword.label')}
-              placeholder={t('resetPassword.newPassword.placeholder')}
-              type={showPassword ? 'text' : 'password'}
-              value={newPassword}
-              onChange={(e) => {
-                setNewPassword(e.target.value);
-                setNewPasswordError(false);
-                if (error) setError(null);
+              </CardContent>
+            </ErrorCard>
+            <BackToLoginLink variant="body2">
+              <CustomLink href="/login">
+                {t('forgotPassword.backToLogin')}
+              </CustomLink>
+            </BackToLoginLink>
+          </ErrorCardContainer>
+        ) : (
+          <ResetPasswordCard>
+            <Box
+              component="form"
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault();
+                handleResetPassword();
               }}
-              error={newPasswordError}
-              helperText={
-                newPasswordError
-                  ? t('common.password.invalidPasswordError')
-                      .split('\n')
-                      .map((line, index) => (
-                        <span key={index}>
-                          {line}
-                          <br />
-                        </span>
-                      ))
-                  : ''
-              }
-              startIcon={<Lock />}
-              endIcon={
-                <IconButton onClick={togglePasswordVisibility} edge="end">
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              }
-            />
-            <CustomTextField
-              label={t('resetPassword.confirmPassword.label')}
-              type={showPassword ? 'text' : 'password'}
-              placeholder={t('resetPassword.confirmPassword.placeholder')}
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPasswordError(false);
-                setConfirmPassword(e.target.value);
-                if (error) setError(null);
-              }}
-              error={confirmPasswordError}
-              helperText={
-                confirmPasswordError
-                  ? t('common.password.passwordRequiredError')
-                  : ''
-              }
-              startIcon={<Lock />}
-              endIcon={
-                <IconButton onClick={togglePasswordVisibility} edge="end">
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              }
-            />
-          </TextFieldsContainer>
-          {passwordMatchError && (
-            <Typography variant="caption" color="error">
-              {t('resetPassword.error.mismatch')}
-            </Typography>
-          )}
-          <ButtonContainer>
-            <SendButton variant="contained" onClick={handleResetPassword}>
-              {t('resetPassword.submit')}
-            </SendButton>
-          </ButtonContainer>
-          {error && (
-            <Typography variant="caption" color="error">
-              {error}
-            </Typography>
-          )}
-        </>
-      )}
-      <CustomLink href="/login" underline="always">
-        {t('forgotPassword.backToLogin')}
-      </CustomLink>
-      <LanguageSelector />
-    </FullPageContainer>
+            >
+              <ResetPasswordTitle variant="h1">
+                {t('resetPassword.title')}
+              </ResetPasswordTitle>
+              <ResetPasswordDescription variant="body1">
+                {t('resetPassword.description')}
+              </ResetPasswordDescription>
+              <FieldStack>
+                <CustomTextField
+                  label={t('resetPassword.newPassword.label')}
+                  placeholder={t('resetPassword.newPassword.placeholder')}
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setNewPasswordError(false);
+                    if (error) setError(null);
+                  }}
+                  error={newPasswordError}
+                  helperText={
+                    newPasswordError
+                      ? t('common.password.invalidPasswordError')
+                          .split('\n')
+                          .map((line, index) => (
+                            <span key={index}>
+                              {line}
+                              <br />
+                            </span>
+                          ))
+                      : ''
+                  }
+                  startIcon={<Lock />}
+                  endIcon={
+                    <IconButton onClick={togglePasswordVisibility} edge="end">
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  }
+                />
+                <CustomTextField
+                  label={t('resetPassword.confirmPassword.label')}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={t('resetPassword.confirmPassword.placeholder')}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPasswordError(false);
+                    setConfirmPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  error={confirmPasswordError || passwordMatchError}
+                  helperText={
+                    confirmPasswordError
+                      ? t('common.password.passwordRequiredError')
+                      : passwordMatchError
+                      ? t('resetPassword.error.mismatch')
+                      : ''
+                  }
+                  startIcon={<Lock />}
+                  endIcon={
+                    <IconButton onClick={togglePasswordVisibility} edge="end">
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  }
+                />
+              </FieldStack>
+              {error && (
+                <ErrorText variant="caption" color="error">
+                  {error}
+                </ErrorText>
+              )}
+              <ButtonContainer>
+                <SendButton as="button" type="submit">
+                  {t('resetPassword.submit')}
+                </SendButton>
+              </ButtonContainer>
+              <BackToLoginLink variant="body2">
+                <CustomLink href="/login">
+                  {t('forgotPassword.backToLogin')}
+                </CustomLink>
+              </BackToLoginLink>
+            </Box>
+          </ResetPasswordCard>
+        )}
+
+        <LanguageWrap>
+          <LanguageSelector compact />
+        </LanguageWrap>
+      </ResetPasswordContent>
+    </ResetPasswordPageShell>
   );
 };
 

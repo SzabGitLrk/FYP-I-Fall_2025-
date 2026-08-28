@@ -6,19 +6,30 @@ import {
   updateStorage,
   deleteStorage,
   searchStorages,
+  searchStoragesStructured,
 } from '../api/storageService';
 import { Storage } from '../types/storage';
+import { SearchResults } from '../types/searchResults';
 
 interface UpdateStorageData {
   id: number;
   storage: Partial<Storage>;
 }
 
-export const useStorages = (keyword?: string) => {
+export const useStorages = () => {
   return useQuery<Storage[], Error>({
-    queryKey: keyword ? ['storages', 'search', keyword] : ['storages'],
-    queryFn: keyword ? () => searchStorages(keyword) : getStorages,
-    enabled: keyword !== undefined, // Only enable the query when needed
+    queryKey: ['storages'],
+    queryFn: getStorages,
+  });
+};
+
+export const useSearchStructured = (keyword?: string) => {
+  const shouldSearch = keyword && keyword.trim().length >= 2;
+  
+  return useQuery<SearchResults, Error>({
+    queryKey: ['storages', 'search-structured', keyword],
+    queryFn: () => searchStoragesStructured(keyword || ''),
+    enabled: !!shouldSearch,
   });
 };
 

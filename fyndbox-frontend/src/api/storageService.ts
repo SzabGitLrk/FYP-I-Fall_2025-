@@ -49,3 +49,16 @@ export const searchStorages = async (keyword: string): Promise<Storage[]> => {
     ),
   );
 };
+
+// Search storages with structured results
+export const searchStoragesStructured = async (
+  keyword: string,
+): Promise<any> => {
+  // Trim only when sending to API, not in the input field
+  const trimmedKeyword = keyword.trim();
+  return handleApiCall(
+    apiClient.get<ApiResponse<any>>(
+      `/storages/search-structured?keyword=${encodeURIComponent(trimmedKeyword)}`,
+    ),
+  );
+};

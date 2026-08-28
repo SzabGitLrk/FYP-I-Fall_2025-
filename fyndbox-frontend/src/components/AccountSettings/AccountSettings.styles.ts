@@ -3,19 +3,19 @@ import { Avatar, Box, IconButton, styled } from '@mui/material';
 export const AccountSettingsContainer = styled(Box)(({ theme }) => ({
   display: 'grid',
   justifyItems: 'center',
-  gap: theme.spacing(1.4),
+  gap: theme.spacing(0.8),
   width: '100%',
-  padding: theme.spacing(0.4, 0, 0),
+  padding: theme.spacing(0, 0, 0.2),
   '& [class*="TextFieldsContainer"]': {
     display: 'grid',
-    gap: theme.spacing(1.7),
+    gap: theme.spacing(1.2),
     width: '100%',
   },
 }));
 
 export const ProfileContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
-  margin: theme.spacing(0.5, 0, 1.3),
+  margin: theme.spacing(0.2, 0, 0.6),
   '& .MuiIconButton-root': {
     width: 36,
     height: 36,
@@ -32,21 +32,21 @@ export const ProfileContainer = styled(Box)(({ theme }) => ({
 }));
 
 export const ProfileAvatar = styled(Avatar)(({ theme }) => ({
-  width: 112,
-  height: 112,
+  width: 92,
+  height: 92,
   objectFit: 'cover',
   backgroundColor: theme.palette.primary.main,
   border: '4px solid rgba(255, 255, 255, 0.9)',
   boxShadow: '0 16px 32px rgba(31, 43, 37, 0.14)',
   color: theme.palette.common.white,
-  fontSize: '2.5rem',
+  fontSize: '2.2rem',
   fontWeight: 900,
   '& .MuiSvgIcon-root': {
-    fontSize: 66,
+    fontSize: 56,
   },
   [theme.breakpoints.down('sm')]: {
-    width: 94,
-    height: 94,
+    width: 80,
+    height: 80,
   },
 }));
 

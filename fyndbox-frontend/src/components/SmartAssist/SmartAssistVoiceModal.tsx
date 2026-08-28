@@ -1063,7 +1063,7 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
         open={open}
         onClose={handleClose}
         fullWidth
-        maxWidth="md"
+        maxWidth="sm"
         PaperProps={{
           sx: {
             borderRadius: 5,
@@ -1071,6 +1071,9 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
             backgroundImage: 'none',
             backgroundColor: '#fafcfa',
             boxShadow: '0 32px 80px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.10)',
+            margin: { xs: 2, sm: 3 },
+            maxHeight: { xs: 'calc(100% - 32px)', sm: 'calc(100% - 64px)' },
+            width: { xs: 'calc(100% - 32px)', sm: '100%' },
           },
         }}
       >
@@ -1490,11 +1493,20 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
           </Stack>
         </DialogContent>
 
-        <DialogActions sx={{ px: { xs: 2.5, sm: 3.5 }, pb: 2.5, pt: 0.5 }}>
+        <DialogActions sx={{ 
+          px: { xs: 2.5, sm: 3.5 }, 
+          pb: 2.5, 
+          pt: 0.5,
+          gap: { xs: 0.75, sm: 1.5 },
+          flexWrap: 'wrap',
+        }}>
               <SmartAssistSecondaryButton
                 variant="outlined"
                 onClick={onClose}
                 disabled={isProcessing || isConfirming}
+                sx={{
+                  order: { xs: 1, sm: 0 },
+                }}
               >
                 {t('modal.cancel')}
               </SmartAssistSecondaryButton>
@@ -1502,9 +1514,15 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                 {isRecording ? (
                   <SmartAssistDestructiveButton
                     variant="outlined"
-                    startIcon={<StopRounded />}
+                    startIcon={<StopRounded sx={{ display: { xs: 'none', sm: 'inline-flex' } }} />}
                     onClick={() => stopRecording(true)}
                     disabled={isProcessing || isConfirming}
+                    sx={{
+                      order: { xs: 2, sm: 0 },
+                      '& .MuiButton-startIcon': {
+                        display: { xs: 'none', sm: 'inline-flex' },
+                      },
+                    }}
                   >
                     {t('smartAdd.voiceStop', {
                       defaultValue: 'Stop',
@@ -1513,7 +1531,7 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                 ) : (
                   <SmartAssistSecondaryButton
                     variant="outlined"
-                    startIcon={<ReplayRounded />}
+                    startIcon={<ReplayRounded sx={{ display: { xs: 'none', sm: 'inline-flex' } }} />}
                     onClick={handleStartRecording}
                     disabled={
                       !supportsVoiceCapture ||
@@ -1521,6 +1539,12 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
                       isProcessing ||
                       isConfirming
                     }
+                    sx={{
+                      order: { xs: 2, sm: 0 },
+                      '& .MuiButton-startIcon': {
+                        display: { xs: 'none', sm: 'inline-flex' },
+                      },
+                    }}
                   >
                     {t('smartAdd.voiceRetry', {
                       defaultValue: 'Retry',
@@ -1530,9 +1554,15 @@ const SmartAssistVoiceModal: FC<SmartAssistVoiceModalProps> = ({
 
                 <SmartAssistPrimaryButton
                   variant="contained"
-                  startIcon={<Check />}
+                  startIcon={<Check sx={{ display: { xs: 'none', sm: 'inline-flex' } }} />}
                   onClick={handleProcessTranscript}
                   disabled={!canProcessTranscript || hasClarificationState}
+                  sx={{
+                    order: { xs: 3, sm: 0 },
+                    '& .MuiButton-startIcon': {
+                      display: { xs: 'none', sm: 'inline-flex' },
+                    },
+                  }}
                 >
                   {isProcessing
                     ? t('smartAdd.voiceProcessingShort', {

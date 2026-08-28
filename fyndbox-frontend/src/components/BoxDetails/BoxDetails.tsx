@@ -62,7 +62,9 @@ const BoxDetails: FC<BoxDetailsProps> = ({
             }
             label={t('box.itemCount', {
               count: itemCount,
-              defaultValue: `${itemCount} Items`,
+              defaultValue: itemCount === 1 
+                ? `1 Item`
+                : `${itemCount} Items`,
             })}
           />
         </DetailsMeta>

@@ -71,11 +71,20 @@ apiClient.interceptors.response.use(
       | string
       | undefined;
 
+    // For 5xx errors, try to extract meaningful message from backend first
     if (status && [500, 502, 503, 504].includes(status)) {
+      const backendMessage =
+        typeof data === 'object' && data
+          ? Array.isArray(data.message)
+            ? data.message.join(' ')
+            : data.message || data.error
+          : typeof data === 'string' && data.trim().length > 0
+            ? data
+            : null;
+
+      // Use backend message if available, otherwise use generic message
       return Promise.reject(
-        new Error(
-          SERVER_UNAVAILABLE_ERROR_MESSAGE,
-        ),
+        new Error(backendMessage || SERVER_UNAVAILABLE_ERROR_MESSAGE),
       );
     }
 

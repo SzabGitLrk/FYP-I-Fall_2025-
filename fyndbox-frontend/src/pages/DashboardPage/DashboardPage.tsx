@@ -34,6 +34,7 @@ import {
   useDeleteStorage,
   useStorages,
   useUpdateStorage,
+  useSearchStructured,
 } from '../../hooks/useStorage';
 import {
   useCreateBox,
@@ -45,12 +46,10 @@ import { useCreateItem } from '../../hooks/useItem';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import QRScanner from '../../components/QRScanner/QRScanner';
-import Sidebar from '../../components/Sidebar/Sidebar';
 import { useFooterActions } from '../../hooks/useFooterActions';
 import SearchField from '../../components/SearchField/SearchField';
 import FavoritesSidebar from '../../components/FavoritesSidebar/FavoritesSidebar';
 import SmartAssistModal from '../../components/SmartAssist/SmartAssistModal';
-import SmartAssistResultDialog from '../../components/SmartAssist/SmartAssistResultDialog';
 import SmartAssistActionDialog from '../../components/SmartAssist/SmartAssistActionDialog';
 import SmartAssistVoiceModal from '../../components/SmartAssist/SmartAssistVoiceModal';
 import SmartAssistImageModal from '../../components/SmartAssist/SmartAssistImageModal';
@@ -64,6 +63,7 @@ import { useAuth } from '../../hooks/useAuth';
 import DashboardSidebar, {
   DashboardSidebarItem,
 } from '../../components/DashboardSidebar/DashboardSidebar';
+import SearchResults from '../../components/SearchResults/SearchResults';
 
 const DashboardPage: FC = () => {
   const { t } = useTranslation();
@@ -95,7 +95,10 @@ const DashboardPage: FC = () => {
     message: string;
     warnings: string[];
   }>({ open: false, message: '', warnings: [] });
-  const { data: storages, isLoading, error } = useStorages(searchKeyword);
+  
+  const { data: storages, isLoading, error } = useStorages();
+  const { data: searchResults, isLoading: isSearching } = useSearchStructured(searchKeyword);
+  
   const { mutate: createStorage, mutateAsync: createStorageAsync } =
     useCreateStorage();
   const { mutate: updateStorage } = useUpdateStorage();
@@ -111,11 +114,9 @@ const DashboardPage: FC = () => {
     handleScanSuccess,
     handleCancelScan,
     handleSettingsClick,
-    handleCloseSidebar,
     handleCloseFavbar,
-    showQRScanner,
     showFavorites,
-    isSidebarOpen,
+    showQRScanner,
   } = useFooterActions();
 
   const normalizeName = (value: string) => value.trim().toLocaleLowerCase();
@@ -302,6 +303,10 @@ const DashboardPage: FC = () => {
     setSearchKeyword(keyword);
   };
 
+  const handleSearchInputChange = (value: string) => {
+    setSearchKeyword(value);
+  };
+
   const handleOpenSmartAssistModal = () => {
     setSmartAddChooserOpen(false);
     setSmartAddOpen(true);
@@ -359,7 +364,7 @@ const DashboardPage: FC = () => {
     {
       label: t('dashboard.entity.storage', { defaultValue: 'Storage' }),
       icon: <Inventory2Outlined />,
-      active: !isSidebarOpen && !showFavorites && !isTemplateSidebarOpen,
+      active: !showFavorites && !isTemplateSidebarOpen,
     },
     {
       label: t('dashboard.footer.favorite'),
@@ -381,7 +386,6 @@ const DashboardPage: FC = () => {
     {
       label: t('dashboard.footer.settings'),
       icon: <SettingsOutlined />,
-      active: isSidebarOpen,
       onClick: handleSettingsClick,
     },
   ];
@@ -402,10 +406,50 @@ const DashboardPage: FC = () => {
       />
       <DashboardWorkspace $sidebarCollapsed={isSidebarCollapsed}>
         <DashboardContent>
-          <TopBar />
-          <SearchField onSearch={handleSearchChange} />
+          <TopBar 
+            onSearch={handleSearchChange} 
+            searchValue={searchKeyword}
+            onSearchChange={handleSearchInputChange}
+          />
           <MainContainer>
-            {isLoading && (
+            {/* Search Results Indicator */}
+            {searchKeyword && !isSearching && searchResults && searchResults.totalResults > 0 && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '8px 4px',
+                  marginBottom: '12px',
+                }}
+              >
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'text.secondary', 
+                    fontWeight: 500, 
+                    fontSize: '0.875rem',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {t('dashboard.search.resultsFor', { 
+                    keyword: searchKeyword,
+                    count: searchResults.totalResults,
+                    defaultValue: `Found ${searchResults.totalResults} result${searchResults.totalResults !== 1 ? 's' : ''} for "${searchKeyword}"` 
+                  })}
+                </Typography>
+              </Box>
+            )}
+            
+            {/* Show search results when searching */}
+            {searchKeyword && searchKeyword.trim().length >= 2 ? (
+              <SearchResults 
+                results={searchResults || { items: [], boxes: [], storages: [], keyword: searchKeyword, totalResults: 0 }}
+                isLoading={isSearching}
+              />
+            ) : (
+              <>
+                {/* Show normal storage list when not searching */}
+                {isLoading && (
               <Box
                 display="flex"
                 justifyContent="center"
@@ -421,9 +465,31 @@ const DashboardPage: FC = () => {
               </Typography>
             )}
             {!isLoading && storages?.length === 0 && (
-              <Typography variant="h6" textAlign="center" color="textSecondary">
-                No Storages Found
-              </Typography>
+              <Box
+                display="flex"
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+                p={5}
+                gap={2}
+              >
+                <Typography variant="h6" textAlign="center" color="textSecondary">
+                  {searchKeyword 
+                    ? t('dashboard.search.noResults', { 
+                        keyword: searchKeyword,
+                        defaultValue: `No results found for "${searchKeyword}"` 
+                      })
+                    : t('dashboard.noStorages', { defaultValue: 'No Storages Found' })
+                  }
+                </Typography>
+                {searchKeyword && (
+                  <Typography variant="body2" textAlign="center" color="textSecondary">
+                    {t('dashboard.search.tryDifferent', { 
+                      defaultValue: 'Try a different search term or browse all items' 
+                    })}
+                  </Typography>
+                )}
+              </Box>
             )}
             {storages?.map((storage, index) => (
               <Box key={index}>
@@ -442,7 +508,9 @@ const DashboardPage: FC = () => {
                       ),
                       label: t('dashboard.entity.boxCount', {
                         count: storage.boxes?.length ?? 0,
-                        defaultValue: `${storage.boxes?.length ?? 0} Boxes`,
+                        defaultValue: storage.boxes?.length === 1 
+                          ? `1 Box`
+                          : `${storage.boxes?.length ?? 0} Boxes`,
                       }),
                     },
                     {
@@ -455,7 +523,9 @@ const DashboardPage: FC = () => {
                       ),
                       label: t('dashboard.entity.itemCount', {
                         count: getStorageItemCount(storage),
-                        defaultValue: `${getStorageItemCount(storage)} Items`,
+                        defaultValue: getStorageItemCount(storage) === 1 
+                          ? `1 Item`
+                          : `${getStorageItemCount(storage)} Items`,
                       }),
                     },
                   ]}
@@ -523,6 +593,8 @@ const DashboardPage: FC = () => {
                 onAdd={() => handleAddEntity('storage')}
               />
             </PrimaryActionsContainer>
+              </>
+            )}
           </MainContainer>
         </DashboardContent>
       </DashboardWorkspace>
@@ -532,6 +604,7 @@ const DashboardPage: FC = () => {
         onScanClick={handleScanClick}
         onTemplateClick={handleOpenTemplateSidebar}
         onSettingsClick={handleSettingsClick}
+        onSmartAddClick={handleOpenSmartAddChooser}
       />
       <EntityActionModal
         key={modalMode}
@@ -575,15 +648,6 @@ const DashboardPage: FC = () => {
         templates={TEMPLATE_HIERARCHIES}
         existingStorages={storages || []}
       />
-      <SmartAssistResultDialog
-        open={smartAddResult.open}
-        message={smartAddResult.message}
-        warnings={smartAddResult.warnings}
-        onClose={() =>
-          setSmartAddResult((current) => ({ ...current, open: false }))
-        }
-      />
-      <Sidebar open={isSidebarOpen} onClose={handleCloseSidebar} />
       <FavoritesSidebar
         open={showFavorites}
         favorites={favoriteBoxes}

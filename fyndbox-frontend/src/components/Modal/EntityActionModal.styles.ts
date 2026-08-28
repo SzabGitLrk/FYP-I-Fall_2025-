@@ -1,4 +1,5 @@
 import { Box, Button, IconButton, styled, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 export const ModalContainer = styled(Box)(({}) => ({
   position: 'fixed',
@@ -35,11 +36,15 @@ export const CancelButton = styled(IconButton)(({ theme }) => ({
   borderRadius: '50%',
   cursor: 'pointer',
   justifyContent: 'center',
-  color: theme.palette.secondary.contrastText,
+  color: theme.palette.error.main,
+  backgroundColor: alpha(theme.palette.error.main, 0.08),
   width: '40px',
   height: '40px',
   top: theme.spacing(1.25),
   right: theme.spacing(1.25),
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.error.main, 0.15),
+  },
 }));
 
 export const ImageUploaderContainer = styled(Box)(({ theme }) => ({

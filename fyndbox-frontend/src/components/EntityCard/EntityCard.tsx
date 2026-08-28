@@ -96,10 +96,11 @@ const EntityCard: FC<EntityCardProps> = ({
 
           {entityType === 'item' && (
             <Box flex="0 0 auto">
-              <QuantityText variant="h6">
-                {quantity! > 1
-                  ? t('modal.quantity.piece_plural', { count: quantity })
-                  : t('modal.quantity.piece', { count: quantity })}
+              <QuantityText variant="body2">
+                {t('item.inStock', {
+                  count: quantity,
+                  defaultValue: `In Stock: ${quantity}`,
+                })}
               </QuantityText>
             </Box>
           )}

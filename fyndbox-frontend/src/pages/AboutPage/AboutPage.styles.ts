@@ -1,5 +1,6 @@
-import { Box, Container } from '@mui/material';
+import { Box, Button, Container } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { ArrowBack } from '@mui/icons-material';
 
 export const AboutPageContainer = styled(Box)(() => ({
   minHeight: '100dvh',
@@ -17,7 +18,8 @@ export const AboutPageShell = styled(Container)(({ theme }) => ({
 }));
 
 export const AboutCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
+  position: 'relative',
+  padding: theme.spacing(5, 3, 3),
   borderRadius: 28,
   backgroundColor: 'rgba(255, 255, 255, 0.78)',
   border: '1px solid rgba(21, 113, 69, 0.12)',
@@ -43,3 +45,40 @@ export const AboutCard = styled(Box)(({ theme }) => ({
     fontWeight: 800,
   },
 }));
+
+export const GoBackButton = styled(Button)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(2),
+  left: theme.spacing(2),
+  minWidth: 'unset',
+  width: 40,
+  height: 40,
+  padding: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: theme.palette.common.white,
+  borderRadius: '50%',
+  backgroundColor: theme.palette.primary.main,
+  boxShadow: '0 2px 8px rgba(21, 113, 69, 0.25)',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    backgroundColor: theme.palette.primary.dark,
+    transform: 'scale(1.05)',
+    boxShadow: '0 3px 12px rgba(21, 113, 69, 0.35)',
+  },
+  '& .MuiSvgIcon-root': {
+    fontSize: '1.3rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: 36,
+    height: 36,
+    top: theme.spacing(1.5),
+    left: theme.spacing(1.5),
+    '& .MuiSvgIcon-root': {
+      fontSize: '1.2rem',
+    },
+  },
+}));
+
+export const StyledArrowBack = styled(ArrowBack)({});

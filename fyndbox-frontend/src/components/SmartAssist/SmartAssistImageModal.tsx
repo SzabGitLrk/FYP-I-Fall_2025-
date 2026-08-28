@@ -414,6 +414,9 @@ const SmartAssistImageModal: FC<SmartAssistImageModalProps> = ({
             backgroundImage: 'none',
             backgroundColor: '#fafcfa',
             boxShadow: '0 32px 80px rgba(0, 0, 0, 0.22), 0 8px 24px rgba(0, 0, 0, 0.10)',
+            margin: { xs: 2, sm: 3 },
+            maxHeight: { xs: 'calc(100% - 32px)', sm: 'calc(100% - 64px)' },
+            width: { xs: 'calc(100% - 32px)', sm: '100%' },
           },
         }}
       >
@@ -634,10 +637,15 @@ const SmartAssistImageModal: FC<SmartAssistImageModalProps> = ({
                         onClick={stopCamera}
                         sx={{
                           flex: 1,
-                          borderColor: 'rgba(93, 157, 113, 0.35)',
-                          color: 'rgba(73, 139, 96, 0.9)',
+                          borderColor: 'error.main',
+                          color: 'error.main',
                           fontWeight: 600,
                           borderRadius: 3,
+                          '&:hover': {
+                            borderColor: 'error.dark',
+                            color: 'error.dark',
+                            backgroundColor: 'rgba(175, 87, 87, 0.08)',
+                          },
                         }}
                       >
                         {t('modal.cancel', { defaultValue: 'Cancel' })}
@@ -826,10 +834,17 @@ const SmartAssistImageModal: FC<SmartAssistImageModalProps> = ({
             variant="contained"
             onClick={submitImage}
             disabled={!selectedImage || isProcessing || isConfirming}
+            sx={{
+              whiteSpace: 'nowrap',
+              [theme => theme.breakpoints.down('sm')]: {
+                minWidth: 'auto',
+                fontSize: '0.8125rem',
+              },
+            }}
           >
             {isProcessing
               ? t('smartAdd.processing', { defaultValue: 'Processing...' })
-              : t('smartAdd.analyze', { defaultValue: 'Analyze Image' })}
+              : t('smartAdd.analyze', { defaultValue: 'Analyze' })}
           </SmartAssistPrimaryButton>
         </DialogActions>
       </Dialog>

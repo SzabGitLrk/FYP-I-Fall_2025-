@@ -5,35 +5,52 @@ import { useTranslation } from 'react-i18next';
 
 import {
   SearchFieldContainer,
-  SearchIconButton,
   SearchTextField,
 } from './SearchField.styles';
 
 interface SearchFieldProps {
   onSearch: (query: string) => void;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
-const SearchField: FC<SearchFieldProps> = ({ onSearch }) => {
+const SearchField: FC<SearchFieldProps> = ({ onSearch, value: externalValue, onChange }) => {
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [internalValue, setInternalValue] = useState('');
+
+  // Use external value if provided, otherwise use internal state
+  const searchQuery = externalValue !== undefined ? externalValue : internalValue;
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleSearchClick = () => {
-    console.log(searchQuery);
-    onSearch(searchQuery.trim()); // Trigger the search with the trimmed query
+    const value = event.target.value;
+    
+    // Update state - keep spaces as user types
+    if (externalValue === undefined) {
+      setInternalValue(value);
+    } else if (onChange) {
+      // If controlled, notify parent of the change (keep spaces)
+      onChange(value);
+    }
+    
+    // Trigger search when criteria met (2+ chars or empty)
+    // Don't trim here - let the user type spaces
+    if (value.trim().length >= 2 || value.trim().length === 0) {
+      onSearch(value); // Pass full value with spaces
+    }
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      onSearch(searchQuery.trim()); // Trigger the search on Enter key press
+    if (event.key === 'Enter' && searchQuery.trim().length >= 2) {
+      onSearch(searchQuery); // Keep spaces
     }
   };
 
   const handleClearClick = () => {
-    setSearchQuery(''); // Clear the search query
+    if (externalValue === undefined) {
+      setInternalValue('');
+    } else if (onChange) {
+      onChange('');
+    }
     onSearch(''); // Reset the search results
   };
 
@@ -55,18 +72,9 @@ const SearchField: FC<SearchFieldProps> = ({ onSearch }) => {
             endAdornment: (
               <InputAdornment position="end">
                 {searchQuery && (
-                  <>
-                    <IconButton onClick={handleClearClick}>
-                      <Clear />
-                    </IconButton>
-                    <SearchIconButton
-                      onClick={handleSearchClick}
-                      disabled={!searchQuery}
-                      disableRipple
-                    >
-                      <Search />
-                    </SearchIconButton>
-                  </>
+                  <IconButton onClick={handleClearClick}>
+                    <Clear />
+                  </IconButton>
                 )}
               </InputAdornment>
             ),
